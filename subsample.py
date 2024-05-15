@@ -139,11 +139,11 @@ for ID in picked_bin:
 subsampled_IDs.close()
 
 #now use bcftools to subsample from the vcf to make a subsampled VCF of only what is in the picked bin
-os.system('bcftools view --samples-file core_files/subsamples.txt core_files/1001genomes_snp_biallelic_only_ACGTN.vcf > core_files/subsampled_',args.n,'.vcf ')
+os.system('bcftools view --samples-file core_files/subsamples.txt core_files/1001genomes_snp_biallelic_only_ACGTN.vcf > ',args.og)
 
 #Sift through the spreadsheet file to only include the phenotype and samples from the picked_bin
 input_file_phenotype_data = open(args.p,'r')
-output_file_subsampled_phenotype = open("core_files/subsampled_phenotype_",args.n,".csv","w")
+output_file_subsampled_phenotype = open(args.op,"w")
 for index, line in enumerate(input_file_phenotype_data):
     cleanline=line.split(',')
     #for the header
