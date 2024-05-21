@@ -353,18 +353,18 @@ def R_plots(output_file, metric='largest_relative_theta', p_value=True): #?# wri
 
 	# reads the T20 snp file based on which metric is being graphed
 	if metric =="absolute_theta":
-		R_out.write(f'T20_Absolute_theta_SNPs <- read.csv("output_files/'+args.id+'_T20_absolute_theta.csv")\n')
+		R_out.write(f'T20_Absolute_theta_SNPs <- read.csv("output_files/'+args.id+'_T20_absolute_theta.csv", header= TRUE, sep=",")\n')
 
 		# write the positions from this csv file to the POI list
 		R_out.write(f'POI_list = c(T20_Absolute_theta_SNPs$POS)\n')
 
 	if metric =="pSNP4":
-		R_out.write(f'T20_pSNP4_SNPs <- read.csv("output_files/'+args.id+'_T20_pSNP4.csv")\n')
+		R_out.write(f'T20_pSNP4_SNPs <- read.csv("output_files/'+args.id+'_T20_pSNP4.csv", header= TRUE, sep=",")\n')
 
 		R_out.write(f'POI_list = c(T20_pSNP4_SNPs$POS)\n')
 
 	if metric =="pSNP5":
-		R_out.write(f'T20_pSNP5_SNPs <- read.csv("output_files/'+args.id+'_T20_pSNP5.csv")\n')
+		R_out.write(f'T20_pSNP5_SNPs <- read.csv("output_files/'+args.id+'_T20_pSNP5.csv", header= TRUE, sep=",")\n')
 
 		R_out.write(f'POI_list = c(T20_pSNP5_SNPs$POS)\n')
 
