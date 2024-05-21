@@ -22,6 +22,7 @@ phenotype<c(JOB_LIST$PHENOTYPE)
 for (i in jobs){
   
 #load the data from input of GWAS result
+
 filename <- paste0('/gpfs01/home/mbysh17/output_files/',phenotype[i],'_GWAS_',sample_n[i],'_',jobs[i],'.csv')
 gwasResults<-read.csv(filename)
 
@@ -36,7 +37,11 @@ T20_SNPS <- gwasResults %>%
               select(positions)%>%
               slice_head(n=20)
 T20_SNPS<- as.list(T20_SNPS)
+
 T20_SNPS
+
+# write the top 20 snps for this ID to a csv file
+
 
 don <- gwasResults %>%
   # Compute chromosome size
@@ -62,9 +67,11 @@ don <- gwasResults %>%
   group_by(chromosomes) %>%
   summarize(center=( max(BPcum) + min(BPcum) ) / 2 )
 
+pngname <- paste0('/gpfs01/home/mbysh17/output_files/',phenotype[i],'_GWAS_MANHATTAN_',sample_n[i],'_',jobs[i],'.png')
+
 png("MY_TEST_PLOT.png", bg = "white", width = 9.75, height = 3.25, units = "in", res = 1200, pointsize = 4)
-  
-ggplot(don, aes(x=BPcum, y=-log10(pvals))) +
+
+  ggplot(don, aes(x=BPcum, y=-log10(pvals))) +
 
     # Show all points
     geom_point( aes(color=as.factor(chromosomes)), alpha=0.8, size=1.3) +

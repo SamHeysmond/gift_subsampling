@@ -77,7 +77,7 @@ for line in input_file_samples_vcf:
     #line = read_next_line(input_file_samples_vcf)
     cleanline = line.replace('\n','')
     samples_list_vcf.append(cleanline)
-print("Samples list vcf: ", samples_list_vcf)
+#print("Samples list vcf: ", samples_list_vcf)
 
 # 2) read all sample ID's from the phenotype spreadsheet to make a list (REPEAT CODE?)
 input_file_phenotype_data = open(args.p,'r')
