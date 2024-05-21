@@ -1,0 +1,487 @@
+#! /usr/bin/python3
+# Testing command:
+# cd ~
+# python3 /Users/sian_bray/Dropbox/Bray/Research/Physics_GWAS/Scripts/physics_GWAS_OOP_V2.py -v /Users/sian_bray/Dropbox/Bray/Research/Physics_GWAS/Data/MOT1_Test/Mot1_biallelic_10kb_AF_filtered.vcf -f /Users/sian_bray/Dropbox/Salt/2_Data/Phenotype_Data/master_list.csv -p leaf_ionome_Mo98 -o ~/physics_gwas_test.csv
+
+# Real commands:
+# cd /Users/sian_bray/Dropbox/Bray/Research/Physics_GWAS/Data/Testing
+# python3 /Users/sian_bray/Dropbox/Bray/Research/Physics_GWAS/Scripts/physics_GWAS_OOP_V2.py -v /Users/sian_bray/Dropbox/Bray/Research/Physics_GWAS/Data/VCFs/1001genomes_snp-biallelic_only_ACGTN.vcf -f /Users/sian_bray/Dropbox/Salt/2_Data/Phenotype_Data/master_list.csv -p leaf_ionome_Mo98 -o /Users/sian_bray/Dropbox/Bray/Research/Physics_GWAS/Data/Testing/Mo_whole_genome_metrics.csv
+# python3 /Users/sian_bray/Dropbox/Bray/Research/Physics_GWAS/Scripts/physics_GWAS_OOP_V2.py -v /Users/sian_bray/Dropbox/Bray/Research/Physics_GWAS/Data/VCFs/1001genomes_snp-biallelic_only_ACGTN.vcf -f /Users/sian_bray/Dropbox/Salt/2_Data/Phenotype_Data/master_list.csv -p leaf_ionome_Na23 -o /Users/sian_bray/Dropbox/Bray/Research/Physics_GWAS/Data/Testing/Na_whole_genome_metrics.csv
+
+# python3 /Users/sian_bray/Dropbox/Bray/Research/Physics_GWAS/Scripts/physics_GWAS_OOP_V2.py -v /Users/sian_bray/Dropbox/Bray/Research/Physics_GWAS/Data/VCFs/1001genomes_snp-biallelic_only_ACGTN.vcf -f /Users/sian_bray/Dropbox/Salt/2_Data/Phenotype_Data/master_list.csv -p leaf_ionome_Mo98 -o /Users/sian_bray/Dropbox/Bray/Research/Physics_GWAS/Data/Testing/Mo_p_value.csv
+# python3 /Users/sian_bray/Dropbox/Bray/Research/Physics_GWAS/Scripts/physics_GWAS_OOP_V2.py -v /Users/sian_bray/Dropbox/Bray/Research/Physics_GWAS/Data/VCFs/1001genomes_snp-biallelic_only_ACGTN.vcf -f /Users/sian_bray/Dropbox/Salt/2_Data/Phenotype_Data/master_list.csv -p leaf_ionome_Na23 -o /Users/sian_bray/Dropbox/Bray/Research/Physics_GWAS/Data/Testing/Na_p_value.csv
+
+# ## = comments for Jon
+# ### = responses from Jon
+# #? = to do
+#P# = publication reference
+
+import argparse, random, pandas, os
+from math import sqrt, erfc, log10
+import numpy as np
+
+# Creates a list of individual names ordered by phenotype value.
+# Input is a csv file with two columns; individual and phenotype value.
+# A headder is expected.
+# Output is a list of individuals.
+def odered_list(phenotypes_file, phenotype):
+
+	# Import phenotype file as an array and sort by the size of the second column ()
+	pheno_array=pandas.read_csv(phenotypes_file)
+	pheno_array=pheno_array.sort_values(by=[phenotype]) # Note: sorted smallest first to largest last
+	# Make a list of the sample names, ordered by value
+	pheno_order=pheno_array.iloc[:,0].tolist()
+	#? Need to filter out identical values here so I don't have to do it manually
+
+	return pheno_order #P# Jon 2.1
+
+# Takes a vcf file and generates a list of the headder items for later use.
+def read_vcf_head(vcf_file):
+
+	file=open(vcf_file, 'r')
+	for line in file:
+		if '#CHROM' in line:
+			vcf_order=line.split('\t')
+			return vcf_order
+	file.close()
+
+# Calculate multiple test corrections - from pygwas mtcorr.py
+
+# Implements Benjamini-Hochberg FDR threshold (1995)
+# Input is a list of p-values and a threshold
+def get_bh_thres(pvals, fdr_thres=0.05):
+
+    m = len(pvals)
+    s_pvals = sorted(pvals) 
+    for i, p in enumerate(s_pvals):
+        thes_pval = ((i + 1.0) / float(m)) * fdr_thres
+        if p > thes_pval:
+            break
+        
+    return {'thes_pval':thes_pval, 'thres_i':i}
+        
+# Implements the Benjamini-Hochberg-Yekutieli procedure (2001).
+# Assumes arbitrary dependence between variables.
+# Input is a list of p-values and a threshold
+def get_bhy_thres(pvals, fdr_thres=0.05):
+
+    m = len(pvals)
+    m_float = float(m)
+    s_pvals = sorted(pvals)
+    s = 1.0
+    for i, p in enumerate(s_pvals):
+        if i > 2:
+            s = s + 1.0/(i-1)
+        thes_pval = ((i + 1.0) / m_float) * fdr_thres / s
+        if p > thes_pval:
+            break
+    return {'thes_pval':thes_pval, 'thres_i':i}
+
+# Create a class 'field'
+# This class takes each VCF line and processes it (turns it into an ordered list of genotype values)
+# You can then perform different methods on each line
+class field:
+	def __init__(self, line, pheno_order, vcf_order):
+
+		self.line=line
+		self.pheno_order=pheno_order
+		self.vcf_order=vcf_order
+
+		# process the line
+
+		line=line.replace('\n', '')
+		line=line.split('\t')
+		genotype_values=[] # Empty list for the -1, 0 and 1 values
+
+		# Save and split the format field.
+		line_format=line[8]
+		line_format=line_format.split(':')
+
+		# For each individual in the phenotype file, locate the genotype and give it a value between -1 and +1 (biallelic diploid data only).
+		for individual in pheno_order:
+
+			individual=str(individual)
+
+			try: # Get the location in the vcf.
+				index=vcf_order.index(individual)
+			except ValueError: # if the individual is not in the vcf
+				continue
+
+			current_column=line[index] # Get the column that contains genotypes for this individual.
+			current_column=current_column.split(':') # Split into fields.
+			current_genotypes=current_column[line_format.index('GT')] # Find the genotypes for this individual.
+			current_genotypes=current_genotypes.replace('/','|') # Make sure you split phased and/or unphased data
+			current_genotypes=current_genotypes.split('|')
+			current_value=[]
+			total=0
+
+			# Make a list of all the genotype values.
+			for things in current_genotypes:
+				if things == "0" or things == "1":
+					current_value.append(int(things))
+					total+=1
+
+			if current_value != []: # If there is any genotype data (sum of an empty list is 0)
+				current_value=sum(current_value)
+				current_value=current_value/total
+				# current_value=round(current_value * 2) / 2 # round to the nearest 0.5 in case of pop-level genotyping or polyploids
+				if current_value == 0:
+					genotype_values.append(-1)
+				if current_value == 0.5:
+					genotype_values.append(0)
+				if current_value == 1:
+					genotype_values.append(1)
+
+		self.ordered_states=genotype_values #P# Jon 2.2
+
+		N = len(genotype_values)
+		N_plus = genotype_values.count(1)
+		N_minus = genotype_values.count(-1)
+		N_zero = genotype_values.count(0)
+
+		self.N=N
+		self.N_plus=N_plus
+		self.N_minus=N_minus
+		self.N_zero=N_zero
+
+		self.line=line
+		#? can maybe remove everything but ordered states when finished for efficency
+
+	def sense_check(self, min_SNPs=15): 
+		ordered_states = self.ordered_states
+		if ordered_states: # Check that there is something in ordered_states
+			count_plus=ordered_states.count(1)
+			count_minus=ordered_states.count(-1)
+			if count_plus >= min_SNPs and count_minus >= min_SNPs:
+				return True
+		return False # If you didn't manage to return True
+
+	def cum_sum(self): # Calculate the cumulative sum of the ordered genotype states
+
+		return list(np.cumsum(self.ordered_states))
+
+	def straight_path(self): # Calculate the straight path i.e. a straigh line from the start to the end of the cumulative sum
+		ordered_states = self.ordered_states
+		final_dest=sum(ordered_states)
+		per_step=final_dest/len(ordered_states)
+		straight_line=[]
+		for step, num in enumerate(ordered_states, 1):
+			straight_line.append(per_step*step)
+			
+		return straight_line #P# Jon 2.7
+
+	def rand_sum(self): # Calculate a random path
+
+		genotype_values=self.ordered_states
+		random.shuffle(genotype_values)
+		return np.cumsum(genotype_values)
+
+	def calc_theta(self, J_2_8=False): # Calculate theta for each position in the ordered states #? Could do to make this re-usable for values that are not the ordered state i.e. a given random path
+
+		# Create the stright line (i.e. from 0 to to sum of the values):
+		# straight line is the (total sum / steps) * the step
+		#final_dest=sum(self.ordered_states)
+		#try:
+		#	per_step=final_dest/len(self.ordered_states)
+		#except ZeroDivisionError:
+		#	per_step=0
+		#cumulative_sum=list(np.cumsum(self.ordered_states))
+		#straight_line=[]
+		#for step, num in enumerate(cumulative_sum, 1):
+		#	straight_line.append(per_step*step)
+
+		# Creates the straight_line which is the same as the straigh path (see straight_path() function above)
+		straight_line=self.straight_path()
+		cumulative_sum=self.cum_sum()
+
+		N=self.N
+		N_plus=self.N_plus
+		N_minus=self.N_minus
+		N_zero=self.N_zero
+
+		#P# Jon 2.8
+		if J_2_8 == True:
+			theta_plus = []
+			theta_minus = []
+			W_plus_j = 0 # number of plus states at j
+			W_minus_j = 0 # number of minuss states at j
+			for j, state in enumerate(cumulative_sum):
+				# j + 1 to make 1-based
+				if state == 1: 
+					W_plus_j += 1
+				if state == -1:
+					W_minus_j += 1
+				theta_plus.append(W_plus_j - (((j+1)*N_plus)/N))
+				theta_minus.append(W_minus_j - (((j+1)*N_minus)/N))
+				# theta_zero can be calculated from these two, see Jon's paper
+
+		# Calculate theta
+		theta=[]
+		for count, val in enumerate(cumulative_sum):
+			theta.append(val-straight_line[count])
+
+		# Calculate relative theta
+
+		# largest and smallest raw theta
+		largest_theta=max(theta)
+		smallest_theta=min(theta)
+
+		# Calculate relative theta
+		# newtheta_plus =oldtheta_plus times N / ( Nplus times (Nzero + Nminus ) )
+		# should give a newtheta between -1 and +1
+		largest_relative_theta = largest_theta * N / (N_plus * (N_zero + N_minus))
+		smallest_relative_theta = smallest_theta * N / (N_plus * (N_zero + N_minus))
+
+		# generate largest, smallest, range, relative and absolute theta
+		if abs(largest_theta) > abs(smallest_theta):
+			absolute_theta=abs(largest_theta)
+			absolute_relative_theta=abs(largest_relative_theta)
+		else:
+			absolute_theta=abs(smallest_theta)
+			absolute_relative_theta=abs(smallest_relative_theta)
+
+		theta_range=largest_theta-smallest_theta
+		range_relative_theta=largest_relative_theta-smallest_relative_theta
+
+		#head: largest_theta,smallest_theta,absolute_theta,theta_range,largest_relative_theta,smallest_relative_theta,absolute_relative_theta,range_relative_theta
+		return largest_theta,smallest_theta,absolute_theta,theta_range,largest_relative_theta,smallest_relative_theta,absolute_relative_theta,range_relative_theta
+
+	def calc_pvals(self): ## Jon - this is where I calculate the P-values
+
+		# N = Total states
+		# theta_j = k - j * w_0_plus
+		# j = first j elements in list
+		# N_plus = number of plus states
+		# N_minus = number of minus states
+		# k = number of plus states in the first j elements
+		# w_0_plus = frequency of plus states
+		# j * w_0_plus = expected + states at j
+
+		ordered_states = self.ordered_states
+
+		# Calculate number of states: N, N_plus and N_minus
+		N, N_plus, N_minus, N_zero = self.N, self.N_plus, self.N_minus, self.N_zero ## Jon - I use the function on line 111 to calculate all the N's
+
+		# Create empty tuple of P values
+		p_vals = []
+		bigest_theta = None
+		bigest_theta_j = None
+
+		# Calculate straight line and cumulative sum
+		cumsum = self.cum_sum() ## Jon - I use the function on line 128 to calculate the cumulative sum
+		straight_line = self.straight_path() ## Jon - I use the function on line 132 to calculate the straight path
+
+		# To keep a theta list
+		theta = []
+		# For the first j elements in the ordered list
+		for j, state in enumerate(ordered_states, 1):
+
+			# Calculate theta at j, j - 1 to make it zero-based
+			theta_j = cumsum[j-1] - straight_line[j-1]
+			theta.append(theta_j)
+
+			if bigest_theta == None:
+				bigest_theta = theta_j
+				bigest_theta_j = int(j-1)
+
+			if theta_j > bigest_theta: ### Jon's response:  (lines 244-246 - we can ignore - my ideas/calculations regarding the biggest value of theta have been superseded by the pSNPmin, pSNP2/pSNP3/pSNP4, / pSNP5 )
+				bigest_theta = theta_j
+				bigest_theta_j = int(j-1)
+			
+			# Calculate p at j
+			p = erfc((N*sqrt(N)*theta_j)/(sqrt(2*j*(N-j)*N_plus*N_minus))) ## Jon - I calculate the raw p value here
+			p_vals.append(p)
+
+		# temporary nan or 0 as last value fix:
+		p_vals[-1]=1 ## Jon - the last value almost always becomes 0 or 'nan' so I am just removing it for now ### Jon's response: trying to evaluate the last item in the list will give 'erfc(0/0)', so setting this to 1 is the correct outcome (or just ignore it, and do later averaging only over elements  1,2,3, .... j .... N-1)
+
+		# Calculate values to return:
+		min_p = min(p_vals) # smallest p ## Jon - taking the lowest overall p value
+		mean_p = sum(p_vals) / len(p_vals) # average p ## Jon - taking the average p value
+
+		# -log10 average ## Jon - taking the -log10 average p value
+		log_p_vals=[]
+		for no in p_vals:
+			try:
+				log_p_vals.append(-log10(no))
+			except ValueError: ## Jon - this was an earlier escape for any 'nan' values
+				log_p_vals.append(0)
+		log_mean_p = sum(log_p_vals) / len(log_p_vals)
+
+		# Greatest theta p_value
+		bigest_theta_p = p_vals[bigest_theta_j] ## Jon - p value for the largest theta, bigest_theta_j is the index position of the biggest theta value
+		# sigma for pSNP4, j - 1 to make it zero-based ## Jon - below are the calculations fos pSNP4 and pSNP5, x += x means x = x+x, so e.g. 5 += 5 is 10
+		sigma_4 = 0
+		for j, state in enumerate(ordered_states, 1):
+			if j < N:
+				sigma_4 += abs(theta[j-1]) / sqrt(j*(N-j))
+
+		# pSNP4
+		Z = sigma_4 * sqrt(N)/sqrt(2*N_plus*N_minus)
+		pSNP4 = erfc(Z)
+
+		# sigma for pSNP5, j - 1 to make it zero-based
+		sigma_5 = 0
+		for j, state in enumerate(ordered_states, 1):
+			if j < N:
+				sigma_5 += (theta[j-1])/ sqrt(j*(N-j)) 
+		
+		# pSNP5
+		Z = sigma_5 * sqrt(N)/sqrt(2*N_plus*N_minus)
+		pSNP5 = erfc(abs(Z))
+
+		# return the smallest P value
+		return min_p, mean_p, log_mean_p, bigest_theta_p, pSNP4, pSNP5
+
+
+# Make R plots, requires the R libraries; tidyverse, htmlwidgets and manhattanly
+def R_plots(output_file, metric='largest_relative_theta', p_value=True): #?# write if p_value == True to -log10 and bf/bhy correct
+	R_out=open(f'{output_file[:-4]}_{metric}.R', 'w')
+	png_out=f'{output_file[:-4]}_{metric}.png'
+	html_out=f'{output_file[:-4]}_{metric}.html'
+	# write the R Script
+	R_out.write(f'library("tidyverse")\n')
+	R_out.write(f'library("htmlwidgets")\n')
+	R_out.write(f'#library("manhattanly")\n')
+	R_out.write(f'GWAS_result1 <- read.csv("{output_file}")\n')
+	R_out.write(f'GWAS_result1[GWAS_result1==Inf] <- NA\n')
+	R_out.write(f'GWAS_result1[GWAS_result1==-Inf] <- NA\n')
+	R_out.write(f'GWAS_result<-GWAS_result1[complete.cases(GWAS_result1),]\n')
+
+	if p_value == True:
+		R_out.write(f'# Calculate the BHY threshold\n')
+		R_out.write(f'm <- nrow(GWAS_result)\n')
+		R_out.write(f'GWAS_result <- GWAS_result[order(GWAS_result${metric}),]\n')
+		R_out.write(f's <- 1.0\n')
+		R_out.write(f'i <- 0\n')
+		R_out.write('for (p in GWAS_result$'+metric+') {\n')
+		R_out.write(f'  p\n')
+		R_out.write(f'  i <- i+1\n')
+		R_out.write('  if (i > 1) {\n')
+		R_out.write(f'    s <- s + 1.0/(i-1)\n')
+		R_out.write('  }\n')
+		R_out.write(f'  thes_pval <- ((i + 1.0) / m) * 0.05 / s\n')
+		R_out.write('  if (p > thes_pval) {break\n')
+		R_out.write('  }\n')
+		R_out.write('}\n')
+		R_out.write(f'thes_pval_original <- thes_pval\n')
+		R_out.write(f'bhy_thres <- -log10(thes_pval)\n')
+		R_out.write(f'# calculate bonferroni_threshold\n')
+		R_out.write(f'bt <- 0.05 / (nrow(GWAS_result)*1135) # times max number of tests per p-value\n')
+		R_out.write(f'bf_thres <- -log10(bt)\n')
+	
+	R_out.write(f'data_cum <- GWAS_result %>% \n')
+	R_out.write(f'  group_by(CHROM) %>% \n')
+	R_out.write(f'  summarise(max_bp = max(POS)) %>% \n')
+	R_out.write(f'  mutate(bp_add = lag(cumsum(max_bp), default = 0)) %>% \n')
+	R_out.write(f'  select(CHROM, bp_add)\n')
+	R_out.write(f'GWAS_result <- GWAS_result %>% \n')
+	R_out.write(f'  inner_join(data_cum, by = "CHROM") %>% \n')
+	R_out.write(f'  mutate(bp_cum = POS + bp_add)\n')
+	R_out.write(f'axis_set <- GWAS_result %>% \n')
+	R_out.write(f'  group_by(CHROM) %>% \n')
+	R_out.write(f'  summarize(center = mean(bp_cum))\n')
+	R_out.write(f'ylim <- abs(floor(log10(min(GWAS_result${metric})))) +1\n')
+	R_out.write(f'png("{png_out}", bg = "white", width = 9.75, height = 3.25, units = "in", res = 1200, pointsize = 4)\n')
+	
+	if p_value == True:
+		R_out.write(f'manhplot <- ggplot(GWAS_result, aes(x = bp_cum, y = (-log10({metric})), # size = 1, \n')
+	if p_value == False:
+		R_out.write(f'manhplot <- ggplot(GWAS_result, aes(x = bp_cum, y = ({metric}), # size = 1, \n')
+
+	R_out.write(f'                                  color = as_factor(CHROM))) +\n')
+	R_out.write(f'  geom_point(alpha = 0.5) +\n')
+	
+	if p_value == True:
+		R_out.write(f'geom_hline(yintercept = bf_thres, color = "red", linetype = "dashed") +\n')
+		R_out.write(f'geom_hline(yintercept = bhy_thres, color = "blue", linetype = "dashed") +\n')
+	
+	R_out.write(f'  scale_x_continuous(label = axis_set$CHROM, breaks = axis_set$center) +\n')
+	R_out.write(f'  labs(x = NULL, \n')
+	R_out.write(f'       y = "{metric}") + \n')
+	R_out.write(f'  theme_minimal() +\n')
+	R_out.write(f'  guides(colour="none")\n')
+	R_out.write(f'  theme(\n')
+	R_out.write(f'    panel.border = element_blank(),\n')
+	R_out.write(f'    panel.grid.major.x = element_blank(),\n')
+	R_out.write(f'    panel.grid.minor.x = element_blank(),\n')
+	R_out.write(f'    axis.text.x = element_text(angle = 90, size = 8, vjust = 0.5)\n')
+	R_out.write(f'  )\n')
+	R_out.write(f'print(manhplot)\n')
+	R_out.write(f'dev.off()\n')
+	R_out.write(f'#attach(GWAS_result)\n')
+	R_out.write(f'#GWAS_result <- GWAS_result[order(-{metric}),]\n')
+	R_out.write(f'#detach(GWAS_result)\n')
+	R_out.write(f'#top_perc <- (nrow(GWAS_result)/100) * 0.01\n')
+	R_out.write(f'#top_perc <-round(top_perc, digits = 0)\n')
+	R_out.write(f'#GWAS_result <- head(GWAS_result,top_perc)\n')
+	R_out.write(f'#names(GWAS_result)[names(GWAS_result) == "CHROM"] <- "CHR"\n')
+	R_out.write(f'#GWAS_result$P <- (0.0000001/GWAS_result${metric})\n')
+	R_out.write(f'#names(GWAS_result)[names(GWAS_result) == "POS"] <- "BP"\n')
+	R_out.write(f'#html_file <- manhattanly(GWAS_result, annotation1 = "CHR", annotation2 = "BP")\n')
+	R_out.write(f'#saveWidget(html_file, "{html_out}", selfcontained = T)\n')
+	# Close the files!
+	R_out.close()
+	# Run the R code!
+	to_run=f'Rscript {output_file[:-4]}_{metric}.R'
+	print(to_run)
+	os.system(to_run)
+
+# Run the code!
+if __name__ == '__main__':
+
+	# File input
+	parser = argparse.ArgumentParser(description="Sums all DPs (depths) in a vcf.")
+	parser.add_argument('-v', type=str, metavar='input_vcf', required=True, help='The input vcf file.')
+	parser.add_argument('-f', type=str, metavar='phenotypes_file', required=True, help='The input phenotype file. It is a .csv file with a one line headder and two columns: individual and phenotype. Phenotype is a numeric value and they must be in order of size.')
+	parser.add_argument('-p', type=str, metavar='phenotype', required=True, help='The phenotype - exactly as written in the phenotype file headder.')
+	parser.add_argument('-o', type=str, metavar='output_file', required=True, help='The output file.')
+	args = parser.parse_args()
+	
+	# Generate ordered phenotypes and headder lists
+	ordered_pheno=odered_list(args.f, args.p)
+	headder=read_vcf_head(args.v)
+	
+	# open vcf file and output file
+	vcf=open(args.v, 'r')
+	output_file=open(args.o, 'w+')
+
+	# Write the headder
+	#output_file.write('CHROM,POS,largest_theta,smallest_theta,absolute_theta,theta_range,largest_relative_theta,smallest_relative_theta,absolute_relative_theta,range_relative_theta\n')
+	#output_file.write('CHROM,POS,min_p,mean_p,log_mean_p,bigest_theta_p,pSNP4,pSNP5\n')
+	output_file.write('CHROM,POS,largest_theta,smallest_theta,absolute_theta,theta_range,largest_relative_theta,smallest_relative_theta,absolute_relative_theta,range_relative_theta,min_p,mean_p,log_mean_p,bigest_theta_p,pSNP4,pSNP5\n')
+
+	# calculate what I want
+	for line in vcf:
+		if '#' not in line:
+			x=field(line, ordered_pheno, headder)
+			if int(x.line[1]) % 10000 == 0:
+				print(x.line[1])
+			if x.sense_check():
+				largest_theta,smallest_theta,absolute_theta,theta_range,largest_relative_theta,smallest_relative_theta,absolute_relative_theta,range_relative_theta = x.calc_theta()
+				#output_file.write(f'{CHROM},{POS},{largest_theta},{smallest_theta},{absolute_theta},{theta_range},{largest_relative_theta},{smallest_relative_theta},{absolute_relative_theta},{range_relative_theta}\n')
+				CHROM,POS = x.line[0], x.line[1]
+				min_p, mean_p, log_mean_p, bigest_theta_p, pSNP4, pSNP5 = x.calc_pvals()
+				#output_file.write(f'{CHROM},{POS},{min_p},{mean_p},{log_mean_p},{bigest_theta_p},{pSNP4},{pSNP5}\n')
+				output_file.write(f'{CHROM},{POS},{largest_theta},{smallest_theta},{absolute_theta},{theta_range},{largest_relative_theta},{smallest_relative_theta},{absolute_relative_theta},{range_relative_theta},{min_p},{mean_p},{log_mean_p},{bigest_theta_p},{pSNP4},{pSNP5}\n')
+
+	output_file.close()
+	# Plot stuff
+	#headder items to plot: largest_theta,smallest_theta,absolute_theta,theta_range,largest_relative_theta,smallest_relative_theta,absolute_relative_theta,range_relative_theta
+	#R_plots(args.o, metric='largest_theta')
+	#R_plots(args.o, metric='smallest_theta')
+	R_plots(args.o, metric='absolute_theta')
+	#R_plots(args.o, metric='theta_range')
+	#R_plots(args.o, metric='max_theta_plus')
+	#R_plots(args.o, metric='max_theta_minus')
+	#R_plots(args.o, metric='largest_relative_theta')
+	#R_plots(args.o, metric='smallest_relative_theta')
+	#R_plots(args.o, metric='absolute_relative_theta')
+	#R_plots(args.o, metric='range_relative_theta')
+	#R_plots(args.o, metric='min_p')
+	#R_plots(args.o, metric='mean_p')
+	#R_plots(args.o, metric='log_mean_p')
+	#R_plots(args.o, metric='bigest_theta_p')
+	R_plots(args.o, metric='pSNP4')
+	R_plots(args.o, metric='pSNP5')
+	

@@ -87,9 +87,9 @@ for line in input_file_phenotype_data:
     #only add the first column of data since this is the sample ID
     samples_list_pheno.append(cleanline[0])
 # remove first item as this is just the title
-print("Samples list pheno: ", samples_list_pheno)
+# print("Samples list pheno: ", samples_list_pheno)
 samples_list_pheno.pop(0)
-print("Samples list pheno without first item: ", samples_list_pheno)
+# print("Samples list pheno without first item: ", samples_list_pheno)
 input_file_samples_vcf.close()
 input_file_phenotype_data.close()
 
@@ -98,8 +98,8 @@ input_file_phenotype_data.close()
 for sample1 in samples_list_vcf:
     if sample1 in samples_list_pheno:
         consensus_sample_list.append(sample1)
-    else:
-        print("Sample from vcf not found in phenotype file : ", sample1)
+    #else:
+        #print("Sample from vcf not found in phenotype file : ", sample1)
 
 
 # based on the number of subsampling needed, try to make a subsampled list of that number
@@ -107,7 +107,7 @@ for sample1 in samples_list_vcf:
 # goes from 0 to num of samples-1 e.g. 0 to 499 (for n = 500)
 
 for n in range(int(args.n)):
-    print("Attempt (n):",n)
+    #print("Attempt (n):",n)
     new_number_picked = False
 
     while new_number_picked == False:
@@ -137,15 +137,15 @@ for n in range(int(args.n)):
     consensus_sample_list.pop(random_id_index)
 
 #finish by printing set of IDs picked 
-print("Picked bin:", picked_bin)
-subsampled_IDs=open('core_files/subsamples_'+str(args.n)+'_'+str(args.ri)+'.txt','w')
+#print("Picked bin:", picked_bin)
+subsampled_IDs=open('core_files/subsample_text_files/subsamples_'+str(args.n)+'_'+str(args.ri)+'.txt','w')
 #write the subsampled data into a new text file
 for ID in picked_bin:
     subsampled_IDs.write(str(ID)+'\n')
 subsampled_IDs.close()
 
 #now use bcftools to subsample from the vcf to make a subsampled VCF of only what is in the picked bin
-os.system('bcftools view --samples-file core_files/subsamples_'+str(args.n)+'_'+str(args.ri)+'.txt core_files/1001genomes_snp_biallelic_only_ACGTN.vcf > '+args.og)
+os.system('bcftools view --samples-file core_files/subsample_text_files/subsamples_'+str(args.n)+'_'+str(args.ri)+'.txt core_files/1001genomes_snp_biallelic_only_ACGTN.vcf > '+args.og)
 
 #Sift through the spreadsheet file to only include the phenotype and samples from the picked_bin
 input_file_phenotype_data = open(args.p,'r')
@@ -154,7 +154,7 @@ for index, line in enumerate(input_file_phenotype_data):
     cleanline=line.split(',')
     #for the header
     if index == 0:
-        print(cleanline)
+        #print(cleanline)
         #find index of the phenotype header 
         Phenotype_index = cleanline.index(args.t)
         #writes only the correct headers to the new csv file
@@ -169,5 +169,5 @@ input_file_phenotype_data.close()
 output_file_subsampled_phenotype.close()
 
 # testing print
-print("End of python script reached")
+print("End of subsample script reached")
 # end of file
