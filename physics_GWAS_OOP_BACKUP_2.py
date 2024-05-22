@@ -353,21 +353,26 @@ def R_plots(output_file, metric='largest_relative_theta', p_value=True): #?# wri
 
 	# reads the T20 snp file based on which metric is being graphed
 	if metric =="absolute_theta":
-		snps_R_variable=str("T20_Absolute_theta_SNPs")
 		R_out.write(f'T20_Absolute_theta_SNPs <- read.csv("output_files/'+args.id+'_T20_absolute_theta.csv", header= TRUE, sep=",")\n')
 
+		# write the positions from this csv file to the POI list
+		R_out.write(f'POI_list = c(T20_Absolute_theta_SNPs$POS)\n')
+
 	if metric =="pSNP4":
-		snps_R_variable=str("T20_pSNP4_SNPs")
 		R_out.write(f'T20_pSNP4_SNPs <- read.csv("output_files/'+args.id+'_T20_pSNP4.csv", header= TRUE, sep=",")\n')
 
+		R_out.write(f'POI_list = c(T20_pSNP4_SNPs$POS)\n')
+
 	if metric =="pSNP5":
-		snps_R_variable=str("T20_pSNP5_SNPs")
 		R_out.write(f'T20_pSNP5_SNPs <- read.csv("output_files/'+args.id+'_T20_pSNP5.csv", header= TRUE, sep=",")\n')
+
+		R_out.write(f'POI_list = c(T20_pSNP5_SNPs$POS)\n')
 
 	### ADD IN CODE TO READ A CSV FOR CUSTOM SNPS OF INTEREST MUCH LIKE THE ABOVE BUT SEPARATE!!
 		#code here for any SNPs in particular (but will require a file to be made first for it to read from)
 
 # ### end of sam edit (1) >>>>>>>>>>>>>>>>>>>>>>>>>>>
+
 
 	if p_value == True:
 		R_out.write(f'# Calculate the BHY threshold\n')
@@ -401,26 +406,8 @@ def R_plots(output_file, metric='largest_relative_theta', p_value=True): #?# wri
 	R_out.write(f'  mutate(bp_cum = POS + bp_add)\n')
 
 # ### start of sam edit (2) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-	# first add column for annotation and highlighting, setting each to no (default)
-	R_out.write(f'GWAS_result<- GWAS_result %>% \n')
-	R_out.write(f'  mutate(is_highlight = "no")\n')
-
-	R_out.write(f'GWAS_result<- GWAS_result %>% \n')
-	R_out.write(f'  mutate(is_annotate = "no")\n')
-
-	# if column CHR and POS match up to a row in POI that has same CHR and POS...
-	# then mutate the gwas result to highlight and annotate the data
-
-	R_out.write('for (T20_index in 1:nrow('+snps_R_variable+')){ \n') 
-	R_out.write('	for(gwas_index in 1:nrow(GWAS_result)) { \n')
-	R_out.write('		if (GWAS_result$CHROM[gwas_index]=='+snps_R_variable+'$CHROM[T20_index] & \n')
-	R_out.write('			GWAS_result$POS[gwas_index]== '+snps_R_variable+'$POS[T20_index]){ \n')
-	R_out.write('			GWAS_result$is_highlight[gwas_index]="yes" \n')
-	R_out.write('			GWAS_result$is_annotate[gwas_index]="yes" \n')
-	R_out.write('		} \n')
-	R_out.write('	} \n')
-	R_out.write('} \n')
-
+	# adds column to the table for highlighting T20 SNPs which will be labelled later
+	R_out.write(f'  mutate(is_highlight = ifelse(POS %in% POI_list, "yes","no"))\n')
 # ### end of sam edit (2) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 	R_out.write(f'axis_set <- GWAS_result %>% \n')
@@ -448,16 +435,11 @@ def R_plots(output_file, metric='largest_relative_theta', p_value=True): #?# wri
 	R_out.write(f'  geom_point(data = subset(GWAS_result, is_highlight=="yes"), color="orange", size=2) +\n')
 
 	# add a label using ggrepel
-	R_out.write(f'  geom_label_repel(data=subset(GWAS_result, is_annotate=="yes"),\n')
-	R_out.write(f'					xlim=c(-Inf,Inf), \n')
-	R_out.write(f'					ylim=c(-Inf,Inf), \n')
-	R_out.write(f'					min.segment.length=0, \n')
-	R_out.write(f'					max.overlaps = Inf, \n')
-	R_out.write(f' 					aes(label=POS), \n')
-	R_out.write(f'					size=2) + \n')
-	
-	# alt idea using geom label but havent tried it yet
+	R_out.write(f'  geom_label_repel( data=subset(GWAS_result, is_annotate=="yes"), aes(label=POS), size=2) +\n')
+
+	# old idea using geom label but havent tried it yet
 	#R_out.write(f'  geom_label(data = subset(GWAS_result, is_highlight=="yes")) +\n')
+
 # ### end of sam edit (3)>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 	R_out.write(f'  labs(x = NULL, \n')
@@ -522,23 +504,13 @@ if __name__ == '__main__':
 	output_file.write('CHROM,POS,largest_theta,smallest_theta,absolute_theta,theta_range,largest_relative_theta,smallest_relative_theta,absolute_relative_theta,range_relative_theta,min_p,mean_p,log_mean_p,bigest_theta_p,pSNP4,pSNP5\n')
 
 # ### start of sam edit (5) <<<<<<<<<<<<<<<<<<<<
-	# add in tracker csv file (Format: CHROM, POS, PVAL)
+	# add in tracker dictionaries (key = position, value = absolute_theta/pSNP4/pSNP5 value)
 	# these will store and track the top 20 SNPs for each output e.g. SNP4 ...
+	T20_absolute_theta={}
 
-	T20_absolute_theta_output=open("output_files/"+args.id+"_T20_absolute_theta.csv","w")
-	# write in header CHROM,POS,PVAL
-	T20_absolute_theta_output.write("CHROM,POS,PVAL"+"\n")
-	T20_absolute_theta_output.close()
+	T20_pSNP4={}
 
-	T20_pSNP4_output=open("output_files/"+args.id+"_T20_pSNP4.csv","w")
-	#write in header CHROM,POS,PVAL
-	T20_pSNP4_output.write("CHROM,POS,PVAL"+"\n")
-	T20_pSNP4_output.close()
-
-	T20_pSNP5_output=open("output_files/"+args.id+"_T20_pSNP5.csv","w")
-	#write in header CHROM,POS,PVAL
-	T20_pSNP5_output.write("CHROM,POS,PVAL"+"\n")
-	T20_pSNP5_output.close()
+	T20_pSNP5={}
 # ### end of sam edit (5) <<<<<<<<<<<<<<<<<<<<
 
 	# calculate what I want
@@ -560,135 +532,193 @@ if __name__ == '__main__':
 				
 # ### start of sam edit (6) <<<<<<<<<<<<<<<<<<<<
 				# FOR TESTING
-				#print ("Current CHROM value: "+ str(CHROM))
-				#print ("Current POS value: "+ str(POS))
-				#print ("Current absolute_theta value: "+ str(absolute_theta))
-				#print ("Current pSNP4 value: "+ str(pSNP4))
-				#print ("Current pSNP5 value: "+ str(pSNP5))
+				print ("Current POS value: "+ str(POS))
+				print ("Current CHROM value: "+ str(CHROM))
+				print ("Current absolute_theta value: "+ str(absolute_theta))
+				print ("Current pSNP4 value: "+ str(pSNP4))
+				print ("Current pSNP5 value: "+ str(pSNP5))
+				
+				# check the T20 lists
 
-				# open up the csv to import into dataframes
-				dataFrame_absolute_theta = pandas.read_csv("output_files/"+args.id+"_T20_absolute_theta.csv")
-				dataFrame_pSNP4 = pandas.read_csv("output_files/"+args.id+"_T20_pSNP4.csv")
-				dataFrame_pSNP5 = pandas.read_csv("output_files/"+args.id+"_T20_pSNP5.csv")
-
-				# check the T20 files to see how many lines they have
-				n_abs_theta_lines= len(dataFrame_absolute_theta)
-				n_pSNP4_lines = len(dataFrame_pSNP4)
-				n_pSNP5_lines = len(dataFrame_pSNP5)
-				# old code below
-				#with open(r"output_files/"+args.id+"_T20_pSNP4.csv", 'r') as fp:
-					#n_abs_theta_lines = len(fp.readlines())
-
-				# ===============================================================
-				# ABSOLUTE_THETA SECTION
-				# =============================================================
 				# if theres room for more SNPs (i.e. 20 limit not reached) 
 				# then add the current absolute theta value
-				# <20 since pandas doesnt count the header?
-				if n_abs_theta_lines<20:
-					# add in a line for the current line of data in the calculation
-					new_row=pandas.Series({"CHROM":CHROM,"POS":POS,"PVAL":absolute_theta})
-					dataFrame_absolute_theta =pandas.concat([dataFrame_absolute_theta, new_row.to_frame().T], ignore_index=True)
+				if len(T20_absolute_theta)<20:
+					
+		
+					T20_absolute_theta.update({POS:absolute_theta})
 
-					# re-sort the csv so lowest pval is at the top and biggest pval is last row
-					dataFrame_absolute_theta.sort_values("PVAL", axis=0, ascending=True,inplace=True, na_position='first')
+					# re-sort the list by lowest to highest
+					sorted_dict={}
+					for key in sorted(T20_absolute_theta, key=T20_absolute_theta.get):
+						sorted_dict[key]=T20_absolute_theta[key]
 
-				# if no room in list -> check if its smaller than the biggest value in list
-				# by checking if its larger than last pval in file (should be the highest)
-				else:
-
-					# source highest pval from dataframe (should be last index and pval col)
-					highest_pval=dataFrame_absolute_theta.iloc[-1]["PVAL"]
-					if float(highest_pval)>float(absolute_relative_theta):
-						# replace biggest value in list (last item in the list)
-						# first remove the biggest item (last item in the dictionary)
-						dataFrame_absolute_theta=dataFrame_absolute_theta.drop(dataFrame_absolute_theta.index[-1])
-						
-						# add in a line for the current line of data in the calculation
-						new_row=pandas.Series({"CHROM":CHROM,"POS":POS,"PVAL":absolute_theta})
-						dataFrame_absolute_theta =pandas.concat([dataFrame_absolute_theta, new_row.to_frame().T], ignore_index=True)
-
-						# re-sort the csv so lowest pval is at the top and biggest pval is last row
-						dataFrame_absolute_theta.sort_values("PVAL", axis=0, ascending=True,inplace=True, na_position='first')
-				# ===============================================================
-				# PSNP4 SECTION
-				# =============================================================
-				# if theres room for more SNPs (i.e. 20 limit not reached) 
-				# then add the current pSNP4
-				# <20 since pandas doesnt count the header?
-				if n_pSNP4_lines<20:
-					# add in a line for the current line of data in the calculation
-					new_row=pandas.Series({"CHROM":CHROM,"POS":POS,"PVAL":pSNP4})
-
-					dataFrame_pSNP4 =pandas.concat([dataFrame_pSNP4, new_row.to_frame().T], ignore_index=True)
-
-					# re-sort the csv so lowest pval is at the top and biggest pval is last row
-					dataFrame_pSNP4.sort_values("PVAL", axis=0, ascending=True,inplace=True, na_position='first')
+					print("T20_absolute_theta before sort: ", T20_absolute_theta)
+					#overwrite the prev dictionary with sorted version
+					T20_absolute_theta=sorted_dict
+				
+					print("T20_absolute_theta after sort: ", T20_absolute_theta)
 
 				# if no room in list -> check if its smaller than the biggest value in list
-				# by checking if its larger than last pval in file (should be the highest)
-				else:
+				elif float(absolute_theta) < float(list(T20_absolute_theta.values())[-1]):
 
-					# source highest pval from dataframe (should be last index and pval col)
-					highest_pval=dataFrame_pSNP4.iloc[-1]["PVAL"]
-					if float(highest_pval)>float(pSNP4):
-						# replace biggest value in list (last item in the list)
-						# first remove the biggest item (last item in the dictionary)
-						dataFrame_pSNP4=dataFrame_pSNP4.drop(dataFrame_pSNP4.index[-1])
-						
-						# add in a line for the current line of data in the calculation
-						new_row=pandas.Series({"CHROM":CHROM,"POS":POS,"PVAL":pSNP4})
-						dataFrame_pSNP4 =pandas.concat([dataFrame_pSNP4, new_row.to_frame().T], ignore_index=True)
+					# replace biggest value in list (last item in the list)
+					# first remove the biggest item (last item in the dictionary)
+					T20_absolute_theta.popitem()
+					
+					# then add in the new item
+					T20_absolute_theta.update({POS:absolute_theta})
 
-						# re-sort the csv so lowest pval is at the top and biggest pval is last row
-						dataFrame_pSNP4.sort_values("PVAL", axis=0, ascending=True,inplace=True, na_position='first')
-				# ===============================================================
-				# PSNP5 SECTION
-				# =============================================================
+					# re-sort the list by lowest to highest
+					sorted_dict={}
+					for key in sorted(T20_absolute_theta, key=T20_absolute_theta.get):
+						sorted_dict[key]=T20_absolute_theta[key]
 
-				# if theres room for more SNPs (i.e. 20 limit not reached) 
-				# then add the current pSNP5
-				# <20 since pandas doesnt count the header?
-				if n_pSNP5_lines<20:
-					# add in a line for the current line of data in the calculation
-					new_row=pandas.Series({"CHROM":CHROM,"POS":POS,"PVAL":pSNP5})
+					print("T20_absolute_theta before sort: ", T20_absolute_theta)
 
-					dataFrame_pSNP5 =pandas.concat([dataFrame_pSNP5, new_row.to_frame().T], ignore_index=True)
+					#overwrite the prev dictionary with sorted version
+					T20_absolute_theta=sorted_dict
 
-					# re-sort the csv so lowest pval is at the top and biggest pval is last row
-					dataFrame_pSNP5.sort_values("PVAL", axis=0, ascending=True,inplace=True, na_position='first')
+					print("T20_absolute_theta after sort: ", T20_absolute_theta)
 
-				# if no room in list -> check if its smaller than the biggest value in list
-				# by checking if its larger than last pval in file (should be the highest)
-				else:
+				# if theres room for more then add the current pSNP4 value
+				if len(T20_pSNP4)<20:
+					
+					T20_pSNP4.update({POS:pSNP4})
 
-					# source highest pval from dataframe (should be last index and pval col)
-					highest_pval=dataFrame_pSNP5.iloc[-1]["PVAL"]
-					if float(highest_pval)>float(pSNP5):
-						# replace biggest value in list (last item in the list)
-						# first remove the biggest item (last item in the dictionary)
-						dataFrame_pSNP5=dataFrame_pSNP5.drop(dataFrame_pSNP5.index[-1])
-						
-						# add in a line for the current line of data in the calculation
-						new_row=pandas.Series({"CHROM":CHROM,"POS":POS,"PVAL":pSNP5})
-						dataFrame_pSNP5 =pandas.concat([dataFrame_pSNP5, new_row.to_frame().T], ignore_index=True)
+					# re-sort the list by lowest to highest
+					sorted_dict={}
+					for key in sorted(T20_pSNP4, key=T20_pSNP4.get):
+						sorted_dict[key]=T20_pSNP4[key]
+					
+					print("T20_pSNP4 before sort: ", T20_pSNP4)
 
-						# re-sort the csv so lowest pval is at the top and biggest pval is last row
-						dataFrame_pSNP5.sort_values("PVAL", axis=0, ascending=True,inplace=True, na_position='first')
+					#overwrite the prev dictionary with sorted version
+					T20_pSNP4=sorted_dict
+				
+					print("T20_pSNP4 after sort: ", T20_pSNP4)
 
-				# write all dataframes back to csv 
-				dataFrame_absolute_theta.to_csv("output_files/"+args.id+"_T20_absolute_theta.csv", index=False)
-				dataFrame_pSNP4.to_csv("output_files/"+args.id+"_T20_pSNP4.csv", index=False)
-				dataFrame_pSNP5.to_csv("output_files/"+args.id+"_T20_pSNP5.csv", index=False)
+				# if no room in list -> check if its smaller than the biggest value in list (last item)
+				elif float(pSNP4) < float(list(T20_pSNP4.values())[-1]):
+
+					# replace biggest value in list (last item in the list)
+					# first remove the biggest item (last item in the dictionary)
+					T20_pSNP4.popitem()
+					
+					# then add in the new item
+					T20_pSNP4.update({POS:pSNP4})
+
+					# re-sort the list by lowest to highest
+					sorted_dict={}
+
+
+
+					for key in sorted(T20_pSNP4, key=T20_pSNP4.get):
+						sorted_dict[key]=T20_pSNP4[key]
+
+					print("T20_pSNP4 before sort: ", T20_pSNP4)
+					#overwrite the prev dictionary with sorted version
+					T20_pSNP4=sorted_dict
+				
+					print("T20_pSNP4 after sort: ", T20_pSNP4)
+
+				# if theres room for more then add the current pSNP5 value
+				if len(T20_pSNP5)<20:
+					
+					T20_pSNP5.update({POS:pSNP5})
+
+					# re-sort the list by lowest to highest
+					sorted_dict={}
+					for key in sorted(T20_pSNP5, key=T20_pSNP5.get):
+						sorted_dict[key]=T20_pSNP5[key]
+
+					# FOR TESTING 
+					print("T20_pSNP5 before sort: ", T20_pSNP5)
+					#overwrite the prev dictionary with sorted version
+					T20_pSNP5=sorted_dict
+					print("T20_pSNP5 after sort: ", T20_pSNP5)
+
+				# if no room in list -> check if its smaller than the biggest value in list (last item)
+				elif float(pSNP5) < float(list(T20_pSNP5.values())[-1]):
+
+					# replace biggest value in list (last item in the list)
+					# first remove the biggest item (last item in the dictionary)
+					T20_pSNP5.popitem()
+					
+					# then add in the new item
+					T20_pSNP5.update({POS:pSNP5})
+
+					# re-sort the list by lowest to highest
+					sorted_dict={}
+					for key in sorted(T20_pSNP5, key=T20_pSNP5.get): #checked syntax and logic
+						sorted_dict[key]=T20_pSNP5[key]
+
+					# FOR TESTING 
+					print("T20_pSNP5 before sort: ", T20_pSNP5)
+					#overwrite the prev dictionary with sorted version
+
+					# FOR TESTING 
+					T20_pSNP5=sorted_dict #checked syntax and logic
+					print("T20_pSNP5 after sort: ", T20_pSNP5)
 
 				# COMMENTS FOR AN IDEA OF CUSTOM SNPS OF INTEREST (NOT T_20)
-					# Check for SNPs of interest (by CHROM and POS since rsID isnt tracked here or in GWAS script)
+					# Check for SNPs of interest (by position data since rsID isnt tracked here or in GWAS script)
 					# open file with positions of interest (POIs): POI_file=open("core_files/POI_SNPs.txt", 'r')
 					# loop through it and store all 20 positions as a list: for line in ....
 					# check if position is in POI_list : if so, write the full output line to a file : "POI_SNPs.csv"
-				# ^^^^ this is not yet implemented, only T_20 tracking is implemented as of now
+				# ^^^^ this is not yet implemented, only T_20 tracking is implemented
+
+	# write the T20 lists to files for each type of result
+
+	# open the theta output csv
+	T20_absolute_theta_output=open("output_files/"+args.id+"_T20_absolute_theta.csv","w")
+
+	# write in header POS,PVAL
+	T20_absolute_theta_output.write("POS,PVAL"+"\n")
+
+	# loop through all items of the dictionaries
+	for position,p_value in T20_absolute_theta.items():
+
+		# FOR TESTING 
+		print ("writing position: "+ str(position)+"//// writing pval: " + str(p_value))
+
+		# write in all 20 items one by one
+		T20_absolute_theta_output.write(str(position)+","+str(p_value)+"\n")
+
+	# close the output file
+	T20_absolute_theta_output.close()
+
+	# open the pSNP4 output csv
+	T20_pSNP4_output=open("output_files/"+args.id+"_T20_pSNP4.csv","w")
+
+	#write in header
+	T20_pSNP4_output.write("POS,PVAL"+"\n")
+
+	for position,p_value in T20_pSNP4.items(): # checked syntax
+
+		# FOR TESTING 
+		print ("writing position: "+ str(position)+"//// writing pval: " + str(p_value))
+		
+		T20_pSNP4_output.write(str(position)+","+str(p_value)+"\n") # checked syntax
+
+
+	T20_pSNP4_output.close()
+
+	# open the pSNP4 output csv
+	T20_pSNP5_output=open("output_files/"+args.id+"_T20_pSNP5.csv","w")
+
+	#write in header
+	T20_pSNP5_output.write("POS,PVAL"+"\n")
+	for position,p_value in T20_pSNP5.items():
+
+		# FOR TESTING 
+		print ("writing position: "+ str(position)+"//// writing pval: " + str(p_value))
+		
+		T20_pSNP5_output.write(str(position)+","+str(p_value)+"\n")
+
+	T20_pSNP5_output.close()
 
 # ### end of sam edit (6) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
 
 	output_file.close()
 	# Plot stuff
@@ -709,4 +739,4 @@ if __name__ == '__main__':
 	#R_plots(args.o, metric='bigest_theta_p')
 	R_plots(args.o, metric='pSNP4')
 	R_plots(args.o, metric='pSNP5')
-# end of file
+	

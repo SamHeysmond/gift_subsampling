@@ -7,8 +7,6 @@
 library("tidyverse")
 library("ggrepel")
 
-
-
 # reads in the list of all job IDs with their respective subsample number
 # format (ID, Subsample_N, phenotype) (this file gets written to by subsample_and_run.sh)
 JOB_LIST<- read.csv('/gpfs01/home/mbysh17/core_files/JOB_LIST.csv')
@@ -20,57 +18,67 @@ phenotype<c(JOB_LIST$PHENOTYPE)
 
 #for loop start
 for (i in jobs){
+    
+  #load the data from input of GWAS result
   
-#load the data from input of GWAS result
-
-filename <- paste0('/gpfs01/home/mbysh17/output_files/',phenotype[i],'_GWAS_',sample_n[i],'_',jobs[i],'.csv')
-gwasResults<-read.csv(filename)
-
-# local testing code commented out
-#gwasResults<-read.csv('leaf_ionome_Mo98_GWAS_200_503066.csv')
-
-# get top 20 SNPs from the GWAS data
-T20_SNPS <- gwasResults %>%
-              select(positions,pvals) %>%
-              #sory by pvalues lowest first
-              arrange(pvals) %>%
-              select(positions)%>%
-              slice_head(n=20)
-T20_SNPS<- as.list(T20_SNPS)
-
-T20_SNPS
-
-# write the top 20 snps for this ID to a csv file
-
-
-don <- gwasResults %>%
-  # Compute chromosome size
-  group_by(chromosomes) %>% 
-  summarise(chr_len=max(positions)) %>% 
+  filename <- paste0('/gpfs01/home/mbysh17/output_files/',phenotype[i],'_GWAS_',sample_n[i],'_',jobs[i],'.csv')
+  gwasResults<-read.csv(filename)
   
-  # Calculate cumulative position of each chromosome
-  mutate(tot=cumsum(chr_len)-chr_len) %>%
-  select(-chr_len) %>%
+  # get top 20 SNPs from the GWAS data
+  T20_SNPS <- gwasResults %>%
+                select(chromosomes,positions,pvals) %>%
+                #sort by pvalues lowest first
+                arrange(pvals) %>%
+                # take the top 20 values
+                slice_head(n=20)
   
-  # Add this info to the initial dataset
-  left_join(gwasResults, ., by=c("chromosomes"="chromosomes")) %>%
+  T20_SNPS_FILENAME <- paste0('/gpfs01/home/mbysh17/output_files/',phenotype[i],'_GWAS_MANHATTAN_',sample_n[i],'_',jobs[i],'.txt')
+  # write the top 20 snps for this ID to a csv file
+  write.csv(T20_SNPS,T20_SNPS_FILENAME,row.names = FALSE)
   
-  # Add a cumulative position of each SNP
-  arrange(chromosomes, positions) %>%
-  mutate( BPcum=positions+tot) %>%
-
-  # Add highlight and annotation information
-  mutate( is_highlight=ifelse(positions %in% T20_SNPS, "yes", "no")) %>%
-  mutate( is_annotate=ifelse(-log10(pvals)>4, "yes", "no")) 
-
-  axisdf = don %>%
-  group_by(chromosomes) %>%
-  summarize(center=( max(BPcum) + min(BPcum) ) / 2 )
-
-pngname <- paste0('/gpfs01/home/mbysh17/output_files/',phenotype[i],'_GWAS_MANHATTAN_',sample_n[i],'_',jobs[i],'.png')
-
-png("MY_TEST_PLOT.png", bg = "white", width = 9.75, height = 3.25, units = "in", res = 1200, pointsize = 4)
-
+  #make new columns where the default highlight and annotation is no
+  gwasResults<-gwasResults %>%
+    mutate(is_highlight = "no") 
+  
+  gwasResults<-gwasResults %>%
+    mutate(is_annotate = "no") 
+  
+# if column CHR and POS match up to a row in T20SNPSthat has same CHR and POS...
+# ... then mutate the gwas result to flag for highlight and annotation.
+  for (T20_index in 1:nrow(T20_SNPS)) {
+    for (gwas_index in 1:nrow(gwasResults)) {
+      if (gwasResults$chromosomes[gwas_index]== T20_SNPS$chromosomes[T20_index] & 
+          gwasResults$positions[gwas_index]== T20_SNPS$positions[T20_index]){
+          gwasResults$is_highlight[gwas_index]="yes"
+          gwasResults$is_annotate[gwas_index]="yes"
+      } 
+    }
+  }
+  
+  don <- gwasResults %>%
+    # Compute chromosome size
+    group_by(chromosomes) %>% 
+    summarise(chr_len=max(positions)) %>% 
+    
+    # Calculate cumulative position of each chromosome
+    mutate(tot=cumsum(chr_len)-chr_len) %>%
+    select(-chr_len) %>%
+    
+    # Add this info to the initial dataset
+    left_join(gwasResults, ., by=c("chromosomes"="chromosomes")) %>%
+    
+    # Add a cumulative position of each SNP
+    arrange(chromosomes, positions) %>%
+    mutate( BPcum=positions+tot) %>%
+  
+    axisdf = don %>%
+    group_by(chromosomes) %>%
+    summarize(center=( max(BPcum) + min(BPcum) ) / 2 )
+  
+  pngname <- paste0('/gpfs01/home/mbysh17/output_files/',phenotype[i],'_GWAS_MANHATTAN_',sample_n[i],'_',jobs[i],'.png')
+  
+  png(pngname, bg = "white", width = 9.75, height = 3.25, units = "in", res = 1200, pointsize = 4)
+  
   ggplot(don, aes(x=BPcum, y=-log10(pvals))) +
 
     # Show all points
@@ -79,14 +87,18 @@ png("MY_TEST_PLOT.png", bg = "white", width = 9.75, height = 3.25, units = "in",
     
     # custom X axis:
     scale_x_continuous( label = axisdf$chromosomes, breaks= axisdf$center ) +
-    scale_y_continuous(expand = c(0, 0) ) +     # remove space between plot area and x axis
+    scale_y_continuous(expand = c(0, 0) ) + # remove space between plot area and x axis
     
-    # Add highlighted points
-    geom_point(data=subset(don, is_highlight=="yes"), color="orange", size=2) +
+    # add highlighting and labels
+    geom_point(data = subset(don, is_highlight=="yes"), color="orange", size=2) +
+    geom_label_repel(data=subset(don, is_annotate=="yes"),
+                     xlim = c(-Inf,Inf), # added -> make room for labels
+                     ylim=c(-Inf,Inf), # added -> make room for labels
+                     min.segment.length = 0, # added -> draw lines
+                     max.overlaps = Inf, #added to see what happens
+                     aes(label=positions), 
+                     size=2) +
     
-    # Add label using ggrepel to avoid overlapping
-    geom_label_repel( data=subset(don, is_annotate=="yes"), aes(label=positions), size=2) +
-  
     # my axis labels
     labs(y= "-log10(pvalue)", x = "chromosome position")+
   
@@ -98,10 +110,9 @@ png("MY_TEST_PLOT.png", bg = "white", width = 9.75, height = 3.25, units = "in",
       panel.grid.major.x = element_blank(),
       panel.grid.minor.x = element_blank()
     )
-dev.off()
-
-
-# for loop end!
+  dev.off()
+  
+  # for loop end!
 }
 
 # OLD CODE BELOW (MAY REMOVE SOON) THAT USED QQman/plot thing
@@ -133,7 +144,5 @@ dev.off()
 
 #close pdf file
 # dev.off()
-
-
 
 #end of R script
