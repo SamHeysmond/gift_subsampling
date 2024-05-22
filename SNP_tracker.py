@@ -22,7 +22,7 @@
 # looping through all .csv made for given ID and given method (gift/gwas)
 
 #packages
-import argparse
+import argparse, pandas
 
 parser=argparse.ArgumentParser(description="subsamples a given number of individuals from master_list.csv")
 
@@ -53,17 +53,28 @@ input_jobs_list=open(args.jl,'r')
 
 output_SNP_tracker_csv=open(args.o+"SNP_tracker_tally.csv","w")
 
+
+# Phenotype,CHR,POS,Subsample_N,N_Times_Significant_GWAS,N_GWAS_tests,N_Sig_GIFT_Absolute_theta,N_Sig_GIFT_pSNP4,N_Sig_GIFT_pSNP5,N_GIFT_tests
+# leaf_ionome_Mo98,2,123,200,85,100,99,79,80,100
+SNP_dataframe = pandas.DataFrame(columns=['PHENOTYPE',
+                                          'CHR',
+                                          'POS',
+                                          'SUBSAMPLE_NUM',
+                                          'N_SIGS_GWAS',
+                                          'N_GWAS_TESTS',
+                                          'N_SIGS_GIFT_ABSOLUTE_THETA',
+                                          'N_SIGS_GIFT_PSNP4',
+                                          'N_SIGS_GIFT_PSNP5',
+                                          'N_GIFT_TESTS'])
 # for graphs (WIP)
 #output_SNP_tracker_Rscript=.....
 
 # set up list of phenotypes sorted
-
 stored_phenotypes=[] #will contain things like leaf_ionome_Mo98....leaf_ionome_Rad50 etc etc
 cumulative_run_number=0 # out of 100 per run (or n_runs)
 current_phenotype="" #string of the current phenotype being tracked e.g. leaf_ionome_Mo98
 cumulative_GWAS_significance=0 # out of 100 (or N) GWAS parallel runs how many show a SNP as significant
 cumulative_GIFT_significance=0 # out of 100 (or N) GIFT parallel runs how many show a SNP as significant
-
 N_GWAS_tests=0 #may combine these since they SHOULD be the same ALWAYS
 N_GIFT_tests=0
 
@@ -76,6 +87,15 @@ N_GIFT_tests=0
 #  …..
 # 60000,200,leaf_ionome_Rad50
 
+# EACH JOB ID IS CONNECTED TO THE FOLLOWING THINGS
+# GWAS T20 SNPS
+# GIFT ABSOLUTE THETA T20 SNPS
+# GIFT PSNP4 T20 SNPS
+# GIFT PSNP5 T20 SNPS
+# HANDPICKED SNPS? (WIP?)
+
+
+# looping through jobs list file
 for line in input_jobs_list:
     # split on the comma to make it into a list
     clean_line=line.split(",")
@@ -85,6 +105,15 @@ for line in input_jobs_list:
 
     # check if the PHENOTYPE is different from whats in the list (should be yes if just started too)
     if clean_line[2] not in stored_phenotypes:
+        # current phenotype not seen yet so either new phenotype or begining
+        # now simply write in the GWAS T20 SNP list first
+        GWAS_output
+          /gpfs01/home/mbysh17/output_files/',phenotype[i],'_GWAS_MANHATTAN_',sample_n[i],'_',jobs[i],'.txt')
+
+  
+
+        new_row=pandas.Series({"CHROM":CHROM,"POS":POS,"PVAL":absolute_theta})
+        dataFrame_absolute_theta =pandas.concat([dataFrame_absolute_theta, new_row.to_frame().T], ignore_index=True)
 
         # if we arent at the first sample(/run?)  THIS FEELS WRONG -NEEDS CHANGING
         if cumulative_run_number!=0:
@@ -141,14 +170,21 @@ for line in input_jobs_list:
 
 # output csv format example
 
-# Phenotype,CHR,POS,Subsample_N,N_Times_Significant_GWAS,N_GWAS_tests,N_Times_Significant_GIFT,N_GIFT_tests
-# leaf_ionome_Mo98,2,123,200,85,100,99,100
+# Phenotype,CHR,POS,Subsample_N,N_Times_Significant_GWAS,N_GWAS_tests,N_Sig_GIFT_Absolute_theta,N_Sig_GIFT_pSNP4,N_Sig_GIFT_pSNP5,N_GIFT_tests
+# leaf_ionome_Mo98,2,123,200,85,100,99,79,80,100
 
+
+# the following graphs are for:
+# Graph: bar chart
+# OF ONE PHENOTYPE
+# OF ONE SAMPLE NUMBER
+# EXAMPLE Pheno = leaf_ionome_Mo96, Subsample_N = 200
+# Can also include hand picked Snps
 
 # output figure ideas
 # idea 1)
-# Graph: bar chart
-# X axis = SNP position (GWAS/GIFT share same position for each position with two adjacent bars)
+
+# X axis = SNP position (GWAS/GIFT share same chr + position with two adjacent bars)
 # Y axis = % of times deemed significant
 
 # idea 2) 

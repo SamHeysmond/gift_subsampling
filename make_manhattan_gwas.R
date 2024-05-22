@@ -32,7 +32,7 @@ for (i in jobs){
                 # take the top 20 values
                 slice_head(n=20)
   
-  T20_SNPS_FILENAME <- paste0('/gpfs01/home/mbysh17/output_files/',phenotype[i],'_GWAS_MANHATTAN_',sample_n[i],'_',jobs[i],'.txt')
+  T20_SNPS_FILENAME <- paste0('/gpfs01/home/mbysh17/output_files/',phenotype[i],'_GWAS_T20_SNPS_',sample_n[i],'_',jobs[i],'.csv')
   # write the top 20 snps for this ID to a csv file
   write.csv(T20_SNPS,T20_SNPS_FILENAME,row.names = FALSE)
   

@@ -288,6 +288,14 @@ class field:
 				bigest_theta = theta_j
 				bigest_theta_j = int(j-1)
 			
+			# FOR TESTING (SAM EDIT)
+			print("N = ", N)
+			print("theta_j = ", theta_j)
+			print("j = ", j)
+			print("N_plus = ", N_plus)
+			print("N_minus = ", N_minus)
+
+
 			# Calculate p at j
 			p = erfc((N*sqrt(N)*theta_j)/(sqrt(2*j*(N-j)*N_plus*N_minus))) ## Jon - I calculate the raw p value here
 			p_vals.append(p)
@@ -355,12 +363,10 @@ def R_plots(output_file, metric='largest_relative_theta', p_value=True): #?# wri
 	if metric =="absolute_theta":
 		snps_R_variable=str("T20_Absolute_theta_SNPs")
 		R_out.write(f'T20_Absolute_theta_SNPs <- read.csv("output_files/'+args.id+'_T20_absolute_theta.csv", header= TRUE, sep=",")\n')
-
-	if metric =="pSNP4":
+	elif metric =="pSNP4":
 		snps_R_variable=str("T20_pSNP4_SNPs")
 		R_out.write(f'T20_pSNP4_SNPs <- read.csv("output_files/'+args.id+'_T20_pSNP4.csv", header= TRUE, sep=",")\n')
-
-	if metric =="pSNP5":
+	elif metric =="pSNP5":
 		snps_R_variable=str("T20_pSNP5_SNPs")
 		R_out.write(f'T20_pSNP5_SNPs <- read.csv("output_files/'+args.id+'_T20_pSNP5.csv", header= TRUE, sep=",")\n')
 
@@ -386,10 +392,16 @@ def R_plots(output_file, metric='largest_relative_theta', p_value=True): #?# wri
 		R_out.write('  }\n')
 		R_out.write('}\n')
 		R_out.write(f'thes_pval_original <- thes_pval\n')
-		R_out.write(f'bhy_thres <- -log10(thes_pval)\n')
+		if metric=='absolute_theta':
+			R_out.write(f'bhy_thres <- log10(thes_pval)\n')
+		else:
+			R_out.write(f'bhy_thres <- -log10(thes_pval)\n')
 		R_out.write(f'# calculate bonferroni_threshold\n')
 		R_out.write(f'bt <- 0.05 / (nrow(GWAS_result)*1135) # times max number of tests per p-value\n')
-		R_out.write(f'bf_thres <- -log10(bt)\n')
+		if metric=='absolute_theta':
+			R_out.write(f'bf_thres <- log10(bt)\n')
+		else:
+			R_out.write(f'bf_thres <- -log10(bt)\n')
 	
 	R_out.write(f'data_cum <- GWAS_result %>% \n')
 	R_out.write(f'  group_by(CHROM) %>% \n')
@@ -430,7 +442,11 @@ def R_plots(output_file, metric='largest_relative_theta', p_value=True): #?# wri
 	R_out.write(f'png("{png_out}", bg = "white", width = 9.75, height = 3.25, units = "in", res = 1200, pointsize = 4)\n')
 	
 	if p_value == True:
-		R_out.write(f'manhplot <- ggplot(GWAS_result, aes(x = bp_cum, y = (-log10({metric})), # size = 1, \n')
+		if metric=='absolute_theta':
+			R_out.write(f'manhplot <- ggplot(GWAS_result, aes(x = bp_cum, y = (log10({metric})), # size = 1, \n')
+		else:
+			R_out.write(f'manhplot <- ggplot(GWAS_result, aes(x = bp_cum, y = (-log10({metric})), # size = 1, \n')
+
 	if p_value == False:
 		R_out.write(f'manhplot <- ggplot(GWAS_result, aes(x = bp_cum, y = ({metric}), # size = 1, \n')
 
