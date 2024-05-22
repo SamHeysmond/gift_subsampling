@@ -32,7 +32,7 @@ parser.add_argument('-jl',
                     required=True, 
                     help='Input for the master list of phenotype data'
                     )
-parser.add_argument('-d', 
+parser.add_argument('-d', # this is not the output where this program WITES to, its what it TAKES from
                     type=str, 
                     metavar='directory for output folder', 
                     required=True, 
@@ -49,23 +49,32 @@ parser.add_argument('-o',
 args= parser.parse_args() 
 
 # opening necessary files
-
 input_jobs_list=open(args.jl,'r')
 
 output_SNP_tracker_csv=open(args.o+"SNP_tracker_tally.csv","w")
 
-# for graphs
+# for graphs (WIP)
 #output_SNP_tracker_Rscript=.....
 
 # set up list of phenotypes sorted
-stored_phenotypes=[]
-cumulative_sample_number=0
-current_phenotype=""
-cumulative_GWAS_significance=0
-cumulative_GIFT_significance=0
+
+stored_phenotypes=[] #will contain things like leaf_ionome_Mo98....leaf_ionome_Rad50 etc etc
+cumulative_sample_number=0 # out of the 200 or 100 per run? (NOT SUREs)
+current_phenotype="" #string of the current phenotype being tracked e.g. leaf_ionome_Mo98
+cumulative_GWAS_significance=0 # out of 100 (or N) GWAS parallel runs how many show a SNP as significant
+cumulative_GIFT_significance=0 # out of 100 (or N) GIFT parallel runs how many show a SNP as significant
 
 N_GWAS_tests=0 #may combine these since they SHOULD be the same ALWAYS
 N_GIFT_tests=0
+
+## REMINDER OF JOB LIST FORMAT
+# JOB_ID,SUBSAMPLE_N,PHENOTYPE
+# 521856,200,leaf_ionome_Mo98
+# 521857,200,leaf_ionome_Mo98
+# ……
+# 521900,400,leaf_ionome_Mo98
+#  …..
+# 60000,200,leaf_ionome_Rad50
 
 for line in input_jobs_list:
     # split on the comma to make it into a list
@@ -74,13 +83,16 @@ for line in input_jobs_list:
     # read the ID of the job
     current_job_id=clean_line[0]
 
-    # check if the PHENOTYPE is different
+    # check if the PHENOTYPE is different from whats in the list (should be yes if just started too)
     if clean_line[2] not in stored_phenotypes:
+
+        # if we arent at the first sample(/run?) 
         if cumulative_sample_number!=0:
 
             #write in the current information to the output file since we're 
             # moving onto another phenotype now
             output_SNP_tracker_csv.write(str(current_phenotype)+
+                                        str(current_SNP_chromosome)+
                                         str(current_SNP_position)+
                                         str(cumulative_sample_number)+
                                         str(cumulative_GWAS_significance)+
@@ -89,7 +101,6 @@ for line in input_jobs_list:
                                         str(N_GIFT_tests)
                                         )
         else: 
-
             # add the new phenotype to the list
             stored_phenotypes.append(str(clean_line[2]))
 
@@ -101,8 +112,9 @@ for line in input_jobs_list:
     for abs_theta_line in input_T20_pSNP4:
         clean_abs_theta_line=abs_theta_line.split(",")
 
-        # store the position 
-        current_SNP_position=clean_abs_theta_line[0]
+        # store the chromosome and position 
+        current_SNP_chromosome=clean_abs_theta_line[0]
+        current_SNP_position=clean_abs_theta_line[1]
         
 
     # find the T20 (pSNP4) GIFT snps for that ID 
@@ -121,13 +133,14 @@ for line in input_jobs_list:
     # run the numbers
 
     # write to the csv
+
 # output csv format example
 
-# Phenotype,POS,Subsample_N,N_Times_Significant_GWAS,N_GWAS_tests,N_Times_Significant_GIFT,N_GIFT_tests
-# leaf_ionome_Mo98,123,200,85,100,99,100
+# Phenotype,CHR,POS,Subsample_N,N_Times_Significant_GWAS,N_GWAS_tests,N_Times_Significant_GIFT,N_GIFT_tests
+# leaf_ionome_Mo98,2,123,200,85,100,99,100
 
 
-# output figures
+# output figure ideas
 # idea 1)
 # Graph: bar chart
 # X axis = SNP position (GWAS/GIFT share same position for each position with two adjacent bars)
