@@ -59,7 +59,7 @@ output_SNP_tracker_csv=open(args.o+"SNP_tracker_tally.csv","w")
 # set up list of phenotypes sorted
 
 stored_phenotypes=[] #will contain things like leaf_ionome_Mo98....leaf_ionome_Rad50 etc etc
-cumulative_sample_number=0 # out of the 200 or 100 per run? (NOT SUREs)
+cumulative_run_number=0 # out of 100 per run (or n_runs)
 current_phenotype="" #string of the current phenotype being tracked e.g. leaf_ionome_Mo98
 cumulative_GWAS_significance=0 # out of 100 (or N) GWAS parallel runs how many show a SNP as significant
 cumulative_GIFT_significance=0 # out of 100 (or N) GIFT parallel runs how many show a SNP as significant
@@ -71,7 +71,7 @@ N_GIFT_tests=0
 # JOB_ID,SUBSAMPLE_N,PHENOTYPE
 # 521856,200,leaf_ionome_Mo98
 # 521857,200,leaf_ionome_Mo98
-# ……
+# …… ^^ the above lines show two RUNS, each with 200 SAMPLES from the vcf
 # 521900,400,leaf_ionome_Mo98
 #  …..
 # 60000,200,leaf_ionome_Rad50
@@ -86,15 +86,15 @@ for line in input_jobs_list:
     # check if the PHENOTYPE is different from whats in the list (should be yes if just started too)
     if clean_line[2] not in stored_phenotypes:
 
-        # if we arent at the first sample(/run?) 
-        if cumulative_sample_number!=0:
+        # if we arent at the first sample(/run?)  THIS FEELS WRONG -NEEDS CHANGING
+        if cumulative_run_number!=0:
 
             #write in the current information to the output file since we're 
             # moving onto another phenotype now
             output_SNP_tracker_csv.write(str(current_phenotype)+
                                         str(current_SNP_chromosome)+
                                         str(current_SNP_position)+
-                                        str(cumulative_sample_number)+
+                                        str(cumulative_run_number)+
                                         str(cumulative_GWAS_significance)+
                                         str(N_GWAS_tests)+
                                         str(cumulative_GIFT_significance)+
@@ -106,6 +106,11 @@ for line in input_jobs_list:
 
 
     # find the T20 (absolute theta) GIFT snps for that ID 
+    # REMINDER OF FORMAT 
+    # CHROM,POS,PVAL
+    # 3,123413,0.00001
+    # 4,1233141,0.0003
+    # 3,5435133,0.0312
     input_T20_absolute_theta=open(args.d+current_job_id+"_T20_absolute_theta.csv","r")
 
     # loop through T20 absolute theta SNPs for 1/100 Job IDs (for 200 samples) -> it would be 1/run_num
