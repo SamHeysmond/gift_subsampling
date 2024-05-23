@@ -32,7 +32,7 @@ parser.add_argument('-jl',
                     required=True, 
                     help='Input for the master list of phenotype data'
                     )
-parser.add_argument('-d', # this is not the output where this program WITES to, its what it TAKES from
+parser.add_argument('-d', # this is NOT the output where this program WITES to, its what it TAKES from
                     type=str, 
                     metavar='directory for output folder', 
                     required=True, 
@@ -93,8 +93,6 @@ N_GIFT_tests=0
 # GIFT PSNP4 T20 SNPS
 # GIFT PSNP5 T20 SNPS
 # HANDPICKED SNPS? (WIP?)
-
-
 # looping through jobs list file
 for line in input_jobs_list:
     # split on the comma to make it into a list
@@ -107,13 +105,12 @@ for line in input_jobs_list:
     if clean_line[2] not in stored_phenotypes:
         # current phenotype not seen yet so either new phenotype or begining
         # now simply write in the GWAS T20 SNP list first
-        GWAS_output
-          /gpfs01/home/mbysh17/output_files/',phenotype[i],'_GWAS_MANHATTAN_',sample_n[i],'_',jobs[i],'.txt')
+        input_GWAS_T20=open(args.d+clean_line[2]+"_GWAS_T20_SNPS_"+clean_line[1]+"_"+clean_line[0]+".csv","r")
+        for GWAS_T20_SNP in input_GWAS_T20:
 
-  
 
-        new_row=pandas.Series({"CHROM":CHROM,"POS":POS,"PVAL":absolute_theta})
-        dataFrame_absolute_theta =pandas.concat([dataFrame_absolute_theta, new_row.to_frame().T], ignore_index=True)
+            new_row=pandas.Series({"CHROM":CHROM,"POS":POS,"PVAL":absolute_theta})
+            SNP_dataframe =pandas.concat([SNP_dataframe, new_row.to_frame().T], ignore_index=True)
 
         # if we arent at the first sample(/run?)  THIS FEELS WRONG -NEEDS CHANGING
         if cumulative_run_number!=0:

@@ -9,20 +9,20 @@ library("ggrepel")
 
 # reads in the list of all job IDs with their respective subsample number
 # format (ID, Subsample_N, phenotype) (this file gets written to by subsample_and_run.sh)
-JOB_LIST<- read.csv('/gpfs01/home/mbysh17/core_files/JOB_LIST.csv')
+JOB_LIST<- read.csv('/gpfs01/home/mbysh17/core_files/JOB_LIST.csv',header=TRUE)
 
 # store each column as a list
-jobs<-c(JOB_LIST$JOB_ID)
-sample_n<-c(JOB_LIST$SAMPLE_N)
-phenotype<c(JOB_LIST$PHENOTYPE)
+#jobs<-c(JOB_LIST$JOB_ID)
+#sample_n<-c(JOB_LIST$SAMPLE_N)
+#phenotype<c(JOB_LIST$PHENOTYPE)
 
 #for loop start
-for (i in jobs){
+for (i in 1:nrow(JOB_LIST)){
     
   #load the data from input of GWAS result
   
-  filename <- paste0('/gpfs01/home/mbysh17/output_files/',phenotype[i],'_GWAS_',sample_n[i],'_',jobs[i],'.csv')
-  gwasResults<-read.csv(filename)
+  filename <- paste0('/gpfs01/home/mbysh17/output_files/',JOB_LIST$PHENOTYPE[i],'_GWAS_',JOB_LIST$SUBSAMPLE_N[i],'_',JOB_LIST$JOB_ID[i],'.csv')
+  gwasResults<-read.csv(filename,header=TRUE)
   
   # get top 20 SNPs from the GWAS data
   T20_SNPS <- gwasResults %>%
@@ -32,7 +32,7 @@ for (i in jobs){
                 # take the top 20 values
                 slice_head(n=20)
   
-  T20_SNPS_FILENAME <- paste0('/gpfs01/home/mbysh17/output_files/',phenotype[i],'_GWAS_T20_SNPS_',sample_n[i],'_',jobs[i],'.csv')
+  T20_SNPS_FILENAME <- paste0('/gpfs01/home/mbysh17/output_files/',JOB_LIST$PHENOTYPE[i],'_GWAS_T20_SNPS_',JOB_LIST$SUBSAMPLE_N[i],'_',JOB_LIST$JOB_ID[i],'.csv')
   # write the top 20 snps for this ID to a csv file
   write.csv(T20_SNPS,T20_SNPS_FILENAME,row.names = FALSE)
   
@@ -69,13 +69,13 @@ for (i in jobs){
     
     # Add a cumulative position of each SNP
     arrange(chromosomes, positions) %>%
-    mutate( BPcum=positions+tot) %>%
+    mutate( BPcum=positions+tot) 
   
-    axisdf = don %>%
-    group_by(chromosomes) %>%
-    summarize(center=( max(BPcum) + min(BPcum) ) / 2 )
+  axisdf = don %>%
+  group_by(chromosomes) %>%
+  summarize(center=( max(BPcum) + min(BPcum) ) / 2 )
   
-  pngname <- paste0('/gpfs01/home/mbysh17/output_files/',phenotype[i],'_GWAS_MANHATTAN_',sample_n[i],'_',jobs[i],'.png')
+  pngname <- paste0('/gpfs01/home/mbysh17/output_files/',JOB_LIST$PHENOTYPE[i],'_GWAS_MANHATTAN_',JOB_LIST$SUBSAMPLE_N[i],'_',JOB_LIST$JOB_ID[i],'.png')
   
   png(pngname, bg = "white", width = 9.75, height = 3.25, units = "in", res = 1200, pointsize = 4)
   

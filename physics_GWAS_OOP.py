@@ -357,25 +357,21 @@ def R_plots(output_file, metric='largest_relative_theta', p_value=True): #?# wri
 	R_out.write(f'GWAS_result1[GWAS_result1==-Inf] <- NA\n')
 	R_out.write(f'GWAS_result<-GWAS_result1[complete.cases(GWAS_result1),]\n')
 
-# ### start of sam edit (1) <<<<<<<<<<<<<<<<<<<<<
-
-	# reads the T20 snp file based on which metric is being graphed
-	if metric =="absolute_theta":
-		snps_R_variable=str("T20_Absolute_theta_SNPs")
-		R_out.write(f'T20_Absolute_theta_SNPs <- read.csv("output_files/'+args.id+'_T20_absolute_theta.csv", header= TRUE, sep=",")\n')
-	elif metric =="pSNP4":
-		snps_R_variable=str("T20_pSNP4_SNPs")
-		R_out.write(f'T20_pSNP4_SNPs <- read.csv("output_files/'+args.id+'_T20_pSNP4.csv", header= TRUE, sep=",")\n')
-	elif metric =="pSNP5":
-		snps_R_variable=str("T20_pSNP5_SNPs")
-		R_out.write(f'T20_pSNP5_SNPs <- read.csv("output_files/'+args.id+'_T20_pSNP5.csv", header= TRUE, sep=",")\n')
-
-	### ADD IN CODE TO READ A CSV FOR CUSTOM SNPS OF INTEREST MUCH LIKE THE ABOVE BUT SEPARATE!!
-		#code here for any SNPs in particular (but will require a file to be made first for it to read from)
-
-# ### end of sam edit (1) >>>>>>>>>>>>>>>>>>>>>>>>>>>
-
 	if p_value == True:
+		# ### start of sam edit (1) <<<<<<<<<<<<<<<<<<<<< # moved this stuff under p_value ==True only
+		# reads the T20 snp file based on which metric is being graphed
+		if metric =="absolute_theta":
+			snps_R_variable=str("T20_Absolute_theta_SNPs")
+			R_out.write(f'T20_Absolute_theta_SNPs <- read.csv("output_files/'+args.id+'_T20_absolute_theta.csv", header= TRUE, sep=",")\n')
+		elif metric =="pSNP4":
+			snps_R_variable=str("T20_pSNP4_SNPs")
+			R_out.write(f'T20_pSNP4_SNPs <- read.csv("output_files/'+args.id+'_T20_pSNP4.csv", header= TRUE, sep=",")\n')
+		elif metric =="pSNP5":
+			snps_R_variable=str("T20_pSNP5_SNPs")
+			R_out.write(f'T20_pSNP5_SNPs <- read.csv("output_files/'+args.id+'_T20_pSNP5.csv", header= TRUE, sep=",")\n')
+		### ADD IN CODE TO READ A CSV FOR CUSTOM SNPS OF INTEREST MUCH LIKE THE ABOVE BUT SEPARATE!!
+			#code here for any SNPs in particular (but will require a file to be made first for it to read from)
+		# ### end of sam edit (1) >>>>>>>>>>>>>>>>>>>>>>>>>>>
 		R_out.write(f'# Calculate the BHY threshold\n')
 		R_out.write(f'm <- nrow(GWAS_result)\n')
 		R_out.write(f'GWAS_result <- GWAS_result[order(GWAS_result${metric}),]\n')
@@ -392,6 +388,7 @@ def R_plots(output_file, metric='largest_relative_theta', p_value=True): #?# wri
 		R_out.write('  }\n')
 		R_out.write('}\n')
 		R_out.write(f'thes_pval_original <- thes_pval\n')
+		# ### start of sam edit (1.2) <<<<<<<<<<<<<<<<<<<<< 
 		if metric=='absolute_theta':
 			R_out.write(f'bhy_thres <- log10(thes_pval)\n')
 		else:
@@ -402,7 +399,7 @@ def R_plots(output_file, metric='largest_relative_theta', p_value=True): #?# wri
 			R_out.write(f'bf_thres <- log10(bt)\n')
 		else:
 			R_out.write(f'bf_thres <- -log10(bt)\n')
-	
+		# ### END of sam edit (1.2) <<<<<<<<<<<<<<<<<<<<< 
 	R_out.write(f'data_cum <- GWAS_result %>% \n')
 	R_out.write(f'  group_by(CHROM) %>% \n')
 	R_out.write(f'  summarise(max_bp = max(POS)) %>% \n')
@@ -411,18 +408,14 @@ def R_plots(output_file, metric='largest_relative_theta', p_value=True): #?# wri
 	R_out.write(f'GWAS_result <- GWAS_result %>% \n')
 	R_out.write(f'  inner_join(data_cum, by = "CHROM") %>% \n')
 	R_out.write(f'  mutate(bp_cum = POS + bp_add)\n')
-
-# ### start of sam edit (2) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	# ### start of sam edit (2) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	# first add column for annotation and highlighting, setting each to no (default)
 	R_out.write(f'GWAS_result<- GWAS_result %>% \n')
 	R_out.write(f'  mutate(is_highlight = "no")\n')
-
 	R_out.write(f'GWAS_result<- GWAS_result %>% \n')
 	R_out.write(f'  mutate(is_annotate = "no")\n')
-
 	# if column CHR and POS match up to a row in POI that has same CHR and POS...
 	# then mutate the gwas result to highlight and annotate the data
-
 	R_out.write('for (T20_index in 1:nrow('+snps_R_variable+')){ \n') 
 	R_out.write('	for(gwas_index in 1:nrow(GWAS_result)) { \n')
 	R_out.write('		if (GWAS_result$CHROM[gwas_index]=='+snps_R_variable+'$CHROM[T20_index] & \n')
@@ -432,21 +425,20 @@ def R_plots(output_file, metric='largest_relative_theta', p_value=True): #?# wri
 	R_out.write('		} \n')
 	R_out.write('	} \n')
 	R_out.write('} \n')
-
-# ### end of sam edit (2) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
+	# ### end of sam edit (2) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	R_out.write(f'axis_set <- GWAS_result %>% \n')
 	R_out.write(f'  group_by(CHROM) %>% \n')
 	R_out.write(f'  summarize(center = mean(bp_cum))\n')
 	R_out.write(f'ylim <- abs(floor(log10(min(GWAS_result${metric})))) +1\n')
 	R_out.write(f'png("{png_out}", bg = "white", width = 9.75, height = 3.25, units = "in", res = 1200, pointsize = 4)\n')
 	
-	if p_value == True:
-		if metric=='absolute_theta':
+	if p_value == True: 
+		# ### START of sam edit (2.2) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+		if metric=='absolute_theta': 
 			R_out.write(f'manhplot <- ggplot(GWAS_result, aes(x = bp_cum, y = (log10({metric})), # size = 1, \n')
 		else:
 			R_out.write(f'manhplot <- ggplot(GWAS_result, aes(x = bp_cum, y = (-log10({metric})), # size = 1, \n')
-
+		# ### ENDof sam edit (2.2) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	if p_value == False:
 		R_out.write(f'manhplot <- ggplot(GWAS_result, aes(x = bp_cum, y = ({metric}), # size = 1, \n')
 
@@ -458,11 +450,9 @@ def R_plots(output_file, metric='largest_relative_theta', p_value=True): #?# wri
 		R_out.write(f'geom_hline(yintercept = bhy_thres, color = "blue", linetype = "dashed") +\n')
 	
 	R_out.write(f'  scale_x_continuous(label = axis_set$CHROM, breaks = axis_set$center) +\n')
-
-# ### start of sam edit (3) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	# ### start of sam edit (3) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	#highlight in orange
 	R_out.write(f'  geom_point(data = subset(GWAS_result, is_highlight=="yes"), color="orange", size=2) +\n')
-
 	# add a label using ggrepel
 	R_out.write(f'  geom_label_repel(data=subset(GWAS_result, is_annotate=="yes"),\n')
 	R_out.write(f'					xlim=c(-Inf,Inf), \n')
@@ -471,11 +461,9 @@ def R_plots(output_file, metric='largest_relative_theta', p_value=True): #?# wri
 	R_out.write(f'					max.overlaps = Inf, \n')
 	R_out.write(f' 					aes(label=POS), \n')
 	R_out.write(f'					size=2) + \n')
-	
 	# alt idea using geom label but havent tried it yet
 	#R_out.write(f'  geom_label(data = subset(GWAS_result, is_highlight=="yes")) +\n')
-# ### end of sam edit (3)>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
+	# ### end of sam edit (3)>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	R_out.write(f'  labs(x = NULL, \n')
 	R_out.write(f'       y = "{metric}") + \n')
 	R_out.write(f'  theme_minimal() +\n')
@@ -515,15 +503,12 @@ if __name__ == '__main__':
 	parser.add_argument('-f', type=str, metavar='phenotypes_file', required=True, help='The input phenotype file. It is a .csv file with a one line headder and two columns: individual and phenotype. Phenotype is a numeric value and they must be in order of size.')
 	parser.add_argument('-p', type=str, metavar='phenotype', required=True, help='The phenotype - exactly as written in the phenotype file headder.')
 	parser.add_argument('-o', type=str, metavar='output_file', required=True, help='The output file.')
-
-# ### start of sam edit (4) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
+	# ### start of sam edit (4) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	# add in an ID tag to allow for proper file naming of outputs and tracking of run IDs
 	parser.add_argument('-id', type=str, metavar='run_ID', required=True, help='Run ID of the batch file.')
-
-# ### end of sam edit (4) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	# ### end of sam edit (4) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	args = parser.parse_args()
-	
+
 	# Generate ordered phenotypes and headder lists
 	ordered_pheno=odered_list(args.f, args.p)
 	headder=read_vcf_head(args.v)
