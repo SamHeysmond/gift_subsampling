@@ -41,14 +41,14 @@ source ~/.bashrc
 #conda deactivate
 
 #conda create -n r_env -y
-conda activate r_env
+#conda activate r_env
 #conda install r-base -y
 #conda install bioconductor-biocinstaller -y
 #conda install r-qqman
 #conda install r-tidyverse -y
 #conda install r-dplyr -y
-conda install r-ggrepel -y
-conda deactivate
+#conda install r-ggrepel -y
+#conda deactivate
 
 #conda create -n gwas_env2 -y
 #conda activate gwas_env2

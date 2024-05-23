@@ -32,20 +32,27 @@ mkdir core_files/subsample_text_files/
 # make directory for parallel tasks to go in
 mkdir batch_files/parallel
 
-#multiply the subsample sh script 100 times for 100 scripts to be made
-# CHANGED THIS TO 10 WHILE TESTING TO SPEED THINGS UP!
-for ((n=1;n<=10;n++));do
-
-echo "current n val is: ${n}"
-
-# copy the template for subsample and run into the parallel folder
-cp batch_files/subsample_and_run.sh batch_files/parallel/subsample_and_run_${n}.sh
-
-#exit for loop
-done
-
 # make job list file in core files
+# first remove old JOB_LIST
+rm core_files/JOB_LIST.csv
 echo "JOB_ID,SUBSAMPLE_N,PHENOTYPE" > core_files/JOB_LIST.csv
 
+# Make the scripts ========================================
+# enter python environment
+conda activate python3_env
+
+# run the python script which will make all of the scripts needed
+python3 batch_files/subsample_script_setup.py
+
 echo "Subsample_setup.sh finished!"
+
+## OLD CODE FOR MAKING SCRIPTS
+#multiply the subsample sh script 100 times for 100 scripts to be made
+#for ((n=1;n<=100;n++));do
+# copy the template for subsample and run into the parallel folder
+#cp batch_files/subsample_and_run.sh batch_files/parallel/subsample_and_run_${n}.sh
+
+#exit for loop
+#done
+
 #end of script

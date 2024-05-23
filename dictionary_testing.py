@@ -28,4 +28,6 @@ dataFrame =pd.concat([dataFrame, new_row.to_frame().T], ignore_index=True)
 print("\nLength of data frame (rows) is: \n", len(dataFrame))
 dataFrame.to_csv("dummy_"+word+".csv", index=False)
 
+print("{hello}")
+
 print("End of script")
