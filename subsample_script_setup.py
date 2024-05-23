@@ -1,3 +1,9 @@
+# SCRIPT INFO
+# This script will make the dozens of subruns for each...
+# PHENOTYPE, SUBSAMPLE NUMBER, and COPY of that subsample num (100 copies each)
+# so for 2 phenotypes that's -> 2x 5 x 100 files = 1000 batch files...whew
+
+
 # open the list of phenotypes to analyse
 # contains format (no header)
 # leaf_ionome_Mo98
@@ -90,6 +96,17 @@ for phenotype in phenotypes_input:
             bash_script_output.write(f'# remove the subsampled phenotype file to save on storage (TEMP PAUSED)\n')
             #bash_script_output.write('rm core_files/subsampled_phenotype_${i}_${SLURM_JOB_ID}.csv\n')
             bash_script_output.write('echo "GWAS for: ${SLURM_JOB_ID} finished"\n')
+
+            # calling for the python script to first MAKE the R script for GWAS manhattan plots
+            # to make manhattan plots from the GWAS data
+            bash_script_output.write(f'conda activate python3_env\n')
+            bash_script_output.write('python3 batch_files/make_r_scripts.py -id ${SLURM_JOB_ID} -i ${i} -p ${phenotype} -o output_files/\n')
+            bash_script_output.write(f'conda deactivate\n')
+            bash_script_output.write(f'conda activate r_env\n')
+            bash_script_output.write('Rscript ${SLURM_JOB_ID}.R\n')
+            bash_script_output.write(f'conda deactivate r_env\n')
+            bash_script_output.write(f'\n')
+            bash_script_output.write(f'\n')
             bash_script_output.write(f'#end of script')
             bash_script_output.close()
 print("====================\n")

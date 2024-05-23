@@ -61,7 +61,7 @@ parser.add_argument('-ri',
 # stores input data and parses them
 args= parser.parse_args() 
 
-#create empty sampels list
+#create empty samples list
 samples_list_vcf =[]
 samples_list_pheno =[]
 consensus_sample_list=[]
