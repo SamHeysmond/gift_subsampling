@@ -24,7 +24,7 @@ import numpy as np
 # Input is a csv file with two columns; individual and phenotype value.
 # A headder is expected.
 # Output is a list of individuals.
-def odered_list(phenotypes_file, phenotype):
+def ordered_list(phenotypes_file, phenotype):
 
 	# Import phenotype file as an array and sort by the size of the second column ()
 	pheno_array=pandas.read_csv(phenotypes_file)
@@ -514,7 +514,7 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 
 	# Generate ordered phenotypes and headder lists
-	ordered_pheno=odered_list(args.f, args.p)
+	ordered_pheno=ordered_list(args.f, args.p)
 	headder=read_vcf_head(args.v)
 	
 	# open vcf file and output file

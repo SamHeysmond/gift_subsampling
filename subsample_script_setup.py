@@ -62,7 +62,7 @@ for phenotype in phenotypes_input:
             bash_script_output.write(f'#SBATCH --error=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.err\n')
             bash_script_output.write(f'#SBATCH --mail-type=ALL\n')
             bash_script_output.write(f'#SBATCH --mail-user=mbysh17@nottingham.ac.uk\n')
-            bash_script_output.write(f'===============================\n')
+            bash_script_output.write(f'#===============================\n')
             bash_script_output.write(f'#change to home directory\n')
             bash_script_output.write(f'cd /gpfs01/home/mbysh17\n')
             bash_script_output.write(f'# source conda environments\n')
@@ -74,7 +74,7 @@ for phenotype in phenotypes_input:
 
             # variables
             bash_script_output.write(f'#set variables for this script\n')
-            bash_script_output.write(f'i = {subsample_num}\n')
+            bash_script_output.write(f'i={subsample_num}\n')
             bash_script_output.write(f'phenotype={phenotype}\n')
 
             #job ID
