@@ -297,11 +297,15 @@ class field:
 
 
 			# Calculate p at j
-			p = erfc((N*sqrt(N)*theta_j)/(sqrt(2*j*(N-j)*N_plus*N_minus))) ## Jon - I calculate the raw p value here
-			p_vals.append(p)
+			# But not for the last line due to theta_j and N-j both being zero!
+			if theta_j == N:
+				p_vals.append(1)
+			else:
+				p = erfc((N*sqrt(N)*theta_j)/(sqrt(2*j*(N-j)*N_plus*N_minus))) ## Jon - I calculate the raw p value here
+				p_vals.append(p)
 
 		# temporary nan or 0 as last value fix:
-		p_vals[-1]=1 ## Jon - the last value almost always becomes 0 or 'nan' so I am just removing it for now ### Jon's response: trying to evaluate the last item in the list will give 'erfc(0/0)', so setting this to 1 is the correct outcome (or just ignore it, and do later averaging only over elements  1,2,3, .... j .... N-1)
+		#p_vals[-1]=1 ## Jon - the last value almost always becomes 0 or 'nan' so I am just removing it for now ### Jon's response: trying to evaluate the last item in the list will give 'erfc(0/0)', so setting this to 1 is the correct outcome (or just ignore it, and do later averaging only over elements  1,2,3, .... j .... N-1)
 
 		# Calculate values to return:
 		min_p = min(p_vals) # smallest p ## Jon - taking the lowest overall p value
