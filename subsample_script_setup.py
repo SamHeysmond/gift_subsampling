@@ -18,6 +18,7 @@ subsample_list=[200,400,600,800,1000]
 #loop through each phenotype with the following settings
 for phenotype in phenotypes_input:
     phenotype = phenotype.replace('\n','')
+    print ("Current phenotype is: ", phenotype)
     # loop for each different amount of samples
     for subsample_num in subsample_list:
 
@@ -112,7 +113,7 @@ for phenotype in phenotypes_input:
             bash_script_output.write('python3 batch_files/make_r_scripts.py -id ${SLURM_JOB_ID} -i ${i} -p ${phenotype} -o output_files/\n')
             bash_script_output.write(f'conda deactivate\n')
             bash_script_output.write(f'conda activate r_env\n')
-            bash_script_output.write('Rscript output_files/${SLURM_JOB_ID}_${i}_{phenotype}.R\n')
+            bash_script_output.write('Rscript output_files/${SLURM_JOB_ID}_${i}_${phenotype}.R\n')
             bash_script_output.write(f'conda deactivate r_env\n')
             bash_script_output.write(f'#end of script')
             bash_script_output.close()
