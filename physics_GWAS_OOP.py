@@ -289,11 +289,11 @@ class field:
 				bigest_theta_j = int(j-1)
 			
 			# FOR TESTING (SAM EDIT)
-			print("N = ", N)
-			print("theta_j = ", theta_j)
-			print("j = ", j)
-			print("N_plus = ", N_plus)
-			print("N_minus = ", N_minus)
+			#print("N = ", N)
+			#print("theta_j = ", theta_j)
+			#print("j = ", j)
+			#print("N_plus = ", N_plus)
+			#print("N_minus = ", N_minus)
 
 
 			# Calculate p at j
