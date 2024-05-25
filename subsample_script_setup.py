@@ -114,7 +114,7 @@ for phenotype in phenotypes_input:
             bash_script_output.write(f'conda deactivate\n')
             bash_script_output.write(f'conda activate r_env\n')
             bash_script_output.write('Rscript output_files/${SLURM_JOB_ID}_${i}_${phenotype}.R\n')
-            bash_script_output.write(f'conda deactivate r_env\n')
+            bash_script_output.write(f'conda deactivate\n')
             bash_script_output.write(f'#end of script')
             bash_script_output.close()
 print("====================\n")

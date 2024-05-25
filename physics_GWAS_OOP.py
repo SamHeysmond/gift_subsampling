@@ -357,9 +357,12 @@ def R_plots(output_file, metric='largest_relative_theta', p_value=True): #?# wri
 	R_out.write(f'library("ggrepel")\n')
 	R_out.write(f'#library("manhattanly")\n')
 	R_out.write(f'GWAS_result1 <- read.csv("{output_file}")\n')
-	R_out.write(f'GWAS_result1[GWAS_result1==Inf] <- NA\n')
-	R_out.write(f'GWAS_result1[GWAS_result1==-Inf] <- NA\n')
-	R_out.write(f'GWAS_result<-GWAS_result1[complete.cases(GWAS_result1),]\n')
+
+	# Issues with NA encountered- TEMP PAUSE THIS COMMAND
+	#R_out.write(f'GWAS_result1[GWAS_result1==Inf] <- NA\n')
+	#R_out.write(f'GWAS_result1[GWAS_result1==-Inf] <- NA\n')
+	#R_out.write(f'GWAS_result<-GWAS_result1[complete.cases(GWAS_result1),]\n')
+	R_out.write(f'GWAS_result <-GWAS_result1\n')
 
 	if p_value == True:
 		# ### start of sam edit (1) <<<<<<<<<<<<<<<<<<<<< # moved this stuff under p_value ==True only

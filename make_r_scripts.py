@@ -35,7 +35,7 @@ parser.add_argument('-o',
 # stores input data and parses them
 args= parser.parse_args() 
 
-Rscript_output=open(str(args.o)+str(args.id)+"_"+str(args.i)+"_"+str(args.p)+".R",)
+Rscript_output=open(str(args.o)+str(args.id)+"_"+str(args.i)+"_"+str(args.p)+".R","w")
 
 Rscript_output.write(f'#R script for making manhattan plots with ggplot\n')
 Rscript_output.write(f'# info: This script will loop for every job ID to create manhattan plots\n')
