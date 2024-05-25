@@ -31,6 +31,7 @@ for phenotype in phenotypes_input:
                                     "_"+
                                     str(copynum)+
                                     ".sh"
+                                    ,"w"
                                     )
             # SLURM variables
             bash_script_output.write(f'#!/bin/bash\n')
