@@ -11,10 +11,18 @@
 # .... 
 phenotypes_input=open("core_files/phenotypes_list.txt","r")
 
+# alter this to change the number of subsamples per run
+# keep in mind the if statements below will also need modifying too if so
 subsample_list=[200,400,600,800,1000]
 
+#loop through each phenotype with the following settings
 for phenotype in phenotypes_input:
+
+    # loop for each different amount of samples
     for subsample_num in subsample_list:
+
+        # make 100 copies of each file 
+        # (alter this to change the number of tests to be done)
         for copynum in range(1,100):
             bash_script_output=open("batch_files/parallel/subrun_"+
                                     str(phenotype)+
@@ -24,7 +32,7 @@ for phenotype in phenotypes_input:
                                     str(copynum)+
                                     ".sh"
                                     )
-            #SLURM variables
+            # SLURM variables
             bash_script_output.write(f'#!/bin/bash\n')
             bash_script_output.write(f'#SBATCH --partition=defq\n')
             bash_script_output.write(f'#SBATCH --nodes=1\n')
@@ -34,18 +42,18 @@ for phenotype in phenotypes_input:
             # ...(bigger sample -> more resources)
             if subsample_num==int(200):
                 bash_script_output.write(f'#SBATCH --mem=6g\n')
-                bash_script_output.write(f'#SBATCH --time=07:00:00\n')
+                bash_script_output.write(f'#SBATCH --time=06:00:00\n')
             elif subsample_num==int(400):
                 bash_script_output.write(f'#SBATCH --mem=8g\n')
-                bash_script_output.write(f'#SBATCH --time=08:00:00\n')
+                bash_script_output.write(f'#SBATCH --time=12:00:00\n')
             elif subsample_num==int(600):
                 bash_script_output.write(f'#SBATCH --mem=10g\n')
                 bash_script_output.write(f'#SBATCH --time=18:00:00\n')
             elif subsample_num==int(800):
-                bash_script_output.write(f'#SBATCH --mem=10g\n')
+                bash_script_output.write(f'#SBATCH --mem=12g\n')
                 bash_script_output.write(f'#SBATCH --time=24:00:00\n')
             elif subsample_num==int(1000):
-                bash_script_output.write(f'#SBATCH --mem=10g\n')
+                bash_script_output.write(f'#SBATCH --mem=14g\n')
                 bash_script_output.write(f'#SBATCH --time=30:00:00\n')
             bash_script_output.write(f'#SBATCH --job-name=subrun\n')
             bash_script_output.write(f'#SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out\n')
@@ -103,10 +111,8 @@ for phenotype in phenotypes_input:
             bash_script_output.write('python3 batch_files/make_r_scripts.py -id ${SLURM_JOB_ID} -i ${i} -p ${phenotype} -o output_files/\n')
             bash_script_output.write(f'conda deactivate\n')
             bash_script_output.write(f'conda activate r_env\n')
-            bash_script_output.write('Rscript ${SLURM_JOB_ID}.R\n')
+            bash_script_output.write('Rscript output_files/${SLURM_JOB_ID}_${i}_{phenotype}.R\n')
             bash_script_output.write(f'conda deactivate r_env\n')
-            bash_script_output.write(f'\n')
-            bash_script_output.write(f'\n')
             bash_script_output.write(f'#end of script')
             bash_script_output.close()
 print("====================\n")

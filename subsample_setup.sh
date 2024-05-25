@@ -2,7 +2,7 @@
 #SBATCH --partition=defq
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=4
 #SBATCH --mem=4g
 #SBATCH --time=00:10:00
 #SBATCH --job-name=subsample_setup
@@ -26,14 +26,21 @@ bcftools query -l core_files/1001genomes_snp_biallelic_only_ACGTN.vcf > core_fil
 #deactivate conda environment
 conda deactivate
 
+# maybe add a way to make output_files/ directory and remove old one?
+
 # make directory for the subsample text files to go in
-mkdir core_files/subsample_text_files/
+# but remove the previous one if it exists
+rm -rf core_files/subsample_test_files
+mkdir core_files/subsample_text_files
 
 # make directory for parallel tasks to go in
+# but remove the previous one if it exists
+rm -rf batch_files/parallel
 mkdir batch_files/parallel
 
 # make job list file in core files
 # first remove old JOB_LIST
+# but remove the previous one if it exists
 rm core_files/JOB_LIST.csv
 echo "JOB_ID,SUBSAMPLE_N,PHENOTYPE" > core_files/JOB_LIST.csv
 

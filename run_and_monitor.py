@@ -3,7 +3,7 @@ import os, subprocess, time
 def terminal_pipe(cmd): 
     return subprocess.Popen(f'{cmd}', shell=True, stdout=subprocess.PIPE).communicate()[0].decode("utf-8").strip(' \n')
 
-def run_and_monitor(sbatch_directory, max_jobs=50):
+def run_and_monitor(sbatch_directory, max_jobs=100):
     # get list of all sbatch files in directory
     batch_jobs=os.listdir(sbatch_directory)
     # get rid of anything that is not a shell file

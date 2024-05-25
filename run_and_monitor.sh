@@ -4,7 +4,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --mem=1g
-#SBATCH --time=24:00:00
+#SBATCH --time=72:00:00
 #SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out
 #SBATCH --error=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.err
 #SBATCH --mail-type=ALL
