@@ -2,16 +2,14 @@
 # This script will write the custom R scripts used...
 # ... to generate manhattan plots based on GWAS data...
 # for each JOB_ID run!
-
-
 import argparse
 
 parser=argparse.ArgumentParser(description="makes R scripts for a given run")
 parser.add_argument('-id', 
                     type=str, 
-                    metavar='master list of all phenotype data', 
+                    metavar='SLURM_JOB_ID', 
                     required=True, 
-                    help='Input for the master list of phenotype data'
+                    help='Input for the SLURM job ID'
                     )
 parser.add_argument('-i', 
                     type=str, 
@@ -35,6 +33,12 @@ parser.add_argument('-o',
 # stores input data and parses them
 args= parser.parse_args() 
 
+# printing for testing
+#print("Ouput dir: ", args.o)
+#print("Subsample num: ", args.i)
+#print("Input phenotype: ", args.p)
+#print("Run ID: ", args.i)
+
 Rscript_output=open(str(args.o)+str(args.id)+"_"+str(args.i)+"_"+str(args.p)+".R","w")
 
 Rscript_output.write(f'#R script for making manhattan plots with ggplot\n')
@@ -44,7 +48,7 @@ Rscript_output.write(f'# library installs\n')
 Rscript_output.write(f'library("tidyverse")\n')
 # mark following line for removal in future update
 Rscript_output.write(f'#JOB_LIST<- read.csv("/gpfs01/home/mbysh17/core_files/JOB_LIST.csv",header=TRUE)\n')
-Rscript_output.write('gwasResults<-read.csv("output_files/{args.p}_GWAS_{args.i}_{args.id}.csv",header=TRUE)\n')
+Rscript_output.write(f'gwasResults<-read.csv("output_files/{args.p}_GWAS_{args.i}_{args.id}.csv",header=TRUE)\n')
 Rscript_output.write(f'# get top 20 SNPs from the GWAS data\n')
 Rscript_output.write(f'T20_SNPS <- gwasResults %>%\n')
 Rscript_output.write(f'         select(chromosomes,positions,pvals) %>%\n')
@@ -53,7 +57,7 @@ Rscript_output.write(f'         arrange(pvals) %>%\n')
 Rscript_output.write(f'         # take the top 20 values\n')
 Rscript_output.write(f'         slice_head(n=20)\n')
 Rscript_output.write(f'# write the top 20 snps for this ID to a csv file\n')
-Rscript_output.write('write.csv("output_files/{args.p}_GWAS_T20_SNPS_{args.i}_{args.id}.csv",row.names = FALSE)\n')
+Rscript_output.write(f'write.csv("output_files/{args.p}_GWAS_T20_SNPS_{args.i}_{args.id}.csv",row.names = FALSE)\n')
 Rscript_output.write(f'#make new columns where the default highlight and annotation is no\n')
 Rscript_output.write(f'gwasResults<-gwasResults %>%\n')
 Rscript_output.write(f'         mutate(is_highlight = "no")\n')
@@ -86,7 +90,7 @@ Rscript_output.write(f'axisdf = don %>%\n')
 Rscript_output.write(f'     group_by(chromosomes) %>%\n')
 Rscript_output.write(f'     summarize(center=( max(BPcum) + min(BPcum) ) / 2 )\n')
 Rscript_output.write(f'#open png\n')
-Rscript_output.write('png("output_files/{args.p}_GWAS_MANHATTAN_{args.i}_{args.id}.png", bg = "white", width = 9.75, height = 4, units = "in", res = 1200, pointsize = 4)\n')
+Rscript_output.write(f'png("output_files/{args.p}_GWAS_MANHATTAN_{args.i}_{args.id}.png", bg = "white", width = 9.75, height = 4, units = "in", res = 1200, pointsize = 4)\n')
 Rscript_output.write(f'ggplot(don, aes(x=BPcum, y=-log10(pvals))) +\n')
 Rscript_output.write(f'     # Show all points\n')
 Rscript_output.write(f'     geom_point( aes(color=as.factor(chromosomes)), alpha=0.8, size=1.3) +\n')
