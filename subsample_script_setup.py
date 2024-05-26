@@ -49,13 +49,13 @@ for phenotype in phenotypes_input:
                 bash_script_output.write(f'#SBATCH --mem=8g\n')
                 bash_script_output.write(f'#SBATCH --time=12:00:00\n')
             elif subsample_num==int(600):
-                bash_script_output.write(f'#SBATCH --mem=10g\n')
+                bash_script_output.write(f'#SBATCH --mem=8g\n')
                 bash_script_output.write(f'#SBATCH --time=18:00:00\n')
             elif subsample_num==int(800):
-                bash_script_output.write(f'#SBATCH --mem=12g\n')
+                bash_script_output.write(f'#SBATCH --mem=8g\n')
                 bash_script_output.write(f'#SBATCH --time=24:00:00\n')
             elif subsample_num==int(1000):
-                bash_script_output.write(f'#SBATCH --mem=14g\n')
+                bash_script_output.write(f'#SBATCH --mem=10g\n')
                 bash_script_output.write(f'#SBATCH --time=30:00:00\n')
             bash_script_output.write(f'#SBATCH --job-name=subrun\n')
             bash_script_output.write(f'#SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out\n')
