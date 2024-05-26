@@ -30,7 +30,7 @@ conda deactivate
 
 # make directory for the subsample text files to go in
 # but remove the previous one if it exists
-rm -rf core_files/subsample_test_files
+rm -rf core_files/subsample_text_files
 mkdir core_files/subsample_text_files
 
 # make directory for parallel tasks to go in
