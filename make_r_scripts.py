@@ -46,6 +46,7 @@ Rscript_output.write(f'# info: This script will loop for every job ID to create 
 Rscript_output.write(f'# from GWAS data produced via pygwas (other script)\n')
 Rscript_output.write(f'# library installs\n')
 Rscript_output.write(f'library("tidyverse")\n')
+Rscript_output.write(f'library("ggrepel")\n')
 # mark following line for removal in future update
 Rscript_output.write(f'#JOB_LIST<- read.csv("/gpfs01/home/mbysh17/core_files/JOB_LIST.csv",header=TRUE)\n')
 Rscript_output.write(f'gwasResults<-read.csv("output_files/{args.p}_GWAS_{args.i}_{args.id}.csv",header=TRUE)\n')
