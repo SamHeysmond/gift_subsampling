@@ -39,24 +39,24 @@ for phenotype in phenotypes_input:
             bash_script_output.write(f'#SBATCH --partition=defq\n')
             bash_script_output.write(f'#SBATCH --nodes=1\n')
             bash_script_output.write(f'#SBATCH --ntasks=1\n')
-            bash_script_output.write(f'#SBATCH --cpus-per-task=4\n')
+            bash_script_output.write(f'#SBATCH --cpus-per-task=3\n')
             # give appropriate memory and time according to the job's subsample number... 
             # ...(bigger sample -> more resources)
             if subsample_num==int(200):
-                bash_script_output.write(f'#SBATCH --mem=6g\n')
+                bash_script_output.write(f'#SBATCH --mem=5g\n')
                 bash_script_output.write(f'#SBATCH --time=06:00:00\n')
             elif subsample_num==int(400):
-                bash_script_output.write(f'#SBATCH --mem=8g\n')
+                bash_script_output.write(f'#SBATCH --mem=6g\n')
                 bash_script_output.write(f'#SBATCH --time=12:00:00\n')
             elif subsample_num==int(600):
-                bash_script_output.write(f'#SBATCH --mem=8g\n')
-                bash_script_output.write(f'#SBATCH --time=18:00:00\n')
+                bash_script_output.write(f'#SBATCH --mem=7g\n')
+                bash_script_output.write(f'#SBATCH --time=24:00:00\n')
             elif subsample_num==int(800):
                 bash_script_output.write(f'#SBATCH --mem=8g\n')
-                bash_script_output.write(f'#SBATCH --time=24:00:00\n')
+                bash_script_output.write(f'#SBATCH --time=48:00:00\n')
             elif subsample_num==int(1000):
-                bash_script_output.write(f'#SBATCH --mem=10g\n')
-                bash_script_output.write(f'#SBATCH --time=30:00:00\n')
+                bash_script_output.write(f'#SBATCH --mem=9g\n')
+                bash_script_output.write(f'#SBATCH --time=96:00:00\n')
             bash_script_output.write(f'#SBATCH --job-name=subrun\n')
             bash_script_output.write(f'#SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out\n')
             bash_script_output.write(f'#SBATCH --error=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.err\n')

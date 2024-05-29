@@ -356,6 +356,8 @@ def R_plots(output_file, metric='largest_relative_theta', p_value=True): #?# wri
 	R_out.write(f'library("htmlwidgets")\n')
 	R_out.write(f'library("ggrepel")\n')
 	R_out.write(f'#library("manhattanly")\n')
+
+	# does this need header and separator flags?
 	R_out.write(f'GWAS_result1 <- read.csv("{output_file}")\n')
 
 	# Issues with NA encountered- TEMP PAUSE THIS COMMAND
@@ -401,7 +403,10 @@ def R_plots(output_file, metric='largest_relative_theta', p_value=True): #?# wri
 		else:
 			R_out.write(f'bhy_thres <- -log10(thes_pval)\n')
 		R_out.write(f'# calculate bonferroni_threshold\n')
+
+		# Should the *1135 change depending on subsample number? if so -> e.g. 200 samples would be *200
 		R_out.write(f'bt <- 0.05 / (nrow(GWAS_result)*1135) # times max number of tests per p-value\n')
+
 		if metric=='absolute_theta':
 			R_out.write(f'bf_thres <- log10(bt)\n')
 		else:
