@@ -137,13 +137,16 @@ subsampled_IDs=open('core_files/subsample_text_files/subsamples_'+str(args.n)+'_
 output_file_subsampled_phenotype = open(args.op,"w")
 
 #consensus_dataframe = consensus_dataframe.reset_index()  # make sure indexes pair with number of rows
+current_row=0
 for index, row in subsampled_dataframe.iterrows():
-
     #write in each ID from the subsampled dataframe
     subsampled_IDs.write(str(row["1001_Genomes_ID"])+'\n')
-
-    #write in each ID and phenotype information from the subsampled dataframe to a subsampled phenotype file
-    output_file_subsampled_phenotype.write(str(row["1001_Genomes_ID"])+','+str(row[str(args.t)])+'\n') 
+    if current_row==0:
+        output_file_subsampled_phenotype.write(str("1001_Genomes_ID")+','+str((args.t))+'\n') 
+    else: 
+        #write in each ID and phenotype information from the subsampled dataframe to a subsampled phenotype file
+        output_file_subsampled_phenotype.write(str(row["1001_Genomes_ID"])+','+str(row[str(args.t)])+'\n') 
+    current_row+=1
 
 # close files vvv
 
