@@ -24,7 +24,7 @@ for phenotype in phenotypes_input:
 
         # make 100 copies of each file 
         # (alter this to change the number of tests to be done)
-        for copynum in range(1,100):
+        for copynum in range(1,101): #increased 1o 101 to get 100 copies
             bash_script_output=open("batch_files/parallel/subrun_"+
                                     str(phenotype)+
                                     "_"+
