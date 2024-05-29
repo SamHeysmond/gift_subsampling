@@ -74,7 +74,7 @@ input_file_samples_vcf=open(args.s,'r')
 for line in input_file_samples_vcf:
     #line = read_next_line(input_file_samples_vcf)
     cleanline = line.replace('\n','')
-    samples_list_vcf.append(cleanline)
+    samples_list_vcf.append(str(cleanline))
 #print("Samples list vcf: ", samples_list_vcf)
 
 # open phenotype data file
@@ -114,19 +114,20 @@ for index, row in consensus_dataframe.iterrows():
 
     # check if each of the rows of the consensus dataframe are in the list of IDs from the vcf
     # if not -> remove the row from the dataframe 
-    if row["1001_Genomes_ID"] in samples_list_vcf:
+    if str(row["1001_Genomes_ID"]) in samples_list_vcf:
         # do nothing since this ID is in both VCF and phenotype data files so can stay!
         pass 
 
     else: #remove the row
         print("Sample from phenotype file not found in vcf, removing ID : ", row["1001_Genomes_ID"])
-        consensus_dataframe.drop([index])
+        consensus_dataframe = consensus_dataframe.drop([index])
 
 print("Consensus_dataframe AFTER checking for consensus")
 print(consensus_dataframe)
 
 # now randomly select a list of ID's for the subsample number e.g. 200 or 400 etc
 subsampled_dataframe = consensus_dataframe.sample(n=int(args.n))
+consensus_dataframe = consensus_dataframe.reset_index()  # make sure indexes pair with number of rows
 print("Subsampled dataframe")
 print(subsampled_dataframe)
 
@@ -135,7 +136,7 @@ subsampled_IDs=open('core_files/subsample_text_files/subsamples_'+str(args.n)+'_
 # open the output phenotype file
 output_file_subsampled_phenotype = open(args.op,"w")
 
-consensus_dataframe = consensus_dataframe.reset_index()  # make sure indexes pair with number of rows
+#consensus_dataframe = consensus_dataframe.reset_index()  # make sure indexes pair with number of rows
 for index, row in subsampled_dataframe.iterrows():
 
     #write in each ID from the subsampled dataframe
@@ -151,7 +152,6 @@ subsampled_IDs.close()
 
 # Output phenotype csv (output:3) finished being made!
 output_file_subsampled_phenotype.close()
-
 
 #now use bcftools to subsample from the vcf to make a subsampled VCF of only what is in the picked bin
 os.system('bcftools view --samples-file core_files/subsample_text_files/subsamples_'+str(args.n)+'_'+str(args.ri)+'.txt core_files/1001genomes_snp_biallelic_only_ACGTN.vcf > '+args.og)

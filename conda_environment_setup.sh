@@ -2,7 +2,7 @@
 #SBATCH --partition=defq
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=4
 #SBATCH --mem=8g
 #SBATCH --time=01:00:00
 #SBATCH --job-name=env_setup
@@ -30,9 +30,10 @@ source ~/.bashrc
 #conda deactivate
 
 #conda create -n python3_env -y
-#conda activate python3_env
+conda activate python3_env
 #conda install python=3.12 -y
-#conda deactivate
+pip3 install pandas
+conda deactivate
 
 #conda create -n gwas_env -y
 #conda activate gwas_env
@@ -69,10 +70,11 @@ source ~/.bashrc
 #conda deactivate
 
 #conda create -n subsample_env -y
-#conda activate subsample_env
+conda activate subsample_env
 #conda install bcftools -y
 #conda install python -y
-#conda deactivate
+pip3 install pandas
+conda deactivate
 
 echo "Script finished!"
 #end of script
