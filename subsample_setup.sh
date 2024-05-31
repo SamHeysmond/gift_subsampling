@@ -38,11 +38,19 @@ mkdir core_files/subsample_text_files
 rm -rf batch_files/parallel
 mkdir batch_files/parallel
 
+# clear and remake the running/completed folder for jobs
+rm -rf batch_files/completed_parallel
+mkdir batch_files/completed_parallel
+
 # make job list file in core files
 # first remove old JOB_LIST
 # but remove the previous one if it exists
 rm core_files/JOB_LIST.csv
 echo "JOB_ID,SUBSAMPLE_N,PHENOTYPE" > core_files/JOB_LIST.csv
+
+# remove leftover csv and vcf files in core files
+rm core_files/subsampled_phenotype_*.csv
+rm core_files/subsampled_genotype_*.vcf
 
 # Make the scripts ========================================
 # enter python environment

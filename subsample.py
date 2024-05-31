@@ -103,8 +103,8 @@ for line in input_file_phenotype_data:
 
 input_file_phenotype_data.close()
 
-print("Consensus_dataframe BEFORE checking for consensus")
-print(consensus_dataframe)
+#print("Consensus_dataframe BEFORE checking for consensus")
+#print(consensus_dataframe)
 
 # 3) make a consensus list of all samples that exist in both the vcf list and the excel list
 # using the excel list as a basis (in the form of a pandas dataframe)
@@ -119,17 +119,17 @@ for index, row in consensus_dataframe.iterrows():
         pass 
 
     else: #remove the row
-        print("Sample from phenotype file not found in vcf, removing ID : ", row["1001_Genomes_ID"])
+        #print("Sample from phenotype file not found in vcf, removing ID : ", row["1001_Genomes_ID"])
         consensus_dataframe = consensus_dataframe.drop([index])
 
-print("Consensus_dataframe AFTER checking for consensus")
-print(consensus_dataframe)
+#print("Consensus_dataframe AFTER checking for consensus")
+#print(consensus_dataframe)
 
 # now randomly select a list of ID's for the subsample number e.g. 200 or 400 etc
 subsampled_dataframe = consensus_dataframe.sample(n=int(args.n))
 consensus_dataframe = consensus_dataframe.reset_index()  # make sure indexes pair with number of rows
-print("Subsampled dataframe")
-print(subsampled_dataframe)
+#print("Subsampled dataframe")
+#print(subsampled_dataframe)
 
 subsampled_IDs=open('core_files/subsample_text_files/subsamples_'+str(args.n)+'_'+str(args.ri)+'.txt','w')
 
