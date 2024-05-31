@@ -18,7 +18,7 @@ def run_and_monitor(sbatch_directory, max_jobs=80):
             os.system(f'sbatch {sbatch_directory}{batch_jobs[0]}')
 
             # sam edit- move the running (soon to be completed) batch job to different folder
-            os.system(f'mv {sbatch_directory}{batch_jobs[0]} ../completed_parallel/')
+            os.system(f'mv {sbatch_directory}{batch_jobs[0]} /gpfs01/home/mbysh17/batch_files/completed_parallel/')
 
             # remove script from batch jobs list
             batch_jobs.remove(batch_jobs[0])
