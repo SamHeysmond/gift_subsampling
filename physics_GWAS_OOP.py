@@ -607,7 +607,7 @@ if __name__ == '__main__':
 					dataFrame_absolute_theta =pandas.concat([dataFrame_absolute_theta, new_row.to_frame().T], ignore_index=True)
 
 					# re-sort the csv so lowest pval is at the top and biggest pval is last row
-					dataFrame_absolute_theta.sort_values("PVAL", axis=0, ascending=False,inplace=True, na_position='first')
+					dataFrame_absolute_theta.sort_values(by=["PVAL"], axis=0, ascending=False,inplace=True, na_position='first')
 
 				# if no room in list -> check if abs theta is bigger than current lowest abs theta in t20 list
 				# by checking if its larger than last pval in file (should be the highest)
@@ -625,7 +625,7 @@ if __name__ == '__main__':
 						dataFrame_absolute_theta =pandas.concat([dataFrame_absolute_theta, new_row.to_frame().T], ignore_index=True)
 
 						# re-sort the csv so highest abs theta is at the top and lowest is at the bottom
-						dataFrame_absolute_theta.sort_values("PVAL", axis=0, ascending=False,inplace=True, na_position='first')
+						dataFrame_absolute_theta.sort_values(by=["PVAL"], axis=0, ascending=False,inplace=True, na_position='first')
 				# ===============================================================
 				# PSNP4 SECTION
 				# =============================================================
@@ -639,7 +639,7 @@ if __name__ == '__main__':
 					dataFrame_pSNP4 =pandas.concat([dataFrame_pSNP4, new_row.to_frame().T], ignore_index=True)
 
 					# re-sort the csv so lowest pval is at the top and biggest pval is last row
-					dataFrame_pSNP4.sort_values("PVAL", axis=0, ascending=True,inplace=True, na_position='first')
+					dataFrame_pSNP4.sort_values(by=["PVAL"], axis=0, ascending=True,inplace=True, na_position='first')
 
 				# if no room in list -> check if its smaller than the biggest value in list
 				# by checking if its larger than last pval in file (should be the highest)
@@ -657,7 +657,7 @@ if __name__ == '__main__':
 						dataFrame_pSNP4 =pandas.concat([dataFrame_pSNP4, new_row.to_frame().T], ignore_index=True)
 
 						# re-sort the csv so lowest pval is at the top and biggest pval is last row
-						dataFrame_pSNP4.sort_values("PVAL", axis=0, ascending=True,inplace=True, na_position='first')
+						dataFrame_pSNP4.sort_values(by=["PVAL"], axis=0, ascending=True,inplace=True, na_position='first')
 				# ===============================================================
 				# PSNP5 SECTION
 				# =============================================================
@@ -672,7 +672,7 @@ if __name__ == '__main__':
 					dataFrame_pSNP5 =pandas.concat([dataFrame_pSNP5, new_row.to_frame().T], ignore_index=True)
 
 					# re-sort the csv so lowest pval is at the top and biggest pval is last row
-					dataFrame_pSNP5.sort_values("PVAL", axis=0, ascending=True,inplace=True, na_position='first')
+					dataFrame_pSNP5.sort_values(by=["PVAL"], axis=0, ascending=True,inplace=True, na_position='first')
 
 				# if no room in list -> check if its smaller than the biggest value in list
 				# by checking if its larger than last pval in file (should be the highest)
@@ -690,7 +690,7 @@ if __name__ == '__main__':
 						dataFrame_pSNP5 =pandas.concat([dataFrame_pSNP5, new_row.to_frame().T], ignore_index=True)
 
 						# re-sort the csv so lowest pval is at the top and biggest pval is last row
-						dataFrame_pSNP5.sort_values("PVAL", axis=0, ascending=True,inplace=True, na_position='first')
+						dataFrame_pSNP5.sort_values(by=["PVAL"], axis=0, ascending=True,inplace=True, na_position='first')
 
 				# write all dataframes back to csv 
 				dataFrame_absolute_theta.to_csv("output_files/"+args.id+"_T20_absolute_theta.csv", index=False)
