@@ -366,21 +366,33 @@ def R_plots(output_file, metric='largest_relative_theta', p_value=True): #?# wri
 	#R_out.write(f'GWAS_result<-GWAS_result1[complete.cases(GWAS_result1),]\n')
 	R_out.write(f'GWAS_result <-GWAS_result1\n')
 
-	if p_value == True:
-		# ### start of sam edit (1) <<<<<<<<<<<<<<<<<<<<< # moved this stuff under p_value ==True only
+	# 'absolute_theta'
+	# ### start of sam edit (1) <<<<<<<<<<<<<<<<<<<<< # moved this stuff under p_value ==True only
+
+	#check if metric is absolute theta or a p value (psnp4 or 5)
+	if metric == 'absolute_theta':
+		# set p value flag to FALSE
+		p_value = False
+
 		# reads the T20 snp file based on which metric is being graphed
-		if metric =="absolute_theta":
-			snps_R_variable=str("T20_Absolute_theta_SNPs")
-			R_out.write(f'T20_Absolute_theta_SNPs <- read.csv("output_files/'+args.id+'_T20_absolute_theta.csv", header= TRUE, sep=",")\n')
-		elif metric =="pSNP4":
-			snps_R_variable=str("T20_pSNP4_SNPs")
-			R_out.write(f'T20_pSNP4_SNPs <- read.csv("output_files/'+args.id+'_T20_pSNP4.csv", header= TRUE, sep=",")\n')
-		elif metric =="pSNP5":
-			snps_R_variable=str("T20_pSNP5_SNPs")
-			R_out.write(f'T20_pSNP5_SNPs <- read.csv("output_files/'+args.id+'_T20_pSNP5.csv", header= TRUE, sep=",")\n')
-		### ADD IN CODE TO READ A CSV FOR CUSTOM SNPS OF INTEREST MUCH LIKE THE ABOVE BUT SEPARATE!!
-			#code here for any SNPs in particular (but will require a file to be made first for it to read from)
-		# ### end of sam edit (1) >>>>>>>>>>>>>>>>>>>>>>>>>>>
+		snps_R_variable=str("T20_Absolute_theta_SNPs")
+		R_out.write(f'T20_Absolute_theta_SNPs <- read.csv("output_files/'+args.id+'_T20_absolute_theta.csv", header= TRUE, sep=",")\n')
+	
+	elif metric =="pSNP4":
+		snps_R_variable=str("T20_pSNP4_SNPs")
+		R_out.write(f'T20_pSNP4_SNPs <- read.csv("output_files/'+args.id+'_T20_pSNP4.csv", header= TRUE, sep=",")\n')
+		p_value = True
+
+	elif metric =="pSNP5":
+		snps_R_variable=str("T20_pSNP5_SNPs")
+		R_out.write(f'T20_pSNP5_SNPs <- read.csv("output_files/'+args.id+'_T20_pSNP5.csv", header= TRUE, sep=",")\n')
+		p_value = True
+	### ADD IN CODE TO READ A CSV FOR CUSTOM SNPS OF INTEREST MUCH LIKE THE ABOVE BUT SEPARATE!!
+		#code here for any SNPs in particular (but will require a file to be made first for it to read from)
+	# ### end of sam edit (1) >>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+	if p_value == True:
+		
 		R_out.write(f'# Calculate the BHY threshold\n')
 		R_out.write(f'm <- nrow(GWAS_result)\n')
 		R_out.write(f'GWAS_result <- GWAS_result[order(GWAS_result${metric}),]\n')
@@ -398,19 +410,12 @@ def R_plots(output_file, metric='largest_relative_theta', p_value=True): #?# wri
 		R_out.write('}\n')
 		R_out.write(f'thes_pval_original <- thes_pval\n')
 		# ### start of sam edit (1.2) <<<<<<<<<<<<<<<<<<<<< 
-		if metric=='absolute_theta':
-			R_out.write(f'bhy_thres <- log10(thes_pval)\n')
-		else:
-			R_out.write(f'bhy_thres <- -log10(thes_pval)\n')
+		R_out.write(f'bhy_thres <- -log10(thes_pval)\n')
 		R_out.write(f'# calculate bonferroni_threshold\n')
 
 		# Should the *1135 change depending on subsample number? if so -> e.g. 200 samples would be *200
 		R_out.write(f'bt <- 0.05 / (nrow(GWAS_result)*{args.s}) # times max number of tests per p-value (subsample number)\n')
-
-		if metric=='absolute_theta':
-			R_out.write(f'bf_thres <- log10(bt)\n')
-		else:
-			R_out.write(f'bf_thres <- -log10(bt)\n')
+		R_out.write(f'bf_thres <- -log10(bt)\n')
 		# ### END of sam edit (1.2) <<<<<<<<<<<<<<<<<<<<< 
 	R_out.write(f'data_cum <- GWAS_result %>% \n')
 	R_out.write(f'  group_by(CHROM) %>% \n')
@@ -446,10 +451,7 @@ def R_plots(output_file, metric='largest_relative_theta', p_value=True): #?# wri
 	
 	if p_value == True: 
 		# ### START of sam edit (2.2) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-		if metric=='absolute_theta': 
-			R_out.write(f'manhplot <- ggplot(GWAS_result, aes(x = bp_cum, y = (log10({metric})), # size = 1, \n')
-		else:
-			R_out.write(f'manhplot <- ggplot(GWAS_result, aes(x = bp_cum, y = (-log10({metric})), # size = 1, \n')
+		R_out.write(f'manhplot <- ggplot(GWAS_result, aes(x = bp_cum, y = (-log10({metric})), # size = 1, \n')
 		# ### ENDof sam edit (2.2) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	if p_value == False:
 		R_out.write(f'manhplot <- ggplot(GWAS_result, aes(x = bp_cum, y = ({metric}), # size = 1, \n')
