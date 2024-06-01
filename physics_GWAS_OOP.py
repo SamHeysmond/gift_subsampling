@@ -607,25 +607,25 @@ if __name__ == '__main__':
 					dataFrame_absolute_theta =pandas.concat([dataFrame_absolute_theta, new_row.to_frame().T], ignore_index=True)
 
 					# re-sort the csv so lowest pval is at the top and biggest pval is last row
-					dataFrame_absolute_theta.sort_values("PVAL", axis=0, ascending=True,inplace=True, na_position='first')
+					dataFrame_absolute_theta.sort_values("PVAL", axis=0, ascending=False,inplace=True, na_position='first')
 
-				# if no room in list -> check if its smaller than the biggest value in list
+				# if no room in list -> check if abs theta is bigger than current lowest abs theta in t20 list
 				# by checking if its larger than last pval in file (should be the highest)
 				else:
 
 					# source highest pval from dataframe (should be last index and pval col)
-					highest_pval=dataFrame_absolute_theta.iloc[-1]["PVAL"]
-					if float(highest_pval)>float(absolute_relative_theta):
-						# replace biggest value in list (last item in the list)
-						# first remove the biggest item (last item in the dictionary)
+					lowest_T20_abs_theta=dataFrame_absolute_theta.iloc[-1]["PVAL"]
+					if float(lowest_T20_abs_theta)<float(absolute_relative_theta):
+						# replace smallest value in list (last item in the list)
+						# first remove the smallest abs theta (last item in the dictionary)
 						dataFrame_absolute_theta=dataFrame_absolute_theta.drop(dataFrame_absolute_theta.index[-1])
 						
 						# add in a line for the current line of data in the calculation
 						new_row=pandas.Series({"CHROM":CHROM,"POS":POS,"PVAL":absolute_theta})
 						dataFrame_absolute_theta =pandas.concat([dataFrame_absolute_theta, new_row.to_frame().T], ignore_index=True)
 
-						# re-sort the csv so lowest pval is at the top and biggest pval is last row
-						dataFrame_absolute_theta.sort_values("PVAL", axis=0, ascending=True,inplace=True, na_position='first')
+						# re-sort the csv so highest abs theta is at the top and lowest is at the bottom
+						dataFrame_absolute_theta.sort_values("PVAL", axis=0, ascending=False,inplace=True, na_position='first')
 				# ===============================================================
 				# PSNP4 SECTION
 				# =============================================================

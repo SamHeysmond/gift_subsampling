@@ -22,7 +22,7 @@
 # looping through all .csv made for given ID and given method (gift/gwas)
 
 #packages
-import argparse, pandas
+import argparse, pandas, os
 
 parser=argparse.ArgumentParser(description="subsamples a given number of individuals from master_list.csv")
 
@@ -51,11 +51,12 @@ args= parser.parse_args()
 # opening necessary files
 input_jobs_list=open(args.jl,'r')
 
-output_SNP_tracker_csv=open(args.o+"SNP_tracker_tally.csv","w")
+#output_SNP_tracker_csv=open(args.o+"SNP_tracker_tally.csv","w")
 
 
 # Phenotype,CHR,POS,Subsample_N,N_Times_Significant_GWAS,N_GWAS_tests,N_Sig_GIFT_Absolute_theta,N_Sig_GIFT_pSNP4,N_Sig_GIFT_pSNP5,N_GIFT_tests
 # leaf_ionome_Mo98,2,123,200,85,100,99,79,80,100
+# might remove the N_SIGS_GIFT_ABSOLUTE THETA UNTIL I GET A THRESHOLD TO USE!
 SNP_dataframe = pandas.DataFrame(columns=['PHENOTYPE',
                                           'CHR',
                                           'POS',
@@ -66,17 +67,30 @@ SNP_dataframe = pandas.DataFrame(columns=['PHENOTYPE',
                                           'N_SIGS_GIFT_PSNP4',
                                           'N_SIGS_GIFT_PSNP5',
                                           'N_GIFT_TESTS'])
+
+# variables for positive and negative control
+positive_control_upper_bound = 0
+positive_control_chromosome = 0
+negative_control_upper_bound = 0
+negative_control_chromosome = 0
+
+
 # for graphs (WIP)
 #output_SNP_tracker_Rscript=.....
 
 # set up list of phenotypes sorted
-stored_phenotypes=[] #will contain things like leaf_ionome_Mo98....leaf_ionome_Rad50 etc etc
+stored_phenotypes=[] #will contain things like leaf_ionome_Mo98....leaf_ionome_Na23 etc etc
 cumulative_run_number=0 # out of 100 per run (or n_runs)
 current_phenotype="" #string of the current phenotype being tracked e.g. leaf_ionome_Mo98
 cumulative_GWAS_significance=0 # out of 100 (or N) GWAS parallel runs how many show a SNP as significant
 cumulative_GIFT_significance=0 # out of 100 (or N) GIFT parallel runs how many show a SNP as significant
 N_GWAS_tests=0 #may combine these since they SHOULD be the same ALWAYS
 N_GIFT_tests=0
+
+# GWAS csv name = output_files/${phenotype}_GWAS_${i}_${SLURM_JOB_ID}.csv
+# GIFT csv name = output_files/${phenotype}_whole_genome_metrics_${i}_${SLURM_JOB_ID}.csv
+
+
 
 ## REMINDER OF JOB LIST FORMAT
 # JOB_ID,SUBSAMPLE_N,PHENOTYPE
@@ -94,6 +108,11 @@ N_GIFT_tests=0
 # GIFT PSNP5 T20 SNPS
 # HANDPICKED SNPS? (WIP?)
 # looping through jobs list file
+
+csv_files = os.listdir(args.d)
+
+
+
 for line in input_jobs_list:
     # split on the comma to make it into a list
     clean_line=line.split(",")
