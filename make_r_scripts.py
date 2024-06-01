@@ -79,7 +79,7 @@ Rscript_output.write(f'thes_pval_original <- thes_pval\n')
 Rscript_output.write(f'bhy_thres <- -log10(thes_pval)\n')
 Rscript_output.write(f'# calculate bonferroni_threshold\n')
 # Should the *1135 change depending on subsample number? if so -> e.g. 200 samples would be *200
-Rscript_output.write(f'bt <- 0.05 / (nrow(gwasResults)*1135) # times max number of tests per p-value\n')
+Rscript_output.write(f'bt <- 0.05 / (nrow(gwasResults))\n')
 Rscript_output.write(f'bf_thres <- -log10(bt)\n')
 # annocation prep stuff
 Rscript_output.write(f'#make new columns where the default highlight and annotation is no\n')

@@ -91,7 +91,7 @@ for phenotype in phenotypes_input:
             bash_script_output.write(f'#activate conda environment for the GIFT method\n')
             bash_script_output.write(f'conda activate gift_env\n')
             bash_script_output.write(f'#run GIFT on the subsampled data\n')
-            bash_script_output.write('python3 -W ignore core_files/physics_GWAS_OOP.py -v core_files/subsampled_genotype_${i}_${SLURM_JOB_ID}.vcf -f core_files/subsampled_phenotype_${i}_${SLURM_JOB_ID}.csv -p ${phenotype} -o output_files/${phenotype}_whole_genome_metrics_${i}_${SLURM_JOB_ID}.csv -id ${SLURM_JOB_ID}\n')
+            bash_script_output.write('python3 -W ignore core_files/physics_GWAS_OOP.py -v core_files/subsampled_genotype_${i}_${SLURM_JOB_ID}.vcf -f core_files/subsampled_phenotype_${i}_${SLURM_JOB_ID}.csv -p ${phenotype} -o output_files/${phenotype}_whole_genome_metrics_${i}_${SLURM_JOB_ID}.csv -id ${SLURM_JOB_ID} -s ${i}\n')
             bash_script_output.write(f'# exit gift environment\n')
             bash_script_output.write(f'conda deactivate\n')
             bash_script_output.write('echo "GIFT for: ${SLURM_JOB_ID} finished"\n')

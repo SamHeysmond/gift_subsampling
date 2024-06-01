@@ -405,7 +405,7 @@ def R_plots(output_file, metric='largest_relative_theta', p_value=True): #?# wri
 		R_out.write(f'# calculate bonferroni_threshold\n')
 
 		# Should the *1135 change depending on subsample number? if so -> e.g. 200 samples would be *200
-		R_out.write(f'bt <- 0.05 / (nrow(GWAS_result)*1135) # times max number of tests per p-value\n')
+		R_out.write(f'bt <- 0.05 / (nrow(GWAS_result)*{args.s}) # times max number of tests per p-value (subsample number)\n')
 
 		if metric=='absolute_theta':
 			R_out.write(f'bf_thres <- log10(bt)\n')
@@ -518,6 +518,7 @@ if __name__ == '__main__':
 	# ### start of sam edit (4) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	# add in an ID tag to allow for proper file naming of outputs and tracking of run IDs
 	parser.add_argument('-id', type=str, metavar='run_ID', required=True, help='Run ID of the batch file.')
+	parser.add_argument('-s', type=str, metavar='subsample_num', required=True, help='Subsample number used in this test for threshold calculation.')
 	# ### end of sam edit (4) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	args = parser.parse_args()
 
