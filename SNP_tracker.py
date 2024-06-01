@@ -87,11 +87,6 @@ cumulative_GIFT_significance=0 # out of 100 (or N) GIFT parallel runs how many s
 N_GWAS_tests=0 #may combine these since they SHOULD be the same ALWAYS
 N_GIFT_tests=0
 
-# GWAS csv name = output_files/${phenotype}_GWAS_${i}_${SLURM_JOB_ID}.csv
-# GIFT csv name = output_files/${phenotype}_whole_genome_metrics_${i}_${SLURM_JOB_ID}.csv
-
-
-
 ## REMINDER OF JOB LIST FORMAT
 # JOB_ID,SUBSAMPLE_N,PHENOTYPE
 # 521856,200,leaf_ionome_Mo98
@@ -112,7 +107,21 @@ N_GIFT_tests=0
 csv_files = os.listdir(args.d)
 
 
+# GWAS csv name = output_files/${phenotype}_GWAS_${i}_${SLURM_JOB_ID}.csv
+# GIFT csv name = output_files/${phenotype}_whole_genome_metrics_${i}_${SLURM_JOB_ID}.csv
+# phenotype name examples:
+# leaf_ionome_Mo98
+# leaf_ionome_Na23
 
+for csv_file in csv_files:
+
+    csv_file=csv_file.split("_")
+
+    #check for the specific phenotype based on the naming convention
+    if csv_files[2] == "Mo98":
+        print("Mo98")
+    if csv_files[2] == "Na23":
+        print("Mo98")
 for line in input_jobs_list:
     # split on the comma to make it into a list
     clean_line=line.split(",")

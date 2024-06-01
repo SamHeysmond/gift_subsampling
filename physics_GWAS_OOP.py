@@ -565,7 +565,7 @@ if __name__ == '__main__':
 			# header is the header of the vcf
 			x=field(line, ordered_pheno, headder) 
 			if int(x.line[1]) % 10000 == 0:
-				print(x.line[1])
+				print(x.line[1])  # remove this print?
 			if x.sense_check():
 				largest_theta,smallest_theta,absolute_theta,theta_range,largest_relative_theta,smallest_relative_theta,absolute_relative_theta,range_relative_theta = x.calc_theta()
 				#output_file.write(f'{CHROM},{POS},{largest_theta},{smallest_theta},{absolute_theta},{theta_range},{largest_relative_theta},{smallest_relative_theta},{absolute_relative_theta},{range_relative_theta}\n')
@@ -615,7 +615,7 @@ if __name__ == '__main__':
 
 					# source highest pval from dataframe (should be last index and pval col)
 					lowest_T20_abs_theta=dataFrame_absolute_theta.iloc[-1]["PVAL"]
-					if float(lowest_T20_abs_theta)<float(absolute_relative_theta):
+					if float(lowest_T20_abs_theta)<float(absolute_theta):
 						# replace smallest value in list (last item in the list)
 						# first remove the smallest abs theta (last item in the dictionary)
 						dataFrame_absolute_theta=dataFrame_absolute_theta.drop(dataFrame_absolute_theta.index[-1])
