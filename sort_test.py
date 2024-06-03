@@ -1,5 +1,11 @@
 import pandas
 
+alpha1=""
+def test1(alpha1variable):
+    alpha1="djdfdnsf"
+    return alpha1
+
+alpha1=test1(alpha1)
 
 T20_absolute_theta_output=open("output_files/999_T20_absolute_theta.csv","w")
 # write in header CHROM,POS,PVAL
@@ -32,7 +38,7 @@ for index in range(0,len(absolute_theta_values)):
 
         # re-sort the csv so lowest pval is at the top and biggest pval is last row
         dataFrame_absolute_theta.sort_values(by=["PVAL"], axis=0, ascending=False,inplace=True, na_position='first')
-        dataFrame_absolute_theta.reset_index()
+        #dataFrame_absolute_theta.reset_index()
     # if no room in list -> check if abs theta is bigger than current lowest abs theta in t20 list
     # by checking if its larger than last pval in file (should be the highest)
     else:
@@ -53,7 +59,18 @@ for index in range(0,len(absolute_theta_values)):
 
             # re-sort the csv so highest abs theta is at the top and lowest is at the bottom
             dataFrame_absolute_theta.sort_values(by=["PVAL"], axis=0, ascending=False,inplace=True, na_position='first')
-            dataFrame_absolute_theta.reset_index()
+            #dataFrame_absolute_theta.reset_index()
+    dataFrame_absolute_theta.reset_index()
     dataFrame_absolute_theta.to_csv("output_files/999_T20_absolute_theta.csv", index=False)
     print(dataFrame_absolute_theta)
+dataFrame_absolute_theta.reset_index()
 print(dataFrame_absolute_theta)
+print("number of rows is :", len(dataFrame_absolute_theta))
+
+x = 15
+y = 20
+z = 21
+if x<=z<=y:
+    print("bingo")
+
+print("alpha1:", alpha1)
