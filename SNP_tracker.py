@@ -156,6 +156,16 @@ Na23_ALL_SNPS_GWAS_df = pandas.DataFrame(columns=[
                                                     'TOTAL_GWAS'   #SHOULD be 100
                                                     ])
 
+T20_SNPS_GIFT_AND_GWAS = pandas.DataFrame(columns=[
+                                                    'CHR', 
+                                                    'POS',
+                                                    'SUBSAMPLE_NUM',  # for each subsamp number 200-1000
+                                                    'TOTAL_PSNP4',
+                                                    'TOTAL_PSNP5',
+                                                    'TOTAL_ABS_THETA',
+                                                    'TIMES_APPEARED', # COULD be 90 or 99 or 100 or 10 who knows
+                                                    'TOTAL_GIFT'   #SHOULD be 100
+                                                    ])
 
 
 # further dataframes can then look at these SNPs and compare their n_sig values between GIFT and GWAS at DIFFERENT subsample nums
@@ -194,6 +204,7 @@ Na23_ALL_SNPS_GWAS_df = pandas.DataFrame(columns=[
 # chromosomes,positions,pvals,mafs,macs,genotype_var_perc
 # 1,55,0.621946624343,0.0016694490818,1,0.000407516956329
 
+# IDEA 3
 def GATHER_ALL_GIFT_SNPS(current_phenotype_df, ALL_GIFT_SNPS_df,Total_GIFT,current_subsample_num):
 
     # increment the GIFT total counter
@@ -246,6 +257,7 @@ def GATHER_ALL_GIFT_SNPS(current_phenotype_df, ALL_GIFT_SNPS_df,Total_GIFT,curre
     print("GIFT GATHER function done")
     return ALL_GIFT_SNPS_df, Total_GIFT
 
+# IDEA 3
 def GATHER_ALL_GWAS_SNPS(current_phenotype_df,ALL_GWAS_SNPS_df,Total_GWAS,current_subsample_num):
     
     # increment the GWAS total counter
@@ -292,6 +304,7 @@ def GATHER_ALL_GWAS_SNPS(current_phenotype_df,ALL_GWAS_SNPS_df,Total_GWAS,curren
     print("GWAS GATHER function finished")
     return ALL_GWAS_SNPS_df, Total_GWAS
 
+# IDEA 3
 def CALCULATE_AVERAGE_SNPS_GIFT(ALL_GIFT_SNPS_df):
     ALL_GIFT_SNPS_df["AVERAGE_PSNP4"] = ALL_GIFT_SNPS_df["TOTAL_PSNP4"] / ALL_GIFT_SNPS_df["TIMES_APPEARED"]
     ALL_GIFT_SNPS_df["AVERAGE_PSNP5"] = ALL_GIFT_SNPS_df["TOTAL_PSNP5"] / ALL_GIFT_SNPS_df["TIMES_APPEARED"]
@@ -299,17 +312,19 @@ def CALCULATE_AVERAGE_SNPS_GIFT(ALL_GIFT_SNPS_df):
 
     return ALL_GIFT_SNPS_df
 
+# IDEA 3
 def CALCULATE_AVERAGE_SNPS_GWAS(ALL_GWAS_SNPS_df):
     ALL_GWAS_SNPS_df["AVERAGE_P"] = ALL_GWAS_SNPS_df["TOTAL_P"] / ALL_GWAS_SNPS_df["TIMES_APPEARED"]
 
     return ALL_GWAS_SNPS_df
 
-def MAKE_R_SCRIPT(phenotype,subsample_number,pval_type):
+# IDEA 3
+def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type):
     # make R script for each P value type (pSNP4, pSNP5, abs theta) -> check phys gwas for things like abs theta incase different
-    R_out=open("output_files/"+str(phenotype)+"_"+str(subsample_number)+"_"+str(pval_type)+"_AVG_MANHATTAN.R","w")
+    R_out=open("output_files/SNP_tracker_R_scripts/"+str(phenotype)+"_"+str(subsample_number)+"_"+str(pval_type)+"_AVG_MANHATTAN.R","w")
     R_out.write(f'#R script for making manhattan plots with ggplot\n')
     R_out.write(f'library("tidyverse")\n')
-    R_out.write(f'library("ggrepel")\n')   
+    # R_out.write(f'library("ggrepel")\n')   # Dont need ggrepel for now
     R_out.write(f'\n')
 
     # for GWAS data
@@ -340,13 +355,13 @@ def MAKE_R_SCRIPT(phenotype,subsample_number,pval_type):
     R_out.write(f'     summarize(center=( max(BPcum) + min(BPcum) ) / 2 )\n')
 
     # set y limit for the graph (not sure if this changes anything here though- just copied from other script)
-    if pval_type=="TOTAL_ABS_THETA": #test
+    if pval_type=="TOTAL_ABS_THETA": # testing without log10
         R_out.write(f'ylim <- abs(floor(min({pval_type}_SUBSAMPLE_{subsample_number}_SNPS_DATA${pval_type}))) +1\n')
     else:
         R_out.write(f'ylim <- abs(floor(log10(min({pval_type}_SUBSAMPLE_{subsample_number}_SNPS_DATA${pval_type})))) +1\n')
 
     R_out.write(f'#open png\n')
-    R_out.write(f'png("output_files/{phenotype}_{subsample_number}_{pval_type}"_AVG_MANHATTAN.png", bg = "white", width = 9.75, height = 3.25, units = "in", res = 1200, pointsize = 4)\n')
+    R_out.write(f'png("output_files/summary_plots/{phenotype}_{subsample_number}_{pval_type}"_AVG_MANHATTAN.png", bg = "white", width = 9.75, height = 3.25, units = "in", res = 1200, pointsize = 4)\n')
 
     # make the plot
     if pval_type=="TOTAL_ABS_THETA":
@@ -379,7 +394,207 @@ def MAKE_R_SCRIPT(phenotype,subsample_number,pval_type):
     R_out.write(f'#END OF SCRIPT\n')
     R_out.close()
 
-    os.system("output_files/"+str(phenotype)+"_"+str(subsample_number)+"_"+str(pval_type)+"_AVG_MANHATTAN.R")
+    # run the R script
+    #os.system("output_files/SNP_tracker_R_scripts/"+str(phenotype)+"_"+str(subsample_number)+"_"+str(pval_type)+"_AVG_MANHATTAN.R")
+    # instead of running the script -> make a batch file for the script and put it into batch_files/parallel_stage2/
+
+    # location where the batch scripts will be written to
+    R_batch=open("batch_files/parallel_stage2/"+str(phenotype)+"_"+str(subsample_number)+"_"+str(pval_type)+"_AVG_MANHATTAN.sh","w")
+    
+    # necessary start to the file
+    R_batch.write(f'#!/bin/bash\n')
+    R_batch.write(f'#SBATCH --partition=defq\n')
+    R_batch.write(f'#SBATCH --nodes=1\n')
+    R_batch.write(f'#SBATCH --ntasks=1\n')
+    R_batch.write(f'#SBATCH --cpus-per-task=3\n')
+    R_batch.write(f'#SBATCH --mem=8g\n')
+    R_batch.write(f'#SBATCH --time=1:00:00\n')
+    R_batch.write(f'#SBATCH --job-name=R_subrun\n')
+    R_batch.write(f'#SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out\n')
+    R_batch.write(f'#SBATCH --error=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.err\n')
+    R_batch.write(f'#SBATCH --mail-type=ALL\n')
+    R_batch.write(f'#SBATCH --mail-user=mbysh17@nottingham.ac.uk\n')
+    R_batch.write(f'#===============================\n')
+    R_batch.write(f'#change to home directory\n')
+    R_batch.write(f'cd /gpfs01/home/mbysh17\n')
+    R_batch.write(f'# source conda environments\n')
+    R_batch.write(f'source ~/.bashrc\n')
+    R_batch.write(f'conda activate r_env\n')
+    R_batch.write(f'# R SCRIPT FOR (IDEA 1) AVG MANHATTAN PLOT\n')
+    R_batch.write(f'Rscript output_files/SNP_tracker_R_scripts/{phenotype}_{subsample_number}_{pval_type}_AVG_MANHATTAN.R\n')
+    R_batch.write(f'conda deactivate\n')
+    R_batch.close()
+    # end of function
+
+
+# IDEA 1
+def TRACK_T20_DOWNSAMPLE(all_snps_dataframe,pval_type): #parameters of: phenotype, subsample number, and pval type (implied method)
+    # need to pass in...
+    # (for each phenotype) GWAS ALL SNPS dataframe  (x2)
+    # (for each phenotype) GIFT ALL SNPS dataframe  (x2)
+
+
+    # after loop for each phenotype, subsample etc...
+    # at 1000 (which is pretty much near the full dataset bar 3 samples?) 
+    #   -> see what TOP20 is overall the 100 tests (using the ALL_SNPS dataframe) for each PVAL type 
+    #   -> save these 20 locations
+    # then go down to 800, 600 etc and track their p values (averaged across all 100 tests at each level for GWAS (TOTAL_P) and GIFT(pSNP4 ...))
+    # each subsample and Pval -> create a new column of "average P val" in GIFT vs in GWAS
+    #       ideally the GIFT pvals wont drop as hard as the GWAS pvals
+    
+    #if pval_type=="AVERAGE_P":
+    
+    # 1) sort GWAS all SNPs by 1000 subsample and the PVAL (so biggest is at the top)
+    #Mo98_ALL_SNPS_GWAS_df.sort_values(by=["SUBSAMPLE_NUM","AVERAGE_P"], axis=0, ascending=[False,True],inplace=True, na_position='first')
+    all_snps_dataframe.sort_values(by=["SUBSAMPLE_NUM",pval_type], axis=0, ascending=[False,True],inplace=True, na_position='first')
+
+    # 2) take top 20 of these averaged GWAS values
+    # example format:
+    # CHR    POS    SUBSAMPLE_NUM    TOTAL_P    TIMES_APPEARED    TOTAL_GWAS    AVERAGE_P
+    # 1      342    1000             7          98                100           0.05
+    # 4      787    1000             12         99                100           0.90
+    # T20_1000_Mo98_GWAS=Mo98_ALL_SNPS_GWAS_df.head(20)
+    current_pval_T20_df=all_snps_dataframe.head(20)
+
+    # was T20_1000_Mo98_GWAS
+    for index, row in current_pval_T20_df.iterrows():
+        # create dataframe for new SNP
+        # example format: (it should end up looking like the below format)
+        # CHR    POS    PVAL_TYPE    SUBSAMPLE_NUM    AVERAGE_VALUE
+        # 1      23     AVERAGE_P    1000             0.000321
+        # 1      23     AVERAGE_P    800              0.002300
+        # 1      23     AVERAGE_P    600              0.006500
+        # 1      23     AVERAGE_P    400              0.007786
+        # 1      23     AVERAGE_P    200              0.031234
+        CURRENT_SNP_DOWNSAMPLE_TRACKING_df = pandas.DataFrame(columns=[
+                                                'CHR', 
+                                                'POS',
+                                                'PVAL_TYPE',
+                                                'SUBSAMPLE_NUM',  # for each subsamp number 200-1000
+                                                'AVERAGE_VALUE'  
+                                                ])
+        #  look in the main ALL GWAS SNPS dataframe for the current CHR and POS and write in values for all subsample numbers 1000-200
+        for main_index,main_row in Mo98_ALL_SNPS_GWAS_df.iterrows():
+            if (main_row['CHR'] == row['CHR']) and (main_row['POS'] == row['POS']):
+                new_row=pandas.Series({
+                                "CHR":main_row['CHR'],
+                                "POS":main_row['POS'],
+                                "PVAL_TYPE":str(pval_type),
+                                "SUBSAMPLE_NUM":int(main_row["SUBSAMPLE_NUM"]),     
+                                "AVERAGE_VALUE":float(main_row[pval_type])
+                                })
+                # add the new row (current SNP) to the main SNP dataframe
+                CURRENT_SNP_DOWNSAMPLE_TRACKING_df =pandas.concat([CURRENT_SNP_DOWNSAMPLE_TRACKING_df, new_row.to_frame().T], ignore_index=True)
+
+                # re-sort the df so CHR and POS go in ascending order -> it looks nicer that way.
+                CURRENT_SNP_DOWNSAMPLE_TRACKING_df.sort_values(by=["PVAL_TYPE","AVERAGE_VALUE"], axis=0, ascending=[False,True],inplace=True, na_position='first')
+        
+        # now write this current df to csv -> using SNP type (e.g. AVERAGE_P or AVERAGE_PSNP4) CHR and POS to name it uniquely
+        # example format: (it should end up looking like the below format)
+        # CHR    POS    PVAL_TYPE    SUBSAMPLE_NUM    AVERAGE_VALUE
+        # 1      23     AVERAGE_P    1000             0.000321
+        # 1      23     AVERAGE_P    800              0.002300
+        # 1      23     AVERAGE_P    600              0.006500
+        # 1      23     AVERAGE_P    400              0.007786
+        # 1      23     AVERAGE_P    200              0.031234
+        CURRENT_SNP_DOWNSAMPLE_TRACKING_df.to_csv("output_files/R_DATA/"+str(pval_type)+"_CHR_"+str(row['CHR'])+"_POS_"+str(row['POS'])+"_T20_DATA.csv", index = False)
+
+        #####################################
+        ####### MAKING THE R SCRIPT
+        ######################################
+
+        # write the R script to pair with the SNP and its data
+        CURRENT_SNP_R_SCRIPT=open("output_files/SNP_tracker_R_scripts/"+str(pval_type)+"_CHR_"+str(row['CHR'])+"_POS_"+str(row['POS'])+"_T20_DATA.R","w")
+        CURRENT_SNP_R_SCRIPT.write(f'#R script for making box plots with ggplot\n')
+        CURRENT_SNP_R_SCRIPT.write(f'library("tidyverse")\n')
+        CURRENT_SNP_R_SCRIPT.write(f'T20_SUBSAMPLE_DATA<- read.csv("output_files/R_DATA/{str(pval_type)}_CHR_{str(row['CHR'])}_POS_{str(row['POS'])}_T20_DATA.csv", header= TRUE, sep=",")\n')
+        CURRENT_SNP_R_SCRIPT.write(f'\n')
+        CURRENT_SNP_R_SCRIPT.write(f'#open png\n')
+        # so the example file name might be: "output_files/summary_plots/AVERAGE_P_CHR_2_POS_1012293_T20_DATA.png"
+        CURRENT_SNP_R_SCRIPT.write(f'png("output_files/summary_plots/{str(pval_type)}_CHR_{str(row['CHR'])}_POS_{str(row['POS'])}_T20_DATA.png", bg = "white", width = 9.75, height = 3.25, units = "in", res = 1200, pointsize = 4)\n')
+        CURRENT_SNP_R_SCRIPT.write(f'ggplot(T20_SUBSAMPLE_DATA, aes(x=PVAL_TYPE, y=AVERAGE_VALUE, fill=SUBSAMPLE_NUM)) +\n')
+        CURRENT_SNP_R_SCRIPT.write(f'   geom_boxplot()\n')
+        CURRENT_SNP_R_SCRIPT.write(f'# no facet_wrap for this code\n')
+        CURRENT_SNP_R_SCRIPT.write(f'\n')
+        CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
+        CURRENT_SNP_R_SCRIPT.write(f'# END OF R SCRIPT')
+        CURRENT_SNP_R_SCRIPT.close()
+
+
+        #####################################
+        ####### MAKING THE BATCH SCRIPT
+        ######################################
+
+        
+        # location where the batch scripts will be written to
+        CURRENT_SNP_BATCH=open("batch_files/parallel_stage2/"+str(pval_type)+"_CHR_"+str(row['CHR'])+"_POS_"+str(row['POS'])+"_T20_DATA.sh","w")
+        
+        # necessary start to the file
+        CURRENT_SNP_BATCH.write(f'#!/bin/bash\n')
+        CURRENT_SNP_BATCH.write(f'#SBATCH --partition=defq\n')
+        CURRENT_SNP_BATCH.write(f'#SBATCH --nodes=1\n')
+        CURRENT_SNP_BATCH.write(f'#SBATCH --ntasks=1\n')
+        CURRENT_SNP_BATCH.write(f'#SBATCH --cpus-per-task=3\n')
+        CURRENT_SNP_BATCH.write(f'#SBATCH --mem=8g\n')
+        CURRENT_SNP_BATCH.write(f'#SBATCH --time=1:00:00\n')
+        CURRENT_SNP_BATCH.write(f'#SBATCH --job-name=R_subrun\n')
+        CURRENT_SNP_BATCH.write(f'#SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out\n')
+        CURRENT_SNP_BATCH.write(f'#SBATCH --error=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.err\n')
+        CURRENT_SNP_BATCH.write(f'#SBATCH --mail-type=ALL\n')
+        CURRENT_SNP_BATCH.write(f'#SBATCH --mail-user=mbysh17@nottingham.ac.uk\n')
+        CURRENT_SNP_BATCH.write(f'#===============================\n')
+        CURRENT_SNP_BATCH.write(f'#change to home directory\n')
+        CURRENT_SNP_BATCH.write(f'cd /gpfs01/home/mbysh17\n')
+        CURRENT_SNP_BATCH.write(f'# source conda environments\n')
+        CURRENT_SNP_BATCH.write(f'source ~/.bashrc\n')
+        CURRENT_SNP_BATCH.write(f'conda activate r_env\n')
+        CURRENT_SNP_BATCH.write(f'# R SCRIPT FOR (IDEA 3) BOXPLOT\n')
+        CURRENT_SNP_BATCH.write(f'Rscript output_files/SNP_tracker_R_scripts/{str(pval_type)}"_CHR_{str(row['CHR'])}_POS_{str(row['POS'])}_T20_DATA.R"\n')
+        CURRENT_SNP_BATCH.write(f'conda deactivate\n')
+        CURRENT_SNP_BATCH.close()
+       
+        '''
+        # COMPLEX IDEA BELOW (cancelled for now) 
+        #  look in the main ALL GIFT SNPS dataframe for the current CHR and POS and write in values for all subsample numbers 1000-200
+        for main_index,main_row in Mo98_ALL_SNPS_GWAS_df.iterrows():
+            if (main_row['CHR'] == row['CHR']) and (main_row['POS'] == row['POS']):
+                
+                # create temp lists
+                temp_values=[]
+                temp_types=["PSNP4","PSNP5","ABS_THETA"]
+
+                # append the three GIFT values in SPECIFIC order
+                temp_values.append(float(main_row["AVERAGE_SNP4"]))
+                temp_values.append(float(main_row["AVERAGE_SNP5"]))
+                temp_values.append(float(main_row["AVERAGE_ABS_THETA"]))
+
+                # loop through both lists together
+                for pval_type,temp_value in zip(temp_types,temp_values):
+
+                    # make one of the values e.g. the PSNP4 information into a new row
+                    new_row=pandas.Series({
+                                "CHR":main_row['CHR'],
+                                "POS":main_row['POS'],
+                                "PVAL_TYPE":pval_type,
+                                "SUBSAMPLE_NUM":int(main_row["SUBSAMPLE_NUM"]),     
+                                "AVERAGE_VALUE":float(temp_value)
+                                })
+                    
+                    # add the new information to the CURRENT_SNP dataframe
+                    CURRENT_SNP_DOWNSAMPLE_TRACKING_df =pandas.concat([CURRENT_SNP_DOWNSAMPLE_TRACKING_df, new_row.to_frame().T], ignore_index=True)
+
+        # now write the current SNP information to a CSV
+
+        #-
+
+        # write the R script that will go with this CSV
+        # -
+
+        # write the bash script that will go with this R and CSV
+        # -
+        '''
+         
+        # end of function
     return
 
 Total_GIFT_Mo98 = 0
@@ -480,7 +695,7 @@ for csv_file in csv_files:
                     pass
         '''
             
-    elif csv_files[2]=="Mo98" and csv_files[3]=='GWAS':# GWAS code vvv      
+    elif csv_files[2]=="Mo98" and csv_files[3]=='GWAS' and csv_files[4]!="T20":# GWAS code vvv      
         #Total_GWAS+=1
         Current_Mo98_dataframe=pandas.read_csv(csv_file)
         Mo98_ALL_SNPS_GWAS_df,Total_GWAS_Mo98 = GATHER_ALL_GWAS_SNPS(Current_Mo98_dataframe,Mo98_ALL_SNPS_GWAS_df,Total_GWAS_Mo98, int(csv_files[6]))
@@ -542,13 +757,12 @@ for csv_file in csv_files:
         Current_Na23_dataframe=pandas.read_csv(csv_file) 
         Na23_ALL_SNPS_GIFT_df,Total_GIFT_Na23=GATHER_ALL_GIFT_SNPS(Current_Na23_dataframe,Na23_ALL_SNPS_GIFT_df,Total_GIFT_Na23,int(csv_files[6]))
 
-    elif csv_files[2] == "Na23" and csv_files[3]=='GWAS':
+    elif csv_files[2] == "Na23" and csv_files[3]=='GWAS' and csv_files[4]!="T20": #
         #Total_GWAS+=1
         Current_Na23_dataframe=pandas.read_csv(csv_file)
         Na23_ALL_SNPS_GWAS_df,Total_GWAS_Na23 = GATHER_ALL_GWAS_SNPS(Current_Na23_dataframe,Na23_ALL_SNPS_GWAS_df,Total_GWAS_Na23, int(csv_files[6]))
 
-    else:
-        print("failure to detect phenotype and GWAS/GIFT method")
+
 
 # Now go through each of the total SNP dataframes and calculate the average P values for each SNP
 Mo98_ALL_SNPS_GIFT_df = CALCULATE_AVERAGE_SNPS_GIFT(Mo98_ALL_SNPS_GIFT_df)
@@ -564,23 +778,48 @@ Mo98_ALL_SNPS_GWAS_df.to_csv("output_files/Mo98_ALL_SNPS_GWAS.csv", index=False)
 Na23_ALL_SNPS_GIFT_df.to_csv("output_files/Na23_ALL_SNPS_GIFT.csv", index=False)
 Na23_ALL_SNPS_GWAS_df.to_csv("output_files/Na23_ALL_SNPS_GWAS.csv", index=False)
 
-subsample_num_list=[200,400,600,800,1000]
-phenotype_list=["Mo98","Na23"]
-pvals=["TOTAL_P","TOTAL_PSNP4","TOTAL_PSNP5","TOTAL_ABS_THETA"]
+subsample_num_list=[200,400,600,800,1000] # can later update this to read from earlier scripts or something
+
+phenotype_list=["Mo98","Na23"] # can later update this to read from the phenotype text file
+
+pvals=["TOTAL_P","TOTAL_PSNP4","TOTAL_PSNP5","TOTAL_ABS_THETA"] # these should always be the same 4 types
 # R script creation and running
 for phenotype in phenotype_list:
-
-    pass
 
     for subsample_number in subsample_num_list:
 
         for pval_type in pvals:
 
-            MAKE_R_SCRIPT(phenotype,subsample_number,pval_type)
-          
-            
-            
-            pass
+            # Example variable inputs are as follows: 
+            # example 1 Mo98,200,TOTAL_P
+            # example 2 Mo98,200,TOTAL_PSNP4
+            # ...
+            # example x Mo98,400,TOTAL_P
+            # ....
+            IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type)
+
+# IDEA 1 loop
+average_pvals_list=["AVERAGE_P","AVERAGE_PSNP4","AVERAGE_PSNP5","AVERAGE_ABS_THETA"]
+for phenotype in phenotype_list:
+
+    for pval_type in average_pvals_list:
+
+        if phenotype=="Mo98":
+
+            if pval_type == "AVERAGE_P":
+                TRACK_T20_DOWNSAMPLE(Mo98_ALL_SNPS_GWAS_df,pval_type)
+
+            else:
+                TRACK_T20_DOWNSAMPLE(Mo98_ALL_SNPS_GIFT_df,pval_type)
+
+        elif phenotype == "Na23":
+
+            if pval_type == "AVERAGE_P":
+                TRACK_T20_DOWNSAMPLE(Na23_ALL_SNPS_GWAS_df,pval_type)
+
+            else:
+                TRACK_T20_DOWNSAMPLE(Na23_ALL_SNPS_GIFT_df,pval_type)
+       
 
 
 

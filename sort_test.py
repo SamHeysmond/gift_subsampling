@@ -73,4 +73,6 @@ z = 21
 if x<=z<=y:
     print("bingo")
 
+biggest_two=dataFrame_absolute_theta.nlargest(2,"PVAL")
 print("alpha1:", alpha1)
+print("Biggest two DF: \n", biggest_two)
