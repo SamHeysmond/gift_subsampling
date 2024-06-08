@@ -22,12 +22,16 @@ source ~/.bashrc
 rm -rf batch_files/parallel_stage2/
 rm -rf batch_files/completed_parallel_stage2/
 rm -rf output_files/SNP_tracker_R_scripts/
-rm -rf output_files/summary_plots/
+rm -rf output_files/summary_plots/IDEA1
+rm -rf output_files/summary_plots/IDEA2
+rm -rf output_files/summary_plots/IDEA3
 rm -rf output_files/R_DATA/
 
 # Set up directory to put the R scripts into
 mkdir output_files/SNP_tracker_R_scripts/
-mkdir output_files/summary_plots/
+mkdir output_files/summary_plots/IDEA1
+mkdir output_files/summary_plots/IDEA2
+mkdir output_files/summary_plots/IDEA3
 mkdir batch_files/parallel_stage2/
 mkdir batch_files/completed_parallel_stage2/
 mkdir output_files/R_DATA/
