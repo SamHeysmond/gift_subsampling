@@ -4,7 +4,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=3
 #SBATCH --mem=16g
-#SBATCH --time=12:00:00
+#SBATCH --time=24:00:00
 #SBATCH --job-name=SNP_tracker_sh
 #SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out
 #SBATCH --error=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.err
@@ -45,7 +45,7 @@ conda activate python3_env
 python3 batch_files/SNP_tracker.py -d /gpfs01/home/mbysh17/output_files/
 
 # run the modified "SNP" run and modifier to execute the R scripts in parallel
-python3 batch_files/Rscript_run_and_monitor.py
+python3 -u batch_files/Rscript_run_and_monitor.py
 
 # exit conda environment
 conda deactivate

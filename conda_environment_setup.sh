@@ -30,11 +30,10 @@ source ~/.bashrc
 #conda deactivate
 
 #conda create -n python3_env -y
-conda activate python3_env
+#conda activate python3_env
 #conda install python=3.12 -y
 #pip3 install pandas
-pip3 install os
-conda deactivate
+#conda deactivate
 
 #conda create -n gwas_env -y
 #conda activate gwas_env
