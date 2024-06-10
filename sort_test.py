@@ -1,4 +1,4 @@
-import pandas
+import pandas, os
 
 alpha1=""
 def test1(alpha1variable):
@@ -92,3 +92,51 @@ biggest_two=dataFrame_absolute_theta.nlargest(2,"PVAL")
 print("alpha1:", alpha1)
 print("Biggest two DF: \n", biggest_two)
 print("dataframe looks like: \n", dataFrame_absolute_theta)
+
+
+print("RENAMING TEST STUFF")
+df=pandas.DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]})
+mynewdf=df.copy()
+
+#mynewdf.rename(columns={"A": "a", "B": "c"},inplace=True)
+brandnewcolumns=["X","Y"]
+mynewdf.columns=brandnewcolumns
+
+print("My old df (shouldnt change)",df)
+print("=================================")
+print("My new df, (YES change)", mynewdf)
+
+mywd=os.getcwd()
+print("mywd is :", mywd)
+list_of_python_files=[]
+
+for file in os.listdir(mywd):
+    if file.endswith(".py"):
+        print(file," added to the list!")
+        list_of_python_files.append(file)
+    else:
+        print(file," IS NOT ADDED TO LIST")
+
+
+'''
+csv_files=os.listdir(mywd)
+
+print(csv_files)
+
+
+
+
+
+for file in csv_files:
+    print("file being checked: ", file)
+    if '.py' in str(file):
+        print(".py is in: ", file)
+        pass  
+    else:
+        print(".py is NOT in: ",file)
+        csv_files.remove(file)
+'''
+print("after sorting")
+
+for python_file in list_of_python_files:
+    print(python_file)
