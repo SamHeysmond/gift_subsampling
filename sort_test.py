@@ -5,6 +5,17 @@ def test1(alpha1variable):
     alpha1="djdfdnsf"
     return alpha1
 
+def write_a_line(dataframe_goes_here):
+    new_row=pandas.Series({
+                            "CHROM":9999,
+                            "POS":9999,
+                            "PVAL":9999
+                        })
+                
+    # add the new row (current SNP) to the main SNP dataframe
+    dataframe_goes_here =pandas.concat([dataframe_goes_here, new_row.to_frame().T], ignore_index=True)
+
+    return dataframe_goes_here
 alpha1=test1(alpha1)
 
 T20_absolute_theta_output=open("output_files/999_T20_absolute_theta.csv","w")
@@ -73,6 +84,11 @@ z = 21
 if x<=z<=y:
     print("bingo")
 
+dataFrame_absolute_theta = write_a_line(dataFrame_absolute_theta)
+path1="test123"
+test_path = ("here/there/somewhere"+str(path1))
+print(test_path)
 biggest_two=dataFrame_absolute_theta.nlargest(2,"PVAL")
 print("alpha1:", alpha1)
 print("Biggest two DF: \n", biggest_two)
+print("dataframe looks like: \n", dataFrame_absolute_theta)

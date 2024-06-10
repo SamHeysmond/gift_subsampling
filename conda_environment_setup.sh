@@ -32,7 +32,8 @@ source ~/.bashrc
 #conda create -n python3_env -y
 conda activate python3_env
 #conda install python=3.12 -y
-pip3 install pandas
+#pip3 install pandas
+pip3 install os
 conda deactivate
 
 #conda create -n gwas_env -y
@@ -70,11 +71,11 @@ conda deactivate
 #conda deactivate
 
 #conda create -n subsample_env -y
-conda activate subsample_env
+#conda activate subsample_env
 #conda install bcftools -y
 #conda install python -y
-pip3 install pandas
-conda deactivate
+#pip3 install pandas
+#conda deactivate
 
 echo "Script finished!"
 #end of script

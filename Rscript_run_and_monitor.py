@@ -26,3 +26,4 @@ def run_and_monitor(sbatch_directory, max_jobs=80):
         if int(running) >= max_jobs:
             time.sleep(5)
 run_and_monitor('/gpfs01/home/mbysh17/batch_files/parallel_stage2/')
+print("Rscript_run_and_monitor.py finished!")

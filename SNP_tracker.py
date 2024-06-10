@@ -27,12 +27,6 @@ import argparse, pandas, os, math
 
 parser=argparse.ArgumentParser(description="subsamples a given number of individuals from master_list.csv")
 
-parser.add_argument('-jl', 
-                    type=str, 
-                    metavar='master list of all phenotype data', 
-                    required=True, 
-                    help='Input for the master list of phenotype data'
-                    )
 
 parser.add_argument('-d', # this is NOT the output where this program WITES to, its what it TAKES from
                     type=str, 
@@ -41,18 +35,9 @@ parser.add_argument('-d', # this is NOT the output where this program WITES to, 
                     help='Lets the program read the csv files made from GWAS and GIFT in output'
                     )
 
-parser.add_argument('-o', 
-                    type=str, 
-                    metavar='output directory of result from SNP_tracker.py', 
-                    required=True, 
-                    help='The directory you want the csv and figures to be put in'
-                    )
 
 # stores input data and parses them
 args= parser.parse_args() 
-
-# opening necessary files
-input_jobs_list=open(args.jl,'r')
 
 #output_SNP_tracker_csv=open(args.o+"SNP_tracker_tally.csv","w")
 
@@ -317,30 +302,33 @@ def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type):
     R_out=open("output_files/SNP_tracker_R_scripts/"+str(phenotype)+"_"+str(subsample_number)+"_"+str(pval_type)+"_AVG_MANHATTAN.R","w")
     R_out.write(f'#R script for making manhattan plots with ggplot\n')
     R_out.write(f'library("tidyverse")\n')
+    #R_out.write(f'library("ggplot2")\n')
+    #R_out.write(f'library("dplyr")\n')
     # R_out.write(f'library("ggrepel")\n')   # Dont need ggrepel for now
+    R_out.write(f'print("Start of IDEA 3 R")\n')
     R_out.write(f'\n')
 
     # for GWAS data....
     if pval_type=="TOTAL_P":
 
         # fetch the data of the csv for the current phenotype and current method (GWAS)
-        R_out.write(f'GWAS_ALL_SNPS_DATA<-read.csv("output_files/{phenotype}_ALL_SNPS_GWAS.csv",header=true)\n')  
+        R_out.write(f'GWAS_ALL_SNPS_DATA<-read.csv("output_files/R_DATA/{phenotype}_ALL_SNPS_GWAS.csv",header=TRUE)\n')  
         
         # subsample this dataset to the current subsample number (e.g. 400)
-        R_out.write(f'GWAS_SUBSAMPLE_{subsample_number}_SNPS_DATA <- subset(GWAS_ALL_SNPS_DATA,SUBSAMPLE_NUM=={subsample_number})\n') 
+        R_out.write(f'{pval_type}_SUBSAMPLE_{subsample_number}_SNPS_DATA <- subset(GWAS_ALL_SNPS_DATA,SUBSAMPLE_NUM=={subsample_number})\n') 
     
     # for GIFT data
     else:
 
         # fetch the data of the csv for the current phenotype and current method (GIFT)
-        R_out.write(f'GIFT_ALL_SNPS_DATA<-read.csv("output_files/{phenotype}_ALL_SNPS_GIFT.csv",header=true)\n')  
+        R_out.write(f'GIFT_ALL_SNPS_DATA<-read.csv("output_files/R_DATA/{phenotype}_ALL_SNPS_GIFT.csv",header=TRUE)\n')  
 
         # subsample this dataset to the current subsample number (e.g. 400)
         # dont worry about pval type separation ,that bit comes soon.
         R_out.write(f'{pval_type}_SUBSAMPLE_{subsample_number}_SNPS_DATA <- subset(GIFT_ALL_SNPS_DATA,SUBSAMPLE_NUM=={subsample_number})\n') 
     
     # cumulative calculations
-    R_out.write(f'don <- {pval_type}_SUBSAMPLE_{subsample_number}_SNPS_DATA %>%\n')
+    R_out.write(f'mydata <- {pval_type}_SUBSAMPLE_{subsample_number}_SNPS_DATA %>%\n')
     R_out.write(f'     # Compute CHR size\n')
     R_out.write(f'     group_by(CHR) %>% \n')
     R_out.write(f'     summarise(chr_len=max(POS)) %>%\n')
@@ -352,7 +340,7 @@ def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type):
     R_out.write(f'     # Add a cumulative position of each SNP\n')
     R_out.write(f'     arrange(CHR, POS) %>%\n')
     R_out.write(f'     mutate( BPcum=POS+tot) \n')
-    R_out.write(f'axisdf = don %>%\n')
+    R_out.write(f'axisdf = mydata %>%\n')
     R_out.write(f'     group_by(CHR) %>%\n')
     R_out.write(f'     summarize(center=( max(BPcum) + min(BPcum) ) / 2 )\n')
 
@@ -365,15 +353,15 @@ def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type):
 
     R_out.write(f'#open png\n')
     # Send output to IDEA 3 summary plot folder
-    R_out.write(f'png("output_files/summary_plots/IDEA3/{phenotype}_{subsample_number}_{pval_type}"_AVG_MANHATTAN.png", bg = "white", width = 9.75, height = 3.25, units = "in", res = 1200, pointsize = 4)\n')
+    R_out.write(f'png("output_files/summary_plots/IDEA3/{phenotype}_{subsample_number}_{pval_type}_AVG_MANHATTAN.png", bg = "white", width = 9.75, height = 3.25, units = "in", res = 1200, pointsize = 4)\n')
 
     # make the plot
     # this is where the plot depends on the pval type. 
     # for absolute theta, there is no -log10 since it isnt quite a "pvalue"
     if pval_type=="TOTAL_ABS_THETA":
-        R_out.write(f'ggplot(don, aes(x=BPcum, y=({pval_type}), color=as_factor(CHR))) +\n')
+        R_out.write(f'ggplot(mydata, aes(x=BPcum, y=({pval_type}), color=as_factor(CHR))) +\n')
     else:
-        R_out.write(f'ggplot(don, aes(x=BPcum, y=-log10({pval_type}), color=as_factor(CHR))) +\n')
+        R_out.write(f'ggplot(mydata, aes(x=BPcum, y=(-log10({pval_type})), color = as_factor(CHR))) +\n')
     R_out.write(f'     # Show all points\n')
     R_out.write(f'     geom_point(alpha=0.5) +\n')
     R_out.write(f'     # custom X axis:\n')
@@ -397,6 +385,7 @@ def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type):
     R_out.write(f'       axis.text.x = element_text(angle = 90, size = 8, vjust = 0.5)\n')
     R_out.write(f'      )\n')
     R_out.write(f'dev.off()\n')
+    R_out.write(f'print("End of IDEA 3 R script")\n')
     R_out.write(f'#END OF SCRIPT\n')
     R_out.close()
 
@@ -425,14 +414,19 @@ def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type):
     R_batch.write(f'#SBATCH --mail-type=ALL\n')
     R_batch.write(f'#SBATCH --mail-user=mbysh17@nottingham.ac.uk\n')
     R_batch.write(f'#===============================\n')
+    R_batch.write(f'echo "start of IDEA 3 batch script"\n')
     R_batch.write(f'#change to home directory\n')
     R_batch.write(f'cd /gpfs01/home/mbysh17\n')
     R_batch.write(f'# source conda environments\n')
     R_batch.write(f'source ~/.bashrc\n')
-    R_batch.write(f'conda activate r_env\n')
+    R_batch.write(f'conda deactivate\n')
+    R_batch.write(f'conda activate gift_env\n')
     R_batch.write(f'# R SCRIPT FOR (IDEA 3) AVG MANHATTAN PLOT\n')
     R_batch.write(f'Rscript output_files/SNP_tracker_R_scripts/{phenotype}_{subsample_number}_{pval_type}_AVG_MANHATTAN.R\n')
     R_batch.write(f'conda deactivate\n')
+    R_batch.write(f'echo "End of IDEA 3 batch script"\n')
+    R_batch.write(f'conda deactivate\n')
+    R_batch.write(f'# END OF FILE\n')
     R_batch.close()
     # end of function
 
@@ -583,16 +577,19 @@ def IDEA_1_MAKE_R_SCRIPT(
     # write the R script to pair with the SNP and its data
     CURRENT_SNP_R_SCRIPT=open("output_files/SNP_tracker_R_scripts/"+str(phenotype)+"_T20_TRACKED.R","w")
     CURRENT_SNP_R_SCRIPT.write(f'#R script for making box plots with ggplot\n')
+    #CURRENT_SNP_R_SCRIPT.write(f'library("ggplot2")\n')
     CURRENT_SNP_R_SCRIPT.write(f'library("tidyverse")\n')
-    CURRENT_SNP_R_SCRIPT.write(f'T20_TRACKED_DATA<- read.csv("output_files/R_DATA/{str(phenotype)}_T20_TRACKED.csv", header= TRUE, sep=",")\n')
+    CURRENT_SNP_R_SCRIPT.write(f'print("start of IDEA1 R script")\n')
+    CURRENT_SNP_R_SCRIPT.write(f'T20_TRACKED_DATA<- read.csv("output_files/R_DATA/{phenotype}_T20_TRACKED.csv", header= TRUE, sep=",")\n')
     CURRENT_SNP_R_SCRIPT.write(f'\n')
     CURRENT_SNP_R_SCRIPT.write(f'#open png\n')
-    CURRENT_SNP_R_SCRIPT.write(f'png("output_files/summary_plots/IDEA1/{str(phenotype)}_T20_TRACKED.png", bg = "white", width = 9.75, height = 3.25, units = "in", res = 1200, pointsize = 4)\n')
+    CURRENT_SNP_R_SCRIPT.write(f'png("output_files/summary_plots/IDEA1/{phenotype}_T20_TRACKED.png", bg = "white", width = 9.75, height = 3.25, units = "in", res = 1200, pointsize = 4)\n')
     CURRENT_SNP_R_SCRIPT.write(f'ggplot(T20_TRACKED_DATA, aes(x=PVAL_TYPE, y=VALUE, fill=SUBSAMPLE_NUM)) +\n')
     CURRENT_SNP_R_SCRIPT.write(f'   geom_boxplot()\n')
     CURRENT_SNP_R_SCRIPT.write(f'# no facet_wrap for this code\n')
     CURRENT_SNP_R_SCRIPT.write(f'\n')
     CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
+    CURRENT_SNP_R_SCRIPT.write(f'print("End of IDEA1 R script")\n')
     CURRENT_SNP_R_SCRIPT.write(f'# END OF R SCRIPT')
     CURRENT_SNP_R_SCRIPT.close()
 
@@ -621,14 +618,18 @@ def IDEA_1_MAKE_BASH_SCRIPT(
     CURRENT_SNP_BATCH.write(f'#SBATCH --mail-type=ALL\n')
     CURRENT_SNP_BATCH.write(f'#SBATCH --mail-user=mbysh17@nottingham.ac.uk\n')
     CURRENT_SNP_BATCH.write(f'#===============================\n')
+    CURRENT_SNP_BATCH.write(f'echo "start OF IDEA 1 batch script" \n')
     CURRENT_SNP_BATCH.write(f'#change to home directory\n')
     CURRENT_SNP_BATCH.write(f'cd /gpfs01/home/mbysh17\n')
     CURRENT_SNP_BATCH.write(f'# source conda environments\n')
     CURRENT_SNP_BATCH.write(f'source ~/.bashrc\n')
-    CURRENT_SNP_BATCH.write(f'conda activate r_env\n')
-    CURRENT_SNP_BATCH.write(f'# R SCRIPT FOR (IDEA 1) BOXPLOT\n')
-    CURRENT_SNP_BATCH.write(f'Rscript output_files/SNP_tracker_R_scripts/{str(phenotype)}_T20_TRACKED.R"\n')
     CURRENT_SNP_BATCH.write(f'conda deactivate\n')
+    CURRENT_SNP_BATCH.write(f'conda activate gift_env\n')
+    CURRENT_SNP_BATCH.write(f'# R SCRIPT FOR (IDEA 1) BOXPLOT\n')
+    CURRENT_SNP_BATCH.write(f'Rscript output_files/SNP_tracker_R_scripts/{phenotype}_T20_TRACKED.R"\n')
+    CURRENT_SNP_BATCH.write(f'conda deactivate\n')
+    CURRENT_SNP_BATCH.write(f'echo "END OF IDEA 1 batch script" \n')
+    CURRENT_SNP_BATCH.write(f'# end of script')
     CURRENT_SNP_BATCH.close()
 
 # IDEA 2.1.1
@@ -762,15 +763,18 @@ def IDEA_2_MAKE_R_AND_BASH_SCRIPT(
     CURRENT_SNP_R_SCRIPT=open("output_files/SNP_tracker_R_scripts/"+str(phenotype)+"_"+str(positive_or_negative)+"_control.R","w")
     CURRENT_SNP_R_SCRIPT.write(f'#R script for making box plots with ggplot\n')
     CURRENT_SNP_R_SCRIPT.write(f'library("tidyverse")\n')
+    #CURRENT_SNP_R_SCRIPT.write(f'library("ggplot2")\n')
+    CURRENT_SNP_R_SCRIPT.write(f'print("start of IDEA 2 R script")\n')
     CURRENT_SNP_R_SCRIPT.write(f'{positive_or_negative}_control_data<- read.csv("output_files/R_DATA/{phenotype}_{positive_or_negative}_control.csv", header= TRUE, sep=",")\n')
     CURRENT_SNP_R_SCRIPT.write(f'\n')
     CURRENT_SNP_R_SCRIPT.write(f'#open png\n')
-    CURRENT_SNP_R_SCRIPT.write(f'png("output_files/summary_plots/IDEA2/{str(phenotype)}_{positive_or_negative}_control.png", bg = "white", width = 9.75, height = 3.25, units = "in", res = 1200, pointsize = 4)\n')
+    CURRENT_SNP_R_SCRIPT.write(f'png("output_files/summary_plots/IDEA2/{phenotype}_{positive_or_negative}_control.png", bg = "white", width = 9.75, height = 3.25, units = "in", res = 1200, pointsize = 4)\n')
     CURRENT_SNP_R_SCRIPT.write(f'ggplot({positive_or_negative}_control_data, aes(x=PVAL_TYPE, y=VALUE, fill=SUBSAMPLE_NUM)) +\n')
     CURRENT_SNP_R_SCRIPT.write(f'   geom_boxplot()\n')
     CURRENT_SNP_R_SCRIPT.write(f'# no facet_wrap for this code\n')
     CURRENT_SNP_R_SCRIPT.write(f'\n')
     CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
+    CURRENT_SNP_R_SCRIPT.write(f'print("End of IDEA 2 R script")\n')
     CURRENT_SNP_R_SCRIPT.write(f'# END OF R SCRIPT')
     CURRENT_SNP_R_SCRIPT.close()
 
@@ -795,14 +799,18 @@ def IDEA_2_MAKE_R_AND_BASH_SCRIPT(
     CURRENT_SNP_BATCH.write(f'#SBATCH --mail-type=ALL\n')
     CURRENT_SNP_BATCH.write(f'#SBATCH --mail-user=mbysh17@nottingham.ac.uk\n')
     CURRENT_SNP_BATCH.write(f'#===============================\n')
+    CURRENT_SNP_BATCH.write(f'echo "start OF IDEA 2 btach script"\n')
     CURRENT_SNP_BATCH.write(f'#change to home directory\n')
     CURRENT_SNP_BATCH.write(f'cd /gpfs01/home/mbysh17\n')
     CURRENT_SNP_BATCH.write(f'# source conda environments\n')
     CURRENT_SNP_BATCH.write(f'source ~/.bashrc\n')
-    CURRENT_SNP_BATCH.write(f'conda activate r_env\n')
-    CURRENT_SNP_BATCH.write(f'# R SCRIPT FOR (IDEA 2) BOXPLOT\n')
-    CURRENT_SNP_BATCH.write(f'Rscript output_files/SNP_tracker_R_scripts/{str(phenotype)}_{str(positive_or_negative)}_control.R"\n')
     CURRENT_SNP_BATCH.write(f'conda deactivate\n')
+    CURRENT_SNP_BATCH.write(f'conda activate gift_env\n')
+    CURRENT_SNP_BATCH.write(f'# R SCRIPT FOR (IDEA 2) BOXPLOT\n')
+    CURRENT_SNP_BATCH.write(f'Rscript output_files/SNP_tracker_R_scripts/{phenotype}_{positive_or_negative}_control.R\n')
+    CURRENT_SNP_BATCH.write(f'conda deactivate\n')
+    CURRENT_SNP_BATCH.write(f'echo "END OF IDEA 2 btach script"\n')
+    CURRENT_SNP_BATCH.write(f'# end of file\n')
     CURRENT_SNP_BATCH.close()
 
     # END OF FUNCTION
@@ -813,8 +821,31 @@ Total_GWAS_Mo98 = 0
 Total_GIFT_Na23 = 0
 Total_GWAS_Na23 = 0
 
-csv_files = os.listdir(args.d)
+#csv_files = os.listdir(args.d)
+current_wd = os.getcwd()
 
+print("Current wd is: ", current_wd)
+
+#csv_files = [f for f in os.listdir(str(args.d)) if os.path.isdir(f)]
+csv_files=os.listdir("/gpfs01/home/mbysh17/output_files/")
+
+print("csv file list BEFORE sort: ======================================= \n")
+print(csv_files[1:30])
+print("\n ======================================= \n")
+
+'''
+for index, item in csv_files:
+    if ".csv" not in csv_files:
+        csv_files.pop(index)
+'''
+
+for file in csv_files:
+        if '.csv' not in file:
+            csv_files.remove(file)
+
+print("csv file list AFTER sort: ======================================= \n")
+print(csv_files[1:30])
+print("\n ======================================= \n")
 # might need to turn this into a function soon (similar for loop used twice...)
 # loop through each csv file in the given directory (which contain GWAS or GIFT data)
 for csv_file in csv_files: 
@@ -824,21 +855,24 @@ for csv_file in csv_files:
 
     #check for the specific phenotype based on the naming convention
     # AND split code into GIFT and GWAS specific code
+    csv_file_path=("/gpfs01/home/mbysh17/output_files/"+str(csv_file))
 
-    if csv_files[2] == "Mo98" and csv_files[3]=='whole':# GIFT code vvvvv
-        
+    if csv_file[2] == "Mo98" and csv_file[3]=='whole':# GIFT code vvvvv
+        # testing
+        print("current csv file being read for Mo98 whole genome data: ", csv_file)
+
         #Total_GIFT+=1 (in function instead)
-        Current_Mo98_dataframe=pandas.read_csv(csv_file)
+        Current_Mo98_dataframe=pandas.read_csv(csv_file_path)
 
        
-        # Mo98_ALL_SNPS_GIFT_df,Total_GIFT_Mo98=GATHER_ALL_GIFT_SNPS(Current_Mo98_dataframe,Mo98_ALL_SNPS_GIFT_df,Total_GIFT_Mo98,int(csv_files[6]))
+        # Mo98_ALL_SNPS_GIFT_df,Total_GIFT_Mo98=GATHER_ALL_GIFT_SNPS(Current_Mo98_dataframe,Mo98_ALL_SNPS_GIFT_df,Total_GIFT_Mo98,int(csv_file[6]))
         
         GWAS_or_GIFT = "GIFT"
         ####################################################
         # IDEA 3.1 #####################################
         ############################################
         
-        Mo98_ALL_SNPS_GIFT_df,Total_GIFT_Mo98=IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,Current_Mo98_dataframe,Mo98_ALL_SNPS_GIFT_df,Total_GIFT_Mo98,int(csv_files[6]))
+        Mo98_ALL_SNPS_GIFT_df,Total_GIFT_Mo98=IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,Current_Mo98_dataframe,Mo98_ALL_SNPS_GIFT_df,Total_GIFT_Mo98,int(csv_file[6]))
 
         ############################################
         # IDEA 3.1 #####################################
@@ -866,7 +900,7 @@ for csv_file in csv_files:
                                                                 negative_control_LB,
                                                                 negative_control_UB,
                                                                 GWAS_or_GIFT,
-                                                                int(csv_files[6]) #SUBSAMPLE NUMBER FOR GIFT FILE
+                                                                int(csv_file[6]) #SUBSAMPLE NUMBER FOR GIFT FILE
                                                                 )
         
         ############################################
@@ -892,7 +926,7 @@ for csv_file in csv_files:
         BHY_pSNP4_thres = -(math.log(thres_pval, 10))
         
         # threshold (1.2) pSNP4 BT threshold
-        BT_pSNP4 = 0.05 / (len(Current_Mo98_dataframe) * int(csv_files[6])) # multiply by subsample num which is in file name
+        BT_pSNP4 = 0.05 / (len(Current_Mo98_dataframe) * int(csv_file[6])) # multiply by subsample num which is in file name
         BF_THRES_pSNP4 = -(math.log(BT_pSNP4,10))
 
          # threshold (2.1) pSNP5 BYH threshold
@@ -912,13 +946,13 @@ for csv_file in csv_files:
         BHY_pSNP5_thres = -(math.log(thres_pval, 10))
         
         # threshold (2.2) pSNP5 BT threshold
-        BT_pSNP5 = 0.05 / (len(Current_Mo98_dataframe) * int(csv_files[6])) # multiply by subsample num which is in file name
+        BT_pSNP5 = 0.05 / (len(Current_Mo98_dataframe) * int(csv_file[6])) # multiply by subsample num which is in file name
         BF_THRES_pSNP5 = -(math.log(BT_pSNP5,10))
 
          # threshold (3.1) absolute theta threshold?
          # awaiting confirmation on how to threshold this value
          # place holder bonferroni correction
-        BT_abstheta = 0.05 / (len(Current_Mo98_dataframe) * int(csv_files[6])) # multiply by subsample num which is in file name
+        BT_abstheta = 0.05 / (len(Current_Mo98_dataframe) * int(csv_file[6])) # multiply by subsample num which is in file name
         BF_THRES_abstheta = BT_abstheta
 
         ########
@@ -942,19 +976,19 @@ for csv_file in csv_files:
                     # check if this SNP with its CHR POS AND SUBSAMPLE_NUM is already in the dataframe
                     already_there = False
                     for inner_index, inner_row in positive_control_Mo98_df.iterrows():
-                        if int(current_row['POS']) == int(inner_row['POS']) and int(current_row['CHR']) == int(inner_row['CHR']) and int(csv_files[6]) == int(inner_row['SUBSAMPLE_NUM']):
+                        if int(current_row['POS']) == int(inner_row['POS']) and int(current_row['CHR']) == int(inner_row['CHR']) and int(csv_file[6]) == int(inner_row['SUBSAMPLE_NUM']):
                                 already_there = True
                 if float(current_row["pSNP4"])>= BF_THRES_pSNP4:
                     #print("This SNP is significant for pSNP4 under BF")
                     pass
         '''
             
-    elif csv_files[2]=="Mo98" and csv_files[3]=='GWAS' and csv_files[4]!="T20":# GWAS code vvv      
+    elif csv_file[2]=="Mo98" and csv_file[3]=='GWAS' and csv_file[4]!="T20":# GWAS code vvv      
         #Total_GWAS+=1
-        Current_Mo98_dataframe=pandas.read_csv(csv_file)
+        Current_Mo98_dataframe=pandas.read_csv(csv_file_path)
 
         GWAS_or_GIFT="GWAS"
-        Mo98_ALL_SNPS_GWAS_df,Total_GWAS_Mo98 = IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,Current_Mo98_dataframe,Mo98_ALL_SNPS_GWAS_df,Total_GWAS_Mo98, int(csv_files[4]))
+        Mo98_ALL_SNPS_GWAS_df,Total_GWAS_Mo98 = IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,Current_Mo98_dataframe,Mo98_ALL_SNPS_GWAS_df,Total_GWAS_Mo98, int(csv_file[4]))
 
         # MOT1 gene location boundaries 
         positive_control_chromosome = 2
@@ -974,7 +1008,7 @@ for csv_file in csv_files:
                                                                     negative_control_LB,
                                                                     negative_control_UB,
                                                                     GWAS_or_GIFT,
-                                                                    int(csv_files[4]) #SUBSAMPLE NUMBER FOR GIFT FILE
+                                                                    int(csv_file[4]) #SUBSAMPLE NUMBER FOR GIFT FILE
                                                                     )
         
         ''' THRESHOLD CODE WIP
@@ -997,7 +1031,7 @@ for csv_file in csv_files:
         BHY_p_thres = -(math.log(thres_pval, 10))
         
         # threshold (1.2) pSNP4 BT threshold
-        BT_p = 0.05 / (len(Current_Mo98_dataframe) * int(csv_files[6])) # multiply by subsample num which is in file name
+        BT_p = 0.05 / (len(Current_Mo98_dataframe) * int(csv_file[6])) # multiply by subsample num which is in file name
         BF_THRES_p = -(math.log(BT_p,10))
 
         ########
@@ -1023,18 +1057,18 @@ for csv_file in csv_files:
                     # check if this SNP with its CHR POS AND SUBSAMPLE_NUM is already in the dataframe
                     already_there = False
                     for inner_index, inner_row in positive_control_Mo98_df.iterrows():
-                        if int(current_row['POS']) == int(inner_row['POS']) and int(current_row['CHR']) == int(inner_row['CHR']) and int(csv_files[6]) == int(inner_row['SUBSAMPLE_NUM']):
+                        if int(current_row['POS']) == int(inner_row['POS']) and int(current_row['CHR']) == int(inner_row['CHR']) and int(csv_file[6]) == int(inner_row['SUBSAMPLE_NUM']):
                                 already_there = True
                 if float(current_row["pSNP4"])>= BF_THRES_pSNP4:
                     print("This SNP is significant for pSNP4 under BF")
 
         '''
 
-    elif csv_files[2] == "Na23" and csv_files[3]=='whole':
-        Current_Na23_dataframe=pandas.read_csv(csv_file) 
+    elif csv_file[2] == "Na23" and csv_file[3]=='whole':
+        Current_Na23_dataframe=pandas.read_csv(csv_file_path) 
 
         GWAS_or_GIFT="GIFT"
-        Na23_ALL_SNPS_GIFT_df,Total_GIFT_Na23=IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,Current_Na23_dataframe,Na23_ALL_SNPS_GIFT_df,Total_GIFT_Na23,int(csv_files[6]))
+        Na23_ALL_SNPS_GIFT_df,Total_GIFT_Na23=IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,Current_Na23_dataframe,Na23_ALL_SNPS_GIFT_df,Total_GIFT_Na23,int(csv_file[6]))
 
         #chr4:6,391,854-6,395,922
         
@@ -1057,15 +1091,15 @@ for csv_file in csv_files:
                                                                     negative_control_LB,
                                                                     negative_control_UB,
                                                                     GWAS_or_GIFT,
-                                                                    int(csv_files[6]) #SUBSAMPLE NUMBER FOR GIFT FILE
+                                                                    int(csv_file[6]) #SUBSAMPLE NUMBER FOR GIFT FILE
                                                                     )
 
-    elif csv_files[2] == "Na23" and csv_files[3]=='GWAS' and csv_files[4]!="T20": #
+    elif csv_file[2] == "Na23" and csv_file[3]=='GWAS' and csv_file[4]!="T20": #
         #Total_GWAS+=1
-        Current_Na23_dataframe=pandas.read_csv(csv_file)
+        Current_Na23_dataframe=pandas.read_csv(csv_file_path)
 
         GWAS_or_GIFT="GWAS"
-        Na23_ALL_SNPS_GWAS_df,Total_GWAS_Na23 = IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,Current_Na23_dataframe,Na23_ALL_SNPS_GWAS_df,Total_GWAS_Na23, int(csv_files[6]))
+        Na23_ALL_SNPS_GWAS_df,Total_GWAS_Na23 = IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,Current_Na23_dataframe,Na23_ALL_SNPS_GWAS_df,Total_GWAS_Na23, int(csv_file[6]))
 
         # HKT1 gene location boundaries 
         positive_control_chromosome = 4
@@ -1086,7 +1120,7 @@ for csv_file in csv_files:
                                                                     negative_control_LB,
                                                                     negative_control_UB,
                                                                     GWAS_or_GIFT,
-                                                                    int(csv_files[4]) #SUBSAMPLE NUMBER FOR GIFT FILE
+                                                                    int(csv_file[4]) #SUBSAMPLE NUMBER FOR GIFT FILE
                                                                     )
 
 ####################################################
@@ -1120,12 +1154,16 @@ Na23_ALL_SNPS_GWAS_df = IDEA_3_CALCULATE_AVERAGE_SNPS_GWAS(Na23_ALL_SNPS_GWAS_df
 ####################################################
 # IDEA 3.3 #####################################
 ############################################
-# write results to csv files for an R script to run them
-Mo98_ALL_SNPS_GIFT_df.to_csv("output_files/Mo98_ALL_SNPS_GIFT.csv", index=False)
-Mo98_ALL_SNPS_GWAS_df.to_csv("output_files/Mo98_ALL_SNPS_GWAS.csv", index=False)
 
-Na23_ALL_SNPS_GIFT_df.to_csv("output_files/Na23_ALL_SNPS_GIFT.csv", index=False)
-Na23_ALL_SNPS_GWAS_df.to_csv("output_files/Na23_ALL_SNPS_GWAS.csv", index=False)
+# testing
+print("Idea 3 dataframes look like this: \n",Mo98_ALL_SNPS_GIFT_df,"\n",Mo98_ALL_SNPS_GWAS_df,"\n", Na23_ALL_SNPS_GIFT_df,"\n",Na23_ALL_SNPS_GWAS_df)
+
+# write results to csv files for an R script to run them
+Mo98_ALL_SNPS_GIFT_df.to_csv("output_files/R_DATA/Mo98_ALL_SNPS_GIFT.csv", index=False)
+Mo98_ALL_SNPS_GWAS_df.to_csv("output_files/R_DATA/Mo98_ALL_SNPS_GWAS.csv", index=False)
+
+Na23_ALL_SNPS_GIFT_df.to_csv("output_files/R_DATA/Na23_ALL_SNPS_GIFT.csv", index=False)
+Na23_ALL_SNPS_GWAS_df.to_csv("output_files/R_DATA/Na23_ALL_SNPS_GWAS.csv", index=False)
 
 ############################################
 # IDEA 3.3 #####################################
@@ -1238,14 +1276,15 @@ for csv_file in csv_files:
 
     #check for the specific phenotype based on the naming convention
     # AND split code into GIFT and GWAS specific code
+    csv_file_path=("/gpfs01/home/mbysh17/output_files/"+str(csv_file))
 
-    if csv_files[2] == "Mo98" and csv_files[3]=='whole':# GIFT code vvvvv
+    if csv_file[2] == "Mo98" and csv_file[3]=='whole':# GIFT code vvvvv
         
-        Current_Mo98_dataframe=pandas.read_csv(csv_file)
+        Current_Mo98_dataframe=pandas.read_csv(csv_file_path)
        
         # set method and level variables
         GWAS_or_GIFT = "GIFT"
-        subsample_level = int(csv_files[6]) 
+        subsample_level = int(csv_file[6]) 
 
         # update the cumulative t20 dataframe
         Mo98_cumulative_t20_dataframe = IDEA_1_ACCUMULATE_T20_SNP_DATA(
@@ -1259,13 +1298,13 @@ for csv_file in csv_files:
             subsample_level
             )
 
-    elif csv_files[2]=="Mo98" and csv_files[3]=='GWAS' and csv_files[4]!="T20":# GWAS code vvv      
+    elif csv_file[2]=="Mo98" and csv_file[3]=='GWAS' and csv_file[4]!="T20":# GWAS code vvv      
         
-        Current_Mo98_dataframe=pandas.read_csv(csv_file)
+        Current_Mo98_dataframe=pandas.read_csv(csv_file_path)
         
         # set method and level variables
         GWAS_or_GIFT = "GIFT"
-        subsample_level = int(csv_files[4])
+        subsample_level = int(csv_file[4])
 
         # update the cumulative t20 dataframe
         Mo98_cumulative_t20_dataframe = IDEA_1_ACCUMULATE_T20_SNP_DATA(
@@ -1279,13 +1318,13 @@ for csv_file in csv_files:
             subsample_level
             )
 
-    elif csv_files[2] == "Na23" and csv_files[3]=='whole':
+    elif csv_file[2] == "Na23" and csv_file[3]=='whole':
 
-        Current_Na23_dataframe=pandas.read_csv(csv_file) 
+        Current_Na23_dataframe=pandas.read_csv(csv_file_path) 
 
         # set method and level variables
         GWAS_or_GIFT = "GIFT"
-        subsample_level = int(csv_files[6])
+        subsample_level = int(csv_file[6])
 
         # update the cumulative t20 dataframe
         Na23_cumulative_t20_dataframe = IDEA_1_ACCUMULATE_T20_SNP_DATA(
@@ -1299,13 +1338,13 @@ for csv_file in csv_files:
             subsample_level
             )
 
-    elif csv_files[2] == "Na23" and csv_files[3]=='GWAS' and csv_files[4]!="T20": 
+    elif csv_file[2] == "Na23" and csv_file[3]=='GWAS' and csv_file[4]!="T20": 
 
-        Current_Na23_dataframe=pandas.read_csv(csv_file) 
+        Current_Na23_dataframe=pandas.read_csv(csv_file_path) 
 
         # set method and level variables
         GWAS_or_GIFT = "GIFT"
-        subsample_level = int(csv_files[4])
+        subsample_level = int(csv_file[4])
 
         # update the cumulative t20 dataframe
         Na23_cumulative_t20_dataframe = IDEA_1_ACCUMULATE_T20_SNP_DATA(
