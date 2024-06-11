@@ -178,7 +178,7 @@ T20_SNPS_GIFT_AND_GWAS = pandas.DataFrame(columns=[
 # TRACE 2
 def IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,current_phenotype_df, GWAS_OR_GIFT_ALL_SNPS_df,Total_GIFT_or_GWAS,current_subsample_num): 
     print("Entered FUNCTION: IDEA_3_GATHER_ALL_SNPS_COMBINED",flush=True)
-
+    '''
     print("current all phenotype dataframe BEFORE addition (THIS SHOULD NOT HAVE CHANGED)",flush=True)
     print(current_phenotype_df.head(),flush=True)
     print("====================================================================================",flush=True)
@@ -189,6 +189,7 @@ def IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,current_phenotype_df, GWAS_OR_G
     print(GWAS_OR_GIFT_ALL_SNPS_df,flush=True)
     print("====================================================================================",flush=True)
     print("====================================================================================",flush=True)
+    '''
     if GWAS_or_GIFT == "GWAS":
         CHR = "chromosomes"
         POS = "positions"
@@ -210,20 +211,20 @@ def IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,current_phenotype_df, GWAS_OR_G
 
         # adding in two new columns at specific index values
         temp_dataframe["TIMES_APPEARED"] = 1
-        temp_dataframe["TOTAL_GIFT"] = Total_GIFT_or_GWAS
+        temp_dataframe["TOTAL_GWAS"] = Total_GIFT_or_GWAS
         temp_dataframe.insert(2,"SUBSAMPLE_NUM",current_subsample_num)
         
   
         # concatonate to the cumulative dataframe
-        print("Temp GWAS dataframe looks like: ",flush=True)
-        print(temp_dataframe.head(),flush=True)
+        #print("Temp GWAS dataframe looks like: ",flush=True)
+        #print(temp_dataframe.head(),flush=True)
 
         #GWAS_OR_GIFT_ALL_SNPS_df =pandas.concat([GWAS_OR_GIFT_ALL_SNPS_df,temp_dataframe], ignore_index=True)
         # testing this
-        GWAS_OR_GIFT_ALL_SNPS_df.append(temp_dataframe,ignore_index=True)
+        GWAS_OR_GIFT_ALL_SNPS_df=pandas.concat([GWAS_OR_GIFT_ALL_SNPS_df, temp_dataframe],ignore_index=True)
 
         # group by and sort the data
-        GWAS_OR_GIFT_ALL_SNPS_df = GWAS_OR_GIFT_ALL_SNPS_df.groupby(['CHR','POS','SUBSAMPLE_NUM'],as_index=False).agg({'TOTAL_PSNP4':'sum','TOTAL_PSNP5':'sum','TOTAL_ABS_THETA':'sum','TIMES_APPEARED':'sum','TOTAL_GIFT':'max'})
+        GWAS_OR_GIFT_ALL_SNPS_df = GWAS_OR_GIFT_ALL_SNPS_df.groupby(['CHR','POS','SUBSAMPLE_NUM'],as_index=False).agg({'TOTAL_P':'sum','TIMES_APPEARED':'sum','TOTAL_GWAS':'max'})
         #############################
         ##########################
         '''
@@ -314,12 +315,13 @@ def IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,current_phenotype_df, GWAS_OR_G
         temp_dataframe["TIMES_APPEARED"] = 1
         temp_dataframe["TOTAL_GIFT"] = Total_GIFT_or_GWAS
         # concatonate to the cumulative dataframe
+        '''
         print("Temp GIFT dataframe looks like: ",flush=True)
         print(temp_dataframe.head(),flush=True)
-
+        '''
         #GWAS_OR_GIFT_ALL_SNPS_df =pandas.concat([temp_dataframe,GWAS_OR_GIFT_ALL_SNPS_df], ignore_index=True)
         # testing the below code line
-        GWAS_OR_GIFT_ALL_SNPS_df.append(temp_dataframe,ignore_index=True)
+        GWAS_OR_GIFT_ALL_SNPS_df=pandas.concat([GWAS_OR_GIFT_ALL_SNPS_df,temp_dataframe],ignore_index=True)
         
         # group by and sort the data
         GWAS_OR_GIFT_ALL_SNPS_df = GWAS_OR_GIFT_ALL_SNPS_df.groupby(['CHR','POS','SUBSAMPLE_NUM'],as_index=False).agg({'TOTAL_PSNP4':'sum','TOTAL_PSNP5':'sum','TOTAL_ABS_THETA':'sum','TIMES_APPEARED':'sum','TOTAL_GIFT':'max'})
@@ -397,18 +399,19 @@ def IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,current_phenotype_df, GWAS_OR_G
                 GWAS_OR_GIFT_ALL_SNPS_df.sort_values(by=["CHR","POS"], axis=0, ascending=[True,True],inplace=True, na_position='first')
     '''
     
+    '''
     print("current all snps dataframe after addition",flush=True)
     print(GWAS_OR_GIFT_ALL_SNPS_df.head(),flush=True)
     print("====================================================================================",flush=True)
     print("====================================================================================",flush=True)
 
-
     print("current all phenotype dataframe AFTER addition (THIS SHOULD NOT HAVE CHANGED)",flush=True)
     print(current_phenotype_df.head(),flush=True)
     print("====================================================================================",flush=True)
     print("====================================================================================",flush=True)
+    '''
+    print("IDEA 3 GIFT GATHER function done",flush=True)
 
-    print("GIFT GATHER function done",flush=True)
     return GWAS_OR_GIFT_ALL_SNPS_df, Total_GIFT_or_GWAS
     
     # end of function code
@@ -642,14 +645,14 @@ def IDEA_1_ACCUMULATE_T20_SNP_DATA(
 
 
         # concatonate to the cumulative dataframe
-        print("Temp t20 gwas dataframe looks like: ",flush=True)
-        print(df_out_2.head(),flush=True)
+        #print("Temp t20 gwas dataframe looks like: ",flush=True)
+        #print(df_out_2.head(),flush=True)
 
         # concatonate it with the main t20 dataframe
 
         #cumulative_t20_dataframe =pandas.concat([df_out_2,cumulative_t20_dataframe], ignore_index=True)
         # testing below code line
-        cumulative_t20_dataframe.append(df_out_2,ignore_index=True)
+        cumulative_t20_dataframe=pandas.concat([cumulative_t20_dataframe,df_out_2],ignore_index=True)
 
 
        
@@ -683,7 +686,7 @@ def IDEA_1_ACCUMULATE_T20_SNP_DATA(
 
         # CONCATONATE
         #cumulative_t20_dataframe =pandas.concat([cumulative_t20_dataframe,df_out_2], ignore_index=True)
-        cumulative_t20_dataframe.append(df_out_2,ignore_index=True)
+        cumulative_t20_dataframe=pandas.concat([cumulative_t20_dataframe,df_out_2],ignore_index=True)
 
         # repeat for other two types of p val but concatonate to df_out_2 instead of equals to it
         ####
@@ -714,7 +717,7 @@ def IDEA_1_ACCUMULATE_T20_SNP_DATA(
 
         # CONCATONATE
         #cumulative_t20_dataframe =pandas.concat([cumulative_t20_dataframe,df_out_2], ignore_index=True)
-        cumulative_t20_dataframe.append(df_out_2,ignore_index=True)
+        cumulative_t20_dataframe=pandas.concat([cumulative_t20_dataframe,df_out_2],ignore_index=True)
         ####
         ## absolute_theta
         ####
@@ -743,12 +746,12 @@ def IDEA_1_ACCUMULATE_T20_SNP_DATA(
         df_out_2["SUBSAMPLE_NUM"] = subsample_level
 
         # testing to see what the df_out_2 looks like with absolute theta in it
-        print("Temp t20 gwas dataframe looks like: ",flush=True)
-        print(df_out_2.head(),flush=True)
+        #print("Temp t20 gwas dataframe looks like: ",flush=True)
+        #print(df_out_2.head(),flush=True)
 
         # CONCATONATE
         #cumulative_t20_dataframe =pandas.concat([cumulative_t20_dataframe,df_out_2], ignore_index=True)
-        cumulative_t20_dataframe.append(df_out_2,ignore_index=True)
+        cumulative_t20_dataframe=pandas.concat([cumulative_t20_dataframe,df_out_2],ignore_index=True)
     ####
     ####
     ####
@@ -947,7 +950,7 @@ def IDEA_2(current_phenotype_df,
             current_subsample_num
             ):
     print("Entered FUNCTION: IDEA_2",flush=True)
-    print("State of GWAS or GIFT: ",GWAS_or_GIFT,flush=True)
+    #print("State of GWAS or GIFT: ",GWAS_or_GIFT,flush=True)
     # list used for splitting 1 line from a GIFT csv into separate lines for each pval type (in the list)
     list_of_pval_types = ["pSNP4","pSNP5","absolute_theta"]
 
@@ -959,10 +962,10 @@ def IDEA_2(current_phenotype_df,
         POS="POS"
 
 
-    print("State of CHR: ",CHR,flush=True)
-    print("State of POS: ",POS,flush=True)
-    print("current dataframe being read in IDEA_2 is...",flush=True)
-    print(current_phenotype_df.head(),flush=True)
+    #print("State of CHR: ",CHR,flush=True)
+    #print("State of POS: ",POS,flush=True)
+    #print("current dataframe being read in IDEA_2 is...",flush=True)
+    #print(current_phenotype_df.head(),flush=True)
     ####
     ### New code
     ####
@@ -971,6 +974,7 @@ def IDEA_2(current_phenotype_df,
     temp_positive_control_df=current_phenotype_df.copy()
     temp_negative_control_df=current_phenotype_df.copy()
 
+    '''
     print("Upper and lower bound data for pos and neg control",flush=True)
 
     print("Pos control chrom:", positive_control_chromosome,flush=True)
@@ -980,6 +984,7 @@ def IDEA_2(current_phenotype_df,
     print("neg control chrom:", negative_control_chromosome,flush=True)
     print("neg control LB:", negative_control_LB,flush=True)
     print("neg control UB:", negative_control_UB,flush=True)
+    '''
 
     temp_positive_control_df = temp_positive_control_df[(temp_positive_control_df[CHR]==positive_control_chromosome) & (temp_positive_control_df[POS]>= positive_control_LB) & (temp_positive_control_df[POS]<= positive_control_UB)]
     temp_negative_control_df = temp_negative_control_df[(temp_negative_control_df[CHR]==negative_control_chromosome) & (temp_negative_control_df[POS]>= negative_control_LB) & (temp_negative_control_df[POS]<= negative_control_UB)]
@@ -1026,19 +1031,19 @@ def IDEA_2(current_phenotype_df,
     if len(temp_positive_control_df)>0:
 
         #positive_control_df =pandas.concat([positive_control_df,temp_positive_control_df], ignore_index=True)
-        positive_control_df.append(temp_positive_control_df,ignore_index=True)
+        positive_control_df=pandas.concat([positive_control_df,temp_positive_control_df],ignore_index=True)
 
     if len(temp_negative_control_df)>0:
 
         #negative_control_df =pandas.concat([negative_control_df,temp_negative_control_df], ignore_index=True)
-        negative_control_df.append(temp_negative_control_df,ignore_index=True)
-
+        negative_control_df=pandas.concat([negative_control_df,temp_negative_control_df],ignore_index=True)
+    '''
     print("positive control dataframe after addition",flush=True)
     print(positive_control_df.head(),flush=True)
 
     print("negative control dataframe after addition",flush=True)
     print(negative_control_df.head(),flush=True)
-
+    '''
     print("IDEA_2 function done",flush=True)
 
 
@@ -1228,34 +1233,45 @@ print(csv_files,flush=True)
 print("\n ======================================= \n",flush=True)
 
 for file in os.listdir("/gpfs01/home/mbysh17/output_files"):
-    if file.endswith(".csv"):
-        print(file," added to the list!")
+    if file.endswith(".csv") and file.__contains__("T20")==False:
+        print(file,": ++++++++++++ ADDED ++++++++++++ !")
         csv_files.append(file)
     else:
-        print(file," IS NOT ADDED TO LIST")
+        print(file,": ////////// SKIPPED //////// !!")
 
 
 #csv_files = [f for f in os.listdir(str(args.d)) if os.path.isdir(f)]
 #csv_files=os.listdir("/gpfs01/home/mbysh17/output_files")
 
 
-
+'''
 print("csv file list AFTER sort: ======================================= \n",flush=True)
 for file in csv_files:
     print(file,flush=True)
 print("\n ======================================= \n",flush=True)
+'''
 # might need to turn this into a function soon (similar for loop used twice...)
 # loop through each csv file in the given directory (which contain GWAS or GIFT data)
+
+csv_file_index =0
+csv_file_index_max=int(len(csv_files)-1)
 
 for csv_file in csv_files: 
 
     csv_file_path=("/gpfs01/home/mbysh17/output_files/"+str(csv_file))
+
+    '''
     print("////////////////////////////////////////////////",flush=True)
     print("CURRENT CSV FILE PATH:",flush=True)
     print(csv_file_path,flush=True)
     print("////////////////////////////////////////////////",flush=True)
-
-
+    '''
+    print("////////////////////////////////////////////////",flush=True)
+    completion_percentage=float((csv_file_index/csv_file_index_max)*100)
+    print("1ST LOOP CSV FILE COMPLETION %: ", completion_percentage,flush=True)
+    print(csv_file_path,flush=True)
+    print("////////////////////////////////////////////////",flush=True)
+    csv_file_index+=1
     # split on the underscore to make lists
     csv_file=csv_file.split("_")
 
@@ -1275,9 +1291,9 @@ for csv_file in csv_files:
         GWAS_or_GIFT = "GIFT"
 
         # testing
-        this_csv="_".join(csv_file)
-        print("Currently reading file: ",this_csv,flush=True)
-        print(Current_Mo98_dataframe.head(),flush=True)
+        #this_csv="_".join(csv_file)
+        #print("Currently reading file: ",this_csv,flush=True)
+        #print(Current_Mo98_dataframe.head(),flush=True)
         ####################################################
         # IDEA 3.1 #####################################
         ############################################
@@ -1411,10 +1427,11 @@ for csv_file in csv_files:
         GWAS_or_GIFT="GWAS"
 
         # testing
+        '''
         this_csv="_".join(csv_file)
         print("Currently reading file: ",this_csv,flush=True)
         print(Current_Mo98_dataframe.head(),flush=True)
-
+        '''
         Mo98_ALL_SNPS_GWAS_df,Total_GWAS_Mo98 = IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,Current_Mo98_dataframe,Mo98_ALL_SNPS_GWAS_df,Total_GWAS_Mo98, int(csv_file[4]))
 
         # MOT1 gene location boundaries 
@@ -1500,10 +1517,11 @@ for csv_file in csv_files:
         Current_Na23_dataframe=pandas.read_csv(csv_file_path) 
 
         # testing
+        '''
         this_csv="_".join(csv_file)
         print("Currently reading file: ",this_csv,flush=True)
         print(Current_Na23_dataframe.head(),flush=True)
-
+        '''
         GWAS_or_GIFT="GIFT"
 
         # TRACE 1
@@ -1545,10 +1563,11 @@ for csv_file in csv_files:
         GWAS_or_GIFT="GWAS"
 
         # testing
+        '''
         this_csv="_".join(csv_file)
         print("Currently reading file: ",this_csv,flush=True)
         print(Current_Na23_dataframe.head(),flush=True)
-
+        '''
         Na23_ALL_SNPS_GWAS_df,Total_GWAS_Na23 = IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,Current_Na23_dataframe,Na23_ALL_SNPS_GWAS_df,Total_GWAS_Na23, int(csv_file[6]))
 
         # HKT1 gene location boundaries 
@@ -1721,12 +1740,21 @@ Na23_cumulative_t20_dataframe = pandas.DataFrame(columns=[
 
 ####################################################
 # IDEA 1.3.X ######################################
+csv_file_index=0
+
 for csv_file in csv_files: 
 
     csv_file_path=("/gpfs01/home/mbysh17/output_files/"+str(csv_file))
 
     # split on the underscore to make lists
     csv_file=csv_file.split("_")
+
+    print("////////////////////////////////////////////////",flush=True)
+    completion_percentage=float((csv_file_index/csv_file_index_max)*100)
+    print("2ND LOOP CSV FILE COMPLETION %: ", completion_percentage,flush=True)
+    print(csv_file_path,flush=True)
+    print("////////////////////////////////////////////////",flush=True)
+    csv_file_index+=1
 
     #check for the specific phenotype based on the naming convention
     # AND split code into GIFT and GWAS specific code
@@ -1741,10 +1769,11 @@ for csv_file in csv_files:
         subsample_level = int(csv_file[6]) 
 
         # testing
+        '''
         this_csv="_".join(csv_file)
         print("Currently reading file: ",this_csv,flush=True)
         print(Current_Mo98_dataframe.head(),flush=True)
-
+        '''
         # update the cumulative t20 dataframe
         Mo98_cumulative_t20_dataframe = IDEA_1_ACCUMULATE_T20_SNP_DATA(
             Current_Mo98_dataframe,
@@ -1766,9 +1795,11 @@ for csv_file in csv_files:
         subsample_level = int(csv_file[4])
 
         # testing
+        '''
         this_csv="_".join(csv_file)
         print("Currently reading file: ",this_csv,flush=True)
         print(Current_Mo98_dataframe.head(),flush=True)
+        '''
 
         # update the cumulative t20 dataframe
         Mo98_cumulative_t20_dataframe = IDEA_1_ACCUMULATE_T20_SNP_DATA(
@@ -1791,10 +1822,11 @@ for csv_file in csv_files:
         subsample_level = int(csv_file[6])
 
         # testing
+        '''
         this_csv="_".join(csv_file)
         print("Currently reading file: ",this_csv,flush=True)
         print(Current_Na23_dataframe.head(),flush=True)
-
+        '''
         # update the cumulative t20 dataframe
         Na23_cumulative_t20_dataframe = IDEA_1_ACCUMULATE_T20_SNP_DATA(
             Current_Na23_dataframe,
@@ -1816,10 +1848,11 @@ for csv_file in csv_files:
         subsample_level = int(csv_file[4])
 
         # testing
+        '''
         this_csv="_".join(csv_file)
         print("Currently reading file: ",this_csv,flush=True)
         print(Current_Na23_dataframe.head(),flush=True)
-
+        '''
 
         # update the cumulative t20 dataframe
         Na23_cumulative_t20_dataframe = IDEA_1_ACCUMULATE_T20_SNP_DATA(
