@@ -2,9 +2,9 @@
 #SBATCH --partition=defq
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=3
-#SBATCH --mem=35g
-#SBATCH --time=4-00:00:00
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=80g
+#SBATCH --time=7-00:00:00
 #SBATCH --job-name=SNP_tracker_sh
 #SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out
 #SBATCH --error=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.err

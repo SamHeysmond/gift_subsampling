@@ -178,18 +178,7 @@ T20_SNPS_GIFT_AND_GWAS = pandas.DataFrame(columns=[
 # TRACE 2
 def IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,current_phenotype_df, GWAS_OR_GIFT_ALL_SNPS_df,Total_GIFT_or_GWAS,current_subsample_num): 
     print("Entered FUNCTION: IDEA_3_GATHER_ALL_SNPS_COMBINED",flush=True)
-    '''
-    print("current all phenotype dataframe BEFORE addition (THIS SHOULD NOT HAVE CHANGED)",flush=True)
-    print(current_phenotype_df.head(),flush=True)
-    print("====================================================================================",flush=True)
-    print("====================================================================================",flush=True)
 
-
-    print("current all snps dataframe before addition",flush=True)
-    print(GWAS_OR_GIFT_ALL_SNPS_df,flush=True)
-    print("====================================================================================",flush=True)
-    print("====================================================================================",flush=True)
-    '''
     if GWAS_or_GIFT == "GWAS":
         CHR = "chromosomes"
         POS = "positions"
@@ -227,71 +216,6 @@ def IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,current_phenotype_df, GWAS_OR_G
         GWAS_OR_GIFT_ALL_SNPS_df = GWAS_OR_GIFT_ALL_SNPS_df.groupby(['CHR','POS','SUBSAMPLE_NUM'],as_index=False).agg({'TOTAL_P':'sum','TIMES_APPEARED':'sum','TOTAL_GWAS':'max'})
         #############################
         ##########################
-        '''
-        # loop through all rows of the current csv file being analysed
-        for current_index, current_row in current_phenotype_df.iterrows():
-             #############################
-            #### NEW CODE
-            ##########################
-            print("current row data",current_row[CHR],":",current_row[POS],flush=True)
-            # write in a new row for every row in the current dataframe
-            new_row=pandas.Series({
-                                        "CHR":current_row[CHR],
-                                        "POS":current_row[POS],
-                                        "SUBSAMPLE_NUM":int(current_subsample_num),
-                                        "TOTAL_P":current_row['pvals'],
-                                        "TIMES_APPEARED":"1", # not sure if string or int here
-                                        "TOTAL_GWAS":Total_GIFT_or_GWAS
-                                        })
-                
-            # add the new row (current SNP) to the main SNP dataframe
-            GWAS_OR_GIFT_ALL_SNPS_df =pandas.concat([GWAS_OR_GIFT_ALL_SNPS_df, new_row.to_frame().T], ignore_index=True)
-
-        # aggregate rows with correct methods (assuming CHR and POS just stack on one another)
-        GWAS_OR_GIFT_ALL_SNPS_df = GWAS_OR_GIFT_ALL_SNPS_df.groupby(['CHR','POS'],as_index=False).agg({'TOTAL_P':'sum','TIMES_APPEARED':'sum','TOTAL_GWAS':'max'})
-        ################################
-        #########################
-        '''
-
-        '''
-            #set the assumption that the current SNP in the current csv file is NOT already in the total SNP dataframe
-            in_all_SNPS=False
-
-           
-
-            # loop through total SNP dataframe (note: this might take a while so edit it?)
-            for ALL_SNPS_index, ALL_SNPS_row in GWAS_OR_GIFT_ALL_SNPS_df.iterrows():
-                    
-                #check if the current SNP for the current subsample matches anything in the ALL_SNPS dataframe
-                if int(current_row[POS]) == int(ALL_SNPS_row['POS']) and int(current_row[CHR]) == int(ALL_SNPS_row['CHR']) and int(current_subsample_num) == int(ALL_SNPS_row['SUBSAMPLE_NUM']):
-                    
-                    # set flag to true
-                    in_all_SNPS=True
-
-                    # update the row that its on (no need to update CHR, POS or SUBSAMPLE_NUM -> just the rest)
-                    GWAS_OR_GIFT_ALL_SNPS_df.at[ALL_SNPS_index,'TOTAL_P']= float(ALL_SNPS_row['TOTAL_P']) + float(current_row['pvals'])
-                    GWAS_OR_GIFT_ALL_SNPS_df.at[ALL_SNPS_index,'TIMES_APPEARED']= int(ALL_SNPS_row['TIMES_APPEARED']) + 1
-                    GWAS_OR_GIFT_ALL_SNPS_df.at[ALL_SNPS_index,'TOTAL_GWAS']= int(ALL_SNPS_row['TOTAL_GWAS']) + 1
-
-            # if it doesnt find this SNP in the main dataframe, then add it to the main dataframe for all SNPs
-            if in_all_SNPS==False:
-                    # add new data to dataframe
-                    # add in a line for the current line of data in the calculation (# NOT SURE IF NEED TO CONVERT TO INTEGER OR NOT HERE)
-                new_row=pandas.Series({
-                                        "CHR":current_row[CHR],
-                                        "POS":current_row[POS],
-                                        "SUBSAMPLE_NUM":int(current_subsample_num),
-                                        "TOTAL_P":current_row['pvals'],
-                                        "TIMES_APPEARED":"1", # not sure if string or int here
-                                        "TOTAL_GWAS":Total_GIFT_or_GWAS
-                                        })
-                
-                # add the new row (current SNP) to the main SNP dataframe
-                GWAS_OR_GIFT_ALL_SNPS_df =pandas.concat([GWAS_OR_GIFT_ALL_SNPS_df, new_row.to_frame().T], ignore_index=True)
-
-                # re-sort the df so CHR and POS go in ascending order -> it looks nicer that way.
-                GWAS_OR_GIFT_ALL_SNPS_df.sort_values(by=["CHR","POS"], axis=0, ascending=[True,True],inplace=True, na_position='first')
-        '''
 
     elif GWAS_or_GIFT == "GIFT":
         CHR="CHROM"
@@ -315,10 +239,7 @@ def IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,current_phenotype_df, GWAS_OR_G
         temp_dataframe["TIMES_APPEARED"] = 1
         temp_dataframe["TOTAL_GIFT"] = Total_GIFT_or_GWAS
         # concatonate to the cumulative dataframe
-        '''
-        print("Temp GIFT dataframe looks like: ",flush=True)
-        print(temp_dataframe.head(),flush=True)
-        '''
+        
         #GWAS_OR_GIFT_ALL_SNPS_df =pandas.concat([temp_dataframe,GWAS_OR_GIFT_ALL_SNPS_df], ignore_index=True)
         # testing the below code line
         GWAS_OR_GIFT_ALL_SNPS_df=pandas.concat([GWAS_OR_GIFT_ALL_SNPS_df,temp_dataframe],ignore_index=True)
@@ -327,89 +248,7 @@ def IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,current_phenotype_df, GWAS_OR_G
         GWAS_OR_GIFT_ALL_SNPS_df = GWAS_OR_GIFT_ALL_SNPS_df.groupby(['CHR','POS','SUBSAMPLE_NUM'],as_index=False).agg({'TOTAL_PSNP4':'sum','TOTAL_PSNP5':'sum','TOTAL_ABS_THETA':'sum','TIMES_APPEARED':'sum','TOTAL_GIFT':'max'})
         #############################
         ##########################
-        '''
-        # loop through all rows of the current csv file being analysed
-        for current_index, current_row in current_phenotype_df.iterrows():
-            # add new data to dataframe
-                # add in a line for the current line of data in the calculation (NOT SURE IF NEED TO CONVERT TO INTEGER OR NOT HERE
-            #############################
-            #### NEW CODE
-            ##########################
 
-            print("current row data",current_row[CHR],":",current_row[POS],flush=True)
-            new_row=pandas.Series({
-                                    "CHR":current_row[CHR],
-                                    "POS":current_row[POS],
-                                    "SUBSAMPLE_NUM":int(current_subsample_num),
-                                    "TOTAL_PSNP4":current_row['pSNP4'],
-                                    "TOTAL_PSNP5":current_row['pSNP5'],
-                                    "TOTAL_ABS_THETA":current_row['absolute_theta'],
-                                    "TIMES_APPEARED":"1",
-                                    "TOTAL_GIFT":Total_GIFT_or_GWAS
-                                    })
-            
-            # join this new row (for this SNP) to the main dataframe
-            GWAS_OR_GIFT_ALL_SNPS_df =pandas.concat([GWAS_OR_GIFT_ALL_SNPS_df, new_row.to_frame().T], ignore_index=True)
-            
-            # aggregate rows with correct methods (assuming CHR and POS just stack on one another)
-            GWAS_OR_GIFT_ALL_SNPS_df = GWAS_OR_GIFT_ALL_SNPS_df.groupby(['CHR','POS'],as_index=False).agg({'TOTAL_PSNP4':'sum','TOTAL_PSNP5':'sum','TOTAL_ABS_THETA':'sum','TIMES_APPEARED':'sum','TOTAL_GIFT':'max'})
-            #########################
-            ##################
-        '''
-        '''
-            #set the assumption that the current SNP in the current csv file is NOT already in the total SNP dataframe
-            in_all_SNPS=False
-
-            # loop through the total SNP dataframe to see if the SNP is there or not
-            for ALL_SNPS_index, ALL_SNPS_row in GWAS_OR_GIFT_ALL_SNPS_df.iterrows():
-                    
-                # check if the current SNP for the current subsample matches anything in the ALL_SNPS dataframe for the following parameters.
-                if int(current_row[POS]) == int(ALL_SNPS_row['POS']) and int(current_row[CHR]) == int(ALL_SNPS_row['CHR']) and int(current_subsample_num) == int(ALL_SNPS_row['SUBSAMPLE_NUM']):
-                    
-                    # set flag to true if it finds the SNP
-                    in_all_SNPS=True
-
-                    # update the row that its on (no need to update CHR, POS or SUBSAMPLE_NUM -> just the rest)
-                    GWAS_OR_GIFT_ALL_SNPS_df.at[ALL_SNPS_index,'TOTAL_PSNP4']= float(ALL_SNPS_row['TOTAL_PSNP4']) + float(current_row['pSNP4'])
-                    GWAS_OR_GIFT_ALL_SNPS_df.at[ALL_SNPS_index,'TOTAL_PSNP5']= float(ALL_SNPS_row['TOTAL_PSNP5']) + float(current_row['pSNP5'])
-                    GWAS_OR_GIFT_ALL_SNPS_df.at[ALL_SNPS_index,'TOTAL_ABS_THETA']= float(ALL_SNPS_row['TOTAL_ABS_THETA']) + float(current_row['absolute_theta'])
-                    GWAS_OR_GIFT_ALL_SNPS_df.at[ALL_SNPS_index,'TIMES_APPEARED']= int(ALL_SNPS_row['TIMES_APPEARED']) + 1
-                    GWAS_OR_GIFT_ALL_SNPS_df.at[ALL_SNPS_index,'TOTAL_GIFT']= int(ALL_SNPS_row['TOTAL_GIFT']) + 1
-
-            # if it doesnt find this SNP in the main dataframe, then add this SNP to the main dataframe for all SNPs
-            if in_all_SNPS==False:
-                
-                    # add new data to dataframe
-                    # add in a line for the current line of data in the calculation (NOT SURE IF NEED TO CONVERT TO INTEGER OR NOT HERE)
-                new_row=pandas.Series({
-                                        "CHR":current_row[CHR],
-                                        "POS":current_row[POS],
-                                        "SUBSAMPLE_NUM":int(current_subsample_num),
-                                        "TOTAL_PSNP4":current_row['pSNP4'],
-                                        "TOTAL_PSNP5":current_row['pSNP5'],
-                                        "TOTAL_ABS_THETA":current_row['absolute_theta'],
-                                        "TIMES_APPEARED":"1",
-                                        "TOTAL_GIFT":Total_GIFT_or_GWAS
-                                        })
-                
-                # join this new row (for this SNP) to the main dataframe
-                GWAS_OR_GIFT_ALL_SNPS_df =pandas.concat([GWAS_OR_GIFT_ALL_SNPS_df, new_row.to_frame().T], ignore_index=True)
-
-                # re-sort the df so CHR and POS go in ascending order -> it looks nicer that way.
-                GWAS_OR_GIFT_ALL_SNPS_df.sort_values(by=["CHR","POS"], axis=0, ascending=[True,True],inplace=True, na_position='first')
-    '''
-    
-    '''
-    print("current all snps dataframe after addition",flush=True)
-    print(GWAS_OR_GIFT_ALL_SNPS_df.head(),flush=True)
-    print("====================================================================================",flush=True)
-    print("====================================================================================",flush=True)
-
-    print("current all phenotype dataframe AFTER addition (THIS SHOULD NOT HAVE CHANGED)",flush=True)
-    print(current_phenotype_df.head(),flush=True)
-    print("====================================================================================",flush=True)
-    print("====================================================================================",flush=True)
-    '''
     print("IDEA 3 GIFT GATHER function done",flush=True)
 
     return GWAS_OR_GIFT_ALL_SNPS_df, Total_GIFT_or_GWAS
@@ -531,8 +370,6 @@ def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type):
     R_out.write(f'#END OF SCRIPT\n')
     R_out.close()
 
-    
-
     ###################################
     ### MAKE BATCH SCRIPT ######
     #####################
@@ -643,19 +480,11 @@ def IDEA_1_ACCUMULATE_T20_SNP_DATA(
         df_out_2["SUBSAMPLE_NUM"] = subsample_level
         df_out_2.insert(2,"PVAL_TYPE","AVERAGE_P")
 
-
-        # concatonate to the cumulative dataframe
-        #print("Temp t20 gwas dataframe looks like: ",flush=True)
-        #print(df_out_2.head(),flush=True)
-
         # concatonate it with the main t20 dataframe
 
         #cumulative_t20_dataframe =pandas.concat([df_out_2,cumulative_t20_dataframe], ignore_index=True)
         # testing below code line
         cumulative_t20_dataframe=pandas.concat([cumulative_t20_dataframe,df_out_2],ignore_index=True)
-
-
-       
 
     elif GWAS_or_GIFT=="GIFT":
         ####
@@ -755,114 +584,6 @@ def IDEA_1_ACCUMULATE_T20_SNP_DATA(
     ####
     ####
     ####
-    '''
-    if GWAS_or_GIFT == "GWAS":
-
-        pval_type="GWAS_P"
-
-        # loop through current dataframe (csv)
-        for current_index, current_row in current_dataframe.iterrows():
-
-            cumulative_t20_dataframe = COMPARE_SNP_POS_TO_CURRENT(GWAS_P_locations_dataframe,
-                                       pval_type,
-                                       cumulative_t20_dataframe,
-                                       current_index,
-                                       current_row,
-                                       CHR,
-                                       POS
-                                       )
-            
-    # but if its a GIFT csv, then we are looking at PSNP4,PSNP5 and ABS_THETA values to add in (Across any subsample level)
-    elif GWAS_or_GIFT == "GIFT":
-
-        for current_index, current_row in current_dataframe.iterrows():
-
-            # loop through the GWAS_P t20 locations dataframe
-            pval_type="PSNP4"
-            cumulative_t20_dataframe = COMPARE_SNP_POS_TO_CURRENT(
-                PSNP4_locations_dataframe,
-                pval_type,
-                cumulative_t20_dataframe,
-                current_index,
-                current_row,
-                CHR,
-                POS
-                )
-            
-            pval_type="PSNP5"
-            cumulative_t20_dataframe = COMPARE_SNP_POS_TO_CURRENT(
-                PSNP5_locations_dataframe,
-                pval_type,
-                cumulative_t20_dataframe,
-                current_index,
-                current_row,
-                CHR,
-                POS
-                )
-            
-            pval_type="ABS_THETA"
-            cumulative_t20_dataframe = COMPARE_SNP_POS_TO_CURRENT(
-                ABS_THETA_locations_dataframe,
-                pval_type,
-                cumulative_t20_dataframe,
-                current_index,
-                current_row,
-                CHR,
-                POS
-                )
-    
-    ''' 
-
-    return cumulative_t20_dataframe
-
-# IDEA 1.3.2
-def COMPARE_SNP_POS_TO_CURRENT(
-        pval_locations_df,
-        pval_type,
-        cumulative_t20_dataframe,
-        curent_index,
-        current_row,
-        CHR,
-        POS
-        ):
-    print("Entered FUNCTION: IDEA_1_COMPARE_SNP_POS_TO_CURRENT",flush=True)
-    if pval_type=="GWAS_P":
-
-        column_to_read="pvals"
-
-    elif pval_type=="PSNP4":
-
-        column_to_read=="pSNP4"
-
-    elif pval_type=="PSNP5":
-
-        column_to_read=="pSNP5"
-
-    elif pval_type=="ABS_THETA":
-
-        column_to_read=="absolute_theta"
-
-    # loop through the GWAS_P t20 locations dataframe
-    for locations_index, locations_row in pval_locations_df.iterrows():
-
-        # if the current csv datframe of the current phenotype and pval matches the location information
-        # then write in the correct row of data following format of IDEA 1 Dataframe 2
-        if int(current_row[CHR]) == int(locations_row["CHR"]) and int(current_row[POS]) == int(locations_row["POS"]):
-
-            new_row=pandas.Series({
-                                "CHR":current_row[CHR],
-                                "POS":current_row[POS],
-                                "PVAL_TYPE":pval_type,
-                                "SUBSAMPLE_NUM":subsample_level,
-                                "VALUE":current_row[column_to_read]
-                                })
-            
-            # add the new row (current SNP) to the main SNP dataframe
-            cumulative_t20_dataframe =pandas.concat([cumulative_t20_dataframe, new_row.to_frame().T], ignore_index=True)
-            
-
-            # re-sort the df
-            cumulative_t20_dataframe.sort_values(by=["PVAL_TYPE","SUBSAMPLE_NUM"], axis=0, ascending=[True,False],inplace=True, na_position='first')
     return cumulative_t20_dataframe
 
 # IDEA 1.4.1
@@ -961,11 +682,6 @@ def IDEA_2(current_phenotype_df,
         CHR="CHROM"
         POS="POS"
 
-
-    #print("State of CHR: ",CHR,flush=True)
-    #print("State of POS: ",POS,flush=True)
-    #print("current dataframe being read in IDEA_2 is...",flush=True)
-    #print(current_phenotype_df.head(),flush=True)
     ####
     ### New code
     ####
@@ -974,17 +690,6 @@ def IDEA_2(current_phenotype_df,
     temp_positive_control_df=current_phenotype_df.copy()
     temp_negative_control_df=current_phenotype_df.copy()
 
-    '''
-    print("Upper and lower bound data for pos and neg control",flush=True)
-
-    print("Pos control chrom:", positive_control_chromosome,flush=True)
-    print("Pos control LB:", positive_control_LB,flush=True)
-    print("Pos control UB:", positive_control_UB,flush=True)
-
-    print("neg control chrom:", negative_control_chromosome,flush=True)
-    print("neg control LB:", negative_control_LB,flush=True)
-    print("neg control UB:", negative_control_UB,flush=True)
-    '''
 
     temp_positive_control_df = temp_positive_control_df[(temp_positive_control_df[CHR]==positive_control_chromosome) & (temp_positive_control_df[POS]>= positive_control_LB) & (temp_positive_control_df[POS]<= positive_control_UB)]
     temp_negative_control_df = temp_negative_control_df[(temp_negative_control_df[CHR]==negative_control_chromosome) & (temp_negative_control_df[POS]>= negative_control_LB) & (temp_negative_control_df[POS]<= negative_control_UB)]
@@ -1037,114 +742,17 @@ def IDEA_2(current_phenotype_df,
 
         #negative_control_df =pandas.concat([negative_control_df,temp_negative_control_df], ignore_index=True)
         negative_control_df=pandas.concat([negative_control_df,temp_negative_control_df],ignore_index=True)
-    '''
-    print("positive control dataframe after addition",flush=True)
-    print(positive_control_df.head(),flush=True)
-
-    print("negative control dataframe after addition",flush=True)
-    print(negative_control_df.head(),flush=True)
-    '''
-    print("IDEA_2 function done",flush=True)
-
-
-    ####
-    ####
-    ####
-    '''
-
-    for current_index, current_row in current_phenotype_df.iterrows():
-
-        # check if the current SNP is in which boundaries
-
-        ##################################
-        # FOR POSITIVE CONTROL DATA
-        ########################
-        if int(current_row[CHR]) == positive_control_chromosome and int(current_row[POS]) >= positive_control_LB and int(current_row[POS]) <= positive_control_UB :
-            
-            # add new row in a way that depends on if reading from GWAS or GIFT csv file
-            if GWAS_or_GIFT == "GWAS":
-
-                # simply write in pval type as "GWAS_P" 
-                new_row=pandas.Series({
-                                    "CHR":current_row[CHR],
-                                    "POS":current_row[POS],
-                                    "PVAL_TYPE": "GWAS_P",
-                                    "SUBSAMPLE_NUM":int(current_subsample_num),
-                                    "VALUE":current_row['pvals']
-                                    # THRESHOLD to be added here later if needed?
-                                    })
-                
-                # add the line to the positive control dataframe
-                positive_control_df =pandas.concat([positive_control_df, new_row.to_frame().T], ignore_index=True)
-                
-            elif GWAS_or_GIFT == "GIFT":
-                # will need to write in three SEPARATE rows for EACH type of PVAL (PSNP4, PSNP5 and ABS_THETA)
-                
-                for pval_type in list_of_pval_types:
-                    #write in current pval type 
-                    new_row=pandas.Series({
-                                        "CHR":current_row[CHR],
-                                        "POS":current_row[POS],
-                                        "PVAL_TYPE": pval_type,
-                                        "SUBSAMPLE_NUM":int(current_subsample_num),
-                                        "VALUE":current_row[pval_type]
-                                        # THRESHOLD to be added here later if needed?
-                                        })
-                    
-                    # join this new row (for this SNP of this pval type) to the positive control dataframe
-                    positive_control_df =pandas.concat([positive_control_df, new_row.to_frame().T], ignore_index=True)
-            
-            #RESET INDEX NEEDED?
-
-        ########################
-        #########################
-        ################################################
-
-        ##################################
-        # FOR NEGATIVE CONTROL DATA
-        ########################
-        # check if the current SNP row int he csv file is within the range of being a negative control
-        elif int(current_row[CHR]) == negative_control_chromosome and int(current_row[POS]) >= negative_control_LB and int(current_row[POS]) <= negative_control_UB :
-             
-            # add new row in a way that depends on if reading from GWAS or GIFT csv file
-            if GWAS_or_GIFT == "GWAS":
-
-                # simply write in pval type as "GWAS_P" 
-                new_row=pandas.Series({
-                                    "CHR":current_row[CHR],
-                                    "POS":current_row[POS],
-                                    "PVAL_TYPE": "GWAS_P",
-                                    "SUBSAMPLE_NUM":int(current_subsample_num),
-                                    "VALUE":current_row['pvals']
-                                    # THRESHOLD to be added here later if needed?
-                                    })
-                
-                # add the line to the positive control dataframe
-                negative_control_df =pandas.concat([negative_control_df, new_row.to_frame().T], ignore_index=True)
-                
-            elif GWAS_or_GIFT == "GIFT":
-                # will need to write in three SEPARATE rows for EACH type of PVAL (PSNP4, PSNP5 and ABS_THETA)
-                for pval_type in list_of_pval_types:
-                    #write in current pval type 
-                    new_row=pandas.Series({
-                                        "CHR":current_row[CHR],
-                                        "POS":current_row[POS],
-                                        "PVAL_TYPE": pval_type,
-                                        "SUBSAMPLE_NUM":int(current_subsample_num),
-                                        "VALUE":current_row[pval_type]
-                                        # THRESHOLD to be added here later if needed?
-                                        })
-                    
-                    # join this new row (for this SNP of this pval type) to the positive control dataframe
-                    negative_control_df =pandas.concat([negative_control_df, new_row.to_frame().T], ignore_index=True)
     
-                    
-    '''
+    print("IDEA_2 function done",flush=True)
+    
+    ####
+    ####
+    ####
+    # END OF FUNCTION
     # return positive and negative control dataframes
     return positive_control_df,negative_control_df
 
-
-    # END OF FUNCTION
+   
 
 # IDEA 2.3.1
 def IDEA_2_MAKE_R_AND_BASH_SCRIPT(
@@ -1244,12 +852,6 @@ for file in os.listdir("/gpfs01/home/mbysh17/output_files"):
 #csv_files=os.listdir("/gpfs01/home/mbysh17/output_files")
 
 
-'''
-print("csv file list AFTER sort: ======================================= \n",flush=True)
-for file in csv_files:
-    print(file,flush=True)
-print("\n ======================================= \n",flush=True)
-'''
 # might need to turn this into a function soon (similar for loop used twice...)
 # loop through each csv file in the given directory (which contain GWAS or GIFT data)
 
@@ -1260,12 +862,6 @@ for csv_file in csv_files:
 
     csv_file_path=("/gpfs01/home/mbysh17/output_files/"+str(csv_file))
 
-    '''
-    print("////////////////////////////////////////////////",flush=True)
-    print("CURRENT CSV FILE PATH:",flush=True)
-    print(csv_file_path,flush=True)
-    print("////////////////////////////////////////////////",flush=True)
-    '''
     print("////////////////////////////////////////////////",flush=True)
     completion_percentage=float((csv_file_index/csv_file_index_max)*100)
     print("1ST LOOP CSV FILE COMPLETION %: ", completion_percentage,flush=True)
@@ -1426,12 +1022,6 @@ for csv_file in csv_files:
 
         GWAS_or_GIFT="GWAS"
 
-        # testing
-        '''
-        this_csv="_".join(csv_file)
-        print("Currently reading file: ",this_csv,flush=True)
-        print(Current_Mo98_dataframe.head(),flush=True)
-        '''
         Mo98_ALL_SNPS_GWAS_df,Total_GWAS_Mo98 = IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,Current_Mo98_dataframe,Mo98_ALL_SNPS_GWAS_df,Total_GWAS_Mo98, int(csv_file[4]))
 
         # MOT1 gene location boundaries 
@@ -1516,16 +1106,14 @@ for csv_file in csv_files:
         print("Entered if statement 1.3",flush=True)
         Current_Na23_dataframe=pandas.read_csv(csv_file_path) 
 
-        # testing
-        '''
-        this_csv="_".join(csv_file)
-        print("Currently reading file: ",this_csv,flush=True)
-        print(Current_Na23_dataframe.head(),flush=True)
-        '''
         GWAS_or_GIFT="GIFT"
 
         # TRACE 1
-        Na23_ALL_SNPS_GIFT_df,Total_GIFT_Na23=IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,Current_Na23_dataframe,Na23_ALL_SNPS_GIFT_df,Total_GIFT_Na23,int(csv_file[6]))
+        Na23_ALL_SNPS_GIFT_df,Total_GIFT_Na23=IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,
+                                                                              Current_Na23_dataframe,
+                                                                              Na23_ALL_SNPS_GIFT_df,
+                                                                              Total_GIFT_Na23,
+                                                                              int(csv_file[6]))
 
         #chr4:6,391,854-6,395,922
         
@@ -1562,13 +1150,11 @@ for csv_file in csv_files:
 
         GWAS_or_GIFT="GWAS"
 
-        # testing
-        '''
-        this_csv="_".join(csv_file)
-        print("Currently reading file: ",this_csv,flush=True)
-        print(Current_Na23_dataframe.head(),flush=True)
-        '''
-        Na23_ALL_SNPS_GWAS_df,Total_GWAS_Na23 = IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,Current_Na23_dataframe,Na23_ALL_SNPS_GWAS_df,Total_GWAS_Na23, int(csv_file[6]))
+        Na23_ALL_SNPS_GWAS_df,Total_GWAS_Na23 = IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,
+                                                                                Current_Na23_dataframe,
+                                                                                Na23_ALL_SNPS_GWAS_df,
+                                                                                Total_GWAS_Na23, 
+                                                                                int(csv_file[4]))
 
         # HKT1 gene location boundaries 
         positive_control_chromosome = 4
@@ -1667,7 +1253,6 @@ print("IDEA 3 FINISHED",flush=True)
 ############################################
 # IDEA 3.4 #####################################
 ####################################################
-
 
 
 ####################################################
@@ -1791,7 +1376,7 @@ for csv_file in csv_files:
         Current_Mo98_dataframe=pandas.read_csv(csv_file_path)
         
         # set method and level variables
-        GWAS_or_GIFT = "GIFT"
+        GWAS_or_GIFT = "GWAS"
         subsample_level = int(csv_file[4])
 
         # testing
@@ -1844,7 +1429,7 @@ for csv_file in csv_files:
         Current_Na23_dataframe=pandas.read_csv(csv_file_path) 
 
         # set method and level variables
-        GWAS_or_GIFT = "GIFT"
+        GWAS_or_GIFT = "GWAS"
         subsample_level = int(csv_file[4])
 
         # testing
@@ -1879,102 +1464,4 @@ IDEA_1_MAKE_BASH_SCRIPT("Na23")
 print("END OF IDEA 1",flush=True)
 
 print("END OF SNP_TRACKER.PY",flush=True)
-
-'''
-for line in input_jobs_list:
-    # split on the comma to make it into a list
-    clean_line=line.split(",")
-
-    # read the ID of the job
-    current_job_id=clean_line[0]
-
-    # check if the PHENOTYPE is different from whats in the list (should be yes if just started too)
-    if clean_line[2] not in stored_phenotypes:
-        # current phenotype not seen yet so either new phenotype or begining
-        # now simply write in the GWAS T20 SNP list first
-        input_GWAS_T20=open(args.d+clean_line[2]+"_GWAS_T20_SNPS_"+clean_line[1]+"_"+clean_line[0]+".csv","r")
-        for GWAS_T20_SNP in input_GWAS_T20:
-
-
-            new_row=pandas.Series({"CHROM":CHROM,"POS":POS,"PVAL":absolute_theta})
-            SNP_dataframe =pandas.concat([SNP_dataframe, new_row.to_frame().T], ignore_index=True)
-
-        # if we arent at the first sample(/run?)  THIS FEELS WRONG -NEEDS CHANGING
-        if cumulative_run_number!=0:
-
-            #write in the current information to the output file since we're 
-            # moving onto another phenotype now
-            output_SNP_tracker_csv.write(str(current_phenotype)+
-                                        str(current_SNP_chromosome)+
-                                        str(current_SNP_position)+
-                                        str(cumulative_run_number)+
-                                        str(cumulative_GWAS_significance)+
-                                        str(N_GWAS_tests)+
-                                        str(cumulative_GIFT_significance)+
-                                        str(N_GIFT_tests)
-                                        )
-        else: 
-            # add the new phenotype to the list
-            stored_phenotypes.append(str(clean_line[2]))
-
-
-    # find the T20 (absolute theta) GIFT snps for that ID 
-    # REMINDER OF FORMAT 
-    # CHROM,POS,PVAL
-    # 3,123413,0.00001
-    # 4,1233141,0.0003
-    # 3,5435133,0.0312
-    input_T20_absolute_theta=open(args.d+current_job_id+"_T20_absolute_theta.csv","r")
-
-    # loop through T20 absolute theta SNPs for 1/100 Job IDs (for 200 samples) -> it would be 1/run_num
-    for abs_theta_line in input_T20_pSNP4:
-        clean_abs_theta_line=abs_theta_line.split(",")
-
-        # store the chromosome and position 
-        current_SNP_chromosome=clean_abs_theta_line[0]
-        current_SNP_position=clean_abs_theta_line[1]
-        
-
-    # find the T20 (pSNP4) GIFT snps for that ID 
-    input_T20_pSNP4=open(args.d+current_job_id+"_T20_pSNP4.csv","r")
-
-    # find the T20 (absolute theta) GIFT snps for that ID 
-    input_T20_pSNP5=open(args.d+current_job_id+"_T20_pSNP5.csv","r")
-
-    # find the HAND PICKED GIFT snps for that ID (PENDING UPDATE)
-    # input_T20_HAND_PICKED=open(args.d+current_job_id+"_T20_HAND_PICKED.csv","r")
-
-    # find the T20 GWAS snps for that ID
-
-    # find the HAND PICKED GWAS snps for that ID (PENDING UPDATE)
-
-    # run the numbers
-
-    # write to the csv
-
-# output csv format example
-
-# Phenotype,CHR,POS,Subsample_N,N_Times_Significant_GWAS,N_GWAS_tests,N_Sig_GIFT_Absolute_theta,N_Sig_GIFT_pSNP4,N_Sig_GIFT_pSNP5,N_GIFT_tests
-# leaf_ionome_Mo98,2,123,200,85,100,99,79,80,100
-
-
-# the following graphs are for:
-# Graph: bar chart
-# OF ONE PHENOTYPE
-# OF ONE SAMPLE NUMBER
-# EXAMPLE Pheno = leaf_ionome_Mo96, Subsample_N = 200
-# Can also include hand picked Snps
-
-# output figure ideas
-# idea 1)
-
-# X axis = SNP position (GWAS/GIFT share same chr + position with two adjacent bars)
-# Y axis = % of times deemed significant
-
-# idea 2) 
-# graph: box and whisker plot
-# x Axis = GWAS_average_T20(or custom SNP)_detection_rate VS GIFTaverage_T20(or custom SNP)_detection_rate 
-# Y Axis = detection rate (%)
-# Purpose: allows to view spread of detection rate of the T20 (or custom) SNPs to see if GIFT detects better
-
-'''
+# end of file
