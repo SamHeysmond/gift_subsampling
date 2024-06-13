@@ -196,9 +196,9 @@ def IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,current_phenotype_df, GWAS_OR_G
         temp_dataframe=temp_dataframe[['CHR','POS','TOTAL_P']]
 
         # adding in two new columns at specific index values
-        temp_dataframe["TIMES_APPEARED"] = 1 #each snp gets 1 point (when grouped itll be added up)
-        temp_dataframe["TOTAL_GWAS"] = Total_GIFT_or_GWAS #change for number of items in list
-        temp_dataframe.insert(2,"SUBSAMPLE_NUM",current_subsample_num) #should be given flat value e.g. 200 across all
+        temp_dataframe["TIMES_APPEARED"] = 1
+        temp_dataframe["TOTAL_GWAS"] = Total_GIFT_or_GWAS
+        temp_dataframe.insert(2,"SUBSAMPLE_NUM",current_subsample_num)
         
   
         # concatonate to the cumulative dataframe
@@ -866,47 +866,6 @@ def IDEA_2_MAKE_R_AND_BASH_SCRIPT(
 
     # END OF FUNCTION
 
-
-# IDEA 3 NEW
-def process_all_snps_file(df_to_process,GIFT_or_GWAS,TOTAL_GIFT_OR_GWAS,subsample_num):
-    if GIFT_or_GWAS == "GWAS":
-        CHR="chromosomes"
-        POS="positions"
-
-        df_to_process.rename(columns={CHR:'CHR',POS:'POS','pvals':'TOTAL_P'},inplace=True)
-
-        df_to_process["TIMES_APPEARED"] = 1
-        df_to_process["TOTAL_GWAS"]=TOTAL_GIFT_OR_GWAS
-        df_to_process.insert(2,"SUBSAMPLE_NUM",subsample_num)
-
-        df_to_process = df_to_process.groupby(['CHR','POS','SUBSAMPLE_NUM'],as_index=False).agg({'TOTAL_P':'sum','TIMES_APPEARED':'sum','TOTAL_GWAS':'max'})
-        
-        df_to_process["AVERAGE_P"] = df_to_process["TOTAL_P"] / df_to_process["TIMES_APPEARED"]
-    
-    elif GIFT_or_GWAS=="GIFT":
-
-        CHR ="CHROM"
-        POS="POS"
-
-        df_to_process.rename(columns={CHR:'CHR',POS:'POS','pSNP4':'TOTAL_PSNP4','pSNP5':'TOTAL_PSNP5','absolute_theta':'TOTAL_ABS_THETA'}, inplace=True)
-        
-        # adding in two new columns at specific index values
-        df_to_process["TIMES_APPEARED"] = 1
-        df_to_process["TOTAL_GIFT"] = TOTAL_GIFT_OR_GWAS
-        df_to_process.insert(2,"SUBSAMPLE_NUM",subsample_num)
-        
-        # group by and sort the data (THIS TAKES A WHILE AND LOTS OF MEMORY)
-        df_to_process = df_to_process.groupby(['CHR','POS','SUBSAMPLE_NUM'],as_index=False).agg({'TOTAL_PSNP4':'sum','TOTAL_PSNP5':'sum','TOTAL_ABS_THETA':'sum','TIMES_APPEARED':'sum','TOTAL_GIFT':'max'})
-            
-        df_to_process["AVERAGE_PSNP4"] = df_to_process["TOTAL_PSNP4"] / df_to_process["TIMES_APPEARED"]
-        df_to_process["AVERAGE_PSNP5"] = df_to_process["TOTAL_PSNP5"] / df_to_process["TIMES_APPEARED"]
-        df_to_process["AVERAGE_ABS_THETA"] =df_to_process["TOTAL_ABS_THETA"] / df_to_process["TIMES_APPEARED"]
-
-    return df_to_process
-
-## I AM HERE SAVED PROGRESS
-
-
 # initialise variable files
 
 Total_GIFT_Mo98 = 0
@@ -934,17 +893,16 @@ Total_GWAS_Na23 = 0
 
 csv_files=[]
 
-#print("csv file list BEFORE sort: ======================================= \n",flush=True)
-#print(csv_files,flush=True)
-#print("\n ======================================= \n",flush=True)
+print("csv file list BEFORE sort: ======================================= \n",flush=True)
+print(csv_files,flush=True)
+print("\n ======================================= \n",flush=True)
 
 for file in os.listdir(PATH_TO_MAIN+"output_files"):
     if file.endswith(".csv") and file.__contains__("T20")==False:
-        #print(file,": ++++++++++++ ADDED ++++++++++++ !")
+        print(file,": ++++++++++++ ADDED ++++++++++++ !")
         csv_files.append(file)
     else:
-        #print(file,": ////////// SKIPPED //////// !!")
-        pass
+        print(file,": ////////// SKIPPED //////// !!")
 
 # might need to turn for loops into a function soon (similar for loop used twice...)
 #   could then MAYBE multithread the loops? depends...
@@ -952,422 +910,6 @@ for file in os.listdir(PATH_TO_MAIN+"output_files"):
 
 csv_file_index =0
 csv_file_index_max=int(len(csv_files)-1)
-
-# Reminder of CSV format (GIFT) NAME leaf_ionome_Mo98_whole_genome_metrics_600_732692.csv
-# CHROM,POS,largest_theta,smallest_theta,absolute_theta,theta_range,largest_relative_theta,smallest_relative_theta,absolute_relative_theta,range_relative_theta,min_p,mean_p,log_mean_p,bigest_theta_p,pSNP4,pSNP5
-# 1,73,6.285714285714285,-4.224489795918359,6.285714285714285,10.510204081632644,0.3845193508114856,-0.25842696629213435,0.3845193508114856,0.6429463171036199,4.185363300872138e-05,nan,nan,0.00015134587316541535,0.15259768149369662,0.6580333017260325
-
-# reminder of csv format (GWAS) NAME leaf_ionome_Mo98_GWAS_600_732692.csv
-# chromosomes,positions,pvals,mafs,macs,genotype_var_perc
-# 1,55,0.621946624343,0.0016694490818,1,0.000407516956329
-
-
-# PHENOTYPE_MEHTOD_SUBNUM_files=[]
-Mo98_GIFT_200_files =[]
-Mo98_GIFT_400_files =[]
-Mo98_GIFT_600_files =[]
-Mo98_GIFT_800_files =[]
-Mo98_GIFT_1000_files =[]
-
-Mo98_GWAS_200_files =[]
-Mo98_GWAS_400_files =[]
-Mo98_GWAS_600_files =[]
-Mo98_GWAS_800_files =[]
-Mo98_GWAS_1000_files =[]
-
-Na23_GIFT_200_files =[]
-Na23_GIFT_400_files =[]
-Na23_GIFT_600_files =[]
-Na23_GIFT_800_files =[]
-Na23_GIFT_1000_files =[]
-
-Na23_GWAS_200_files =[]
-Na23_GWAS_400_files =[]
-Na23_GWAS_600_files =[]
-Na23_GWAS_800_files =[]
-Na23_GWAS_1000_files =[]
-
-# split csv files into categories (PHENO, METHOD, SUBNUM)
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Splitting the file names into groups...",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-for csv_file in csv_files:
-    csv_file_name = csv_file.split("_")
-    #print(f"Current csv file to be split is... {csv_file}")
-    #print(f"position 6 of its name is... {csv_file[6]}")
-    # Mo98 GWAS lists
-    if csv_file_name[2] == "Mo98" and csv_file_name[3]=='whole': 
-        if csv_file_name[6]=="200":
-            Mo98_GIFT_200_files.append(csv_file)
-            #print(f"Appended {csv_file} to the Mo98_GIFT_200 files list!")
-
-        elif csv_file_name[6]=="400":
-            Mo98_GIFT_400_files.append(csv_file)
-
-        elif csv_file_name[6]=="600":
-            Mo98_GIFT_600_files.append(csv_file)
-
-        elif csv_file_name[6]=="800":
-            Mo98_GIFT_800_files.append(csv_file)
-
-        elif csv_file_name[6]=="1000":
-            Mo98_GIFT_1000_files.append(csv_file)
-
-        # REMOVED THE !=T20 as there shouldnt be any T20 files in here anymore
-    # Mo98 GWAS lists
-    elif csv_file_name[2]=="Mo98" and csv_file_name[3]=='GWAS' :
-        if csv_file_name[4]=="200":# GWAS code vvv  
-            Mo98_GWAS_200_files.append(csv_file)
-
-        elif csv_file_name[4]=="400":# GWAS code vvv  
-            Mo98_GWAS_400_files.append(csv_file)  
-
-        elif csv_file_name[4]=="600":# GWAS code vvv  
-            Mo98_GWAS_600_files.append(csv_file)
-
-        elif csv_file_name[4]=="800":# GWAS code vvv  
-            Mo98_GWAS_800_files.append(csv_file) 
-
-        elif csv_file_name[4]=="1000":# GWAS code vvv  
-            Mo98_GWAS_1000_files.append(csv_file)
-
-    # ---
-    # Na23 GIFT lists
-    elif csv_file_name[2] == "Na23" and csv_file_name[3]=='whole': 
-        if csv_file_name[6]=="200":
-            Na23_GIFT_200_files.append(csv_file)
-
-        elif csv_file_name[6]=="400":
-            Na23_GIFT_400_files.append(csv_file)
-
-        elif csv_file_name[6]=="600":
-            Na23_GIFT_600_files.append(csv_file)
-
-        elif csv_file_name[6]=="800":
-            Na23_GIFT_800_files.append(csv_file)
-
-        elif csv_file_name[6]=="1000":
-            Na23_GIFT_1000_files.append(csv_file)
-
-    # Na23 GWAS lists
-    elif csv_file_name[2]=="Na23" and csv_file_name[3]=='GWAS':
-        if csv_file[4]=="200":# GWAS code vvv  
-            Na23_GWAS_200_files.append(csv_file)
-
-        elif csv_file_name[4]=="400":# GWAS code vvv  
-            Na23_GWAS_400_files.append(csv_file) 
-
-        elif csv_file_name[4]=="600":# GWAS code vvv  
-            Na23_GWAS_600_files.append(csv_file)  
-
-        elif csv_file_name[4]=="800":# GWAS code vvv  
-            Na23_GWAS_800_files.append(csv_file) 
-
-        elif csv_file_name[4]=="1000":# GWAS code vvv  
-            Na23_GWAS_1000_files.append(csv_file)  
-
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Finished splitting into groups!",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-
-# concatonate each into one big file -> x20 csv files for 2 phenotypes (10 per phenotype)
-
-######################################################
-####################################
-list_of_list_of_files=[Mo98_GIFT_200_files,
-                       Mo98_GIFT_400_files,
-                       Mo98_GIFT_600_files,
-                       Mo98_GIFT_800_files,
-                       Mo98_GIFT_1000_files,
-                       Mo98_GWAS_200_files,
-                       Mo98_GWAS_400_files,
-                       Mo98_GWAS_600_files,
-                       Mo98_GWAS_800_files,
-                       Mo98_GWAS_1000_files,
-                       Na23_GIFT_200_files,
-                       Na23_GIFT_400_files,
-                       Na23_GIFT_600_files,
-                       Na23_GIFT_800_files,
-                       Na23_GIFT_1000_files,
-                       Na23_GWAS_200_files,
-                       Na23_GWAS_400_files,
-                       Na23_GWAS_600_files,
-                       Na23_GWAS_800_files,
-                       Na23_GWAS_1000_files]
-
-for list_of_files in list_of_list_of_files:
-    # read first item to determine what it is
-    first_item_name=list_of_files[1].split("_")
-    if first_item_name[3]=="whole":
-        GIFT_or_GWAS="GIFT"
-        subsample_number = first_item_name[6]
-
-    elif first_item_name[3]=="GWAS":
-        GIFT_or_GWAS="GWAS"
-        subsample_number = first_item_name[4]
-   
-
-    # PROGRESS METER
-    print("////////////////////////////////////////////////",flush=True)
-    print(f"Concatonating {first_item_name[2]}_{GIFT_or_GWAS}_{subsample_number}",flush=True)
-    print("////////////////////////////////////////////////",flush=True)
-
-    if GIFT_or_GWAS=="GIFT":
-
-        this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",usecols=["CHROM","POS","absolute_theta","pSNP4","pSNP5"]) for csv_file in list_of_files],ignore_index=True)
-
-        this_df=process_all_snps_file(this_df, GIFT_or_GWAS,len(list_of_files),subsample_number)
-
-    elif GIFT_or_GWAS=="GWAS":
-
-        this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["chromosomes","positions","pvals"]) for csv_file in Mo98_GWAS_200_files],ignore_index=True)
-
-        this_df=process_all_snps_file(this_df, GIFT_or_GWAS,len(list_of_files),subsample_number)
-
-    # save to csv
-    this_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/"+first_item_name[2]+"_"+GIFT_or_GWAS+"_"+subsample_number+"_ALL.csv",header=True,index=False)
-
-    # delete df to save mem
-    del this_df
-
-# Mo98_GIFT_NUM
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Concatonating Mo98_GIFT_NUM",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-print(Mo98_GIFT_200_files)
-
-this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",usecols=["CHROM","POS","absolute_theta","pSNP4","pSNP5"]) for csv_file in Mo98_GIFT_200_files],ignore_index=True)
-this_df=process_all_snps_file(this_df)
-# save to csv
-this_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/Mo98_GIFT_200_ALL.csv",header=True,index=False)
-
-del this_df
-
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Concatonating done 200",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-
-this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["CHROM","POS","absolute_theta","pSNP4","pSNP5"]) for csv_file in Mo98_GIFT_400_files],ignore_index=True)
-
-# save to csv
-this_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/Mo98_GIFT_400_ALL.csv",header=True,index=False)
-del this_df
-
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Concatonating done 400",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-
-this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["CHROM","POS","absolute_theta","pSNP4","pSNP5"]) for csv_file in Mo98_GIFT_600_files],ignore_index=True)
-#  save to csv
-this_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/Mo98_GIFT_600_ALL.csv",header=True,index=False)
-del this_df
-
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Concatonating done 600",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-
-this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["CHROM","POS","absolute_theta","pSNP4","pSNP5"]) for csv_file in Mo98_GIFT_800_files],ignore_index=True)
-# save to csv
-this_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/Mo98_GIFT_800_ALL.csv",header=True,index=False)
-del this_df
-
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Concatonating done 800",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-
-this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["CHROM","POS","absolute_theta","pSNP4","pSNP5"]) for csv_file in Mo98_GIFT_1000_files],ignore_index=True)
-# save to csv
-this_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/Mo98_GIFT_1000_ALL.csv",header=True,index=False)
-del this_df
-
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Concatonating done 1000",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-
-######################################################
-####################################
-# Mo98_GWAS_NUM
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Concatonating Mo98_GWAS_NUM",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-
-this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["chromosomes","positions","pvals"]) for csv_file in Mo98_GWAS_200_files],ignore_index=True)
-# save to csv
-this_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/Mo98_GWAS_200_ALL.csv",header=True,index=False)
-del this_df
-
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Concatonating done 200",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-
-this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["chromosomes","positions","pvals"]) for csv_file in Mo98_GWAS_400_files],ignore_index=True)
-# save to csv
-this_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/Mo98_GWAS_400_ALL.csv",header=True,index=False)
-del this_df
-
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Concatonating done 400",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-
-this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["chromosomes","positions","pvals"]) for csv_file in Mo98_GWAS_600_files],ignore_index=True)
-# save to csv
-this_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/Mo98_GWAS_600_ALL.csv",header=True,index=False)
-del this_df
-
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Concatonating done 600",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-
-this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["chromosomes","positions","pvals"]) for csv_file in Mo98_GWAS_800_files],ignore_index=True)
-# save to csv
-this_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/Mo98_GWAS_800_ALL.csv",header=True,index=False)
-del this_df
-
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Concatonating done 800",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-
-this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["chromosomes","positions","pvals"]) for csv_file in Mo98_GWAS_1000_files],ignore_index=True)
-# save to csv
-this_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/Mo98_GWAS_1000_ALL.csv",header=True,index=False)
-del this_df
-
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Concatonating done 1000",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-
-######################################################
-####################################
-# Na23_GIFT_NUM
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Concatonating Na23_GIFT_NUM",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-
-this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["CHROM","POS","absolute_theta","pSNP4","pSNP5"]) for csv_file in Na23_GIFT_200_files],ignore_index=True)
-# save to csv
-this_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/Na23_GIFT_200_ALL.csv",header=True,index=False)
-del this_df
-
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Concatonating done 200",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-
-this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["CHROM","POS","absolute_theta","pSNP4","pSNP5"]) for csv_file in Na23_GIFT_400_files],ignore_index=True)
-# save to csv
-this_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/Na23_GIFT_400_ALL.csv",header=True,index=False)
-del this_df
-
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Concatonating done 400",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-
-this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["CHROM","POS","absolute_theta","pSNP4","pSNP5"]) for csv_file in Na23_GIFT_600_files],ignore_index=True)
-# save to csv
-this_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/Na23_GIFT_600_ALL.csv",header=True,index=False)
-del this_df
-
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Concatonating done 600",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-
-this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["CHROM","POS","absolute_theta","pSNP4","pSNP5"]) for csv_file in Na23_GIFT_800_files],ignore_index=True)
-# save to csv
-this_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/Na23_GIFT_800_ALL.csv",header=True,index=False)
-del this_df
-
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Concatonating done 800",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-
-this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["CHROM","POS","absolute_theta","pSNP4","pSNP5"]) for csv_file in Na23_GIFT_1000_files],ignore_index=True)
-# save to csv
-this_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/Na23_GIFT_1000_ALL.csv",header=True,index=False)
-del this_df
-
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Concatonating done 1000",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-
-######################################################
-####################################
-# Na23_GWAS_NUM
-
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Concatonating Na23_GWAS_NUM",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-
-this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["chromosomes","positions","pvals"]) for csv_file in Na23_GWAS_200_files],ignore_index=True)
-# save to csv
-this_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/Na23_GWAS_200_ALL.csv",header=True,index=False)
-del this_df
-
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Concatonating done 200",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-
-this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["chromosomes","positions","pvals"]) for csv_file in Na23_GWAS_400_files],ignore_index=True)
-# save to csv
-this_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/Na23_GWAS_400_ALL.csv",header=True,index=False)
-del this_df
-
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Concatonating done 400",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-
-this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["chromosomes","positions","pvals"]) for csv_file in Na23_GWAS_600_files],ignore_index=True)
-# save to csv
-this_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/Na23_GWAS_600_ALL.csv",header=True,index=False)
-del this_df
-
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Concatonating done 600",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-
-this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["chromosomes","positions","pvals"]) for csv_file in Na23_GWAS_800_files],ignore_index=True)
-# save to csv
-this_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/Na23_GWAS_800_ALL.csv",header=True,index=False)
-del this_df
-
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Concatonating done 800",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-
-this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["chromosomes","positions","pvals"]) for csv_file in Na23_GWAS_1000_files],ignore_index=True)
-# save to csv
-this_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/Na23_GWAS_1000_ALL.csv",header=True,index=False)
-del this_df
-
-# PROGRESS METER
-print("////////////////////////////////////////////////",flush=True)
-print("Concatonating done 1000",flush=True)
-print("////////////////////////////////////////////////",flush=True)
-
-## Now need to PROCESS the fils using idea 3 function (but modified)
 
 # Loop 1 for IDEA 3
 # loop through each csv file in the given directory (which contain GWAS or GIFT data)
@@ -1397,10 +939,23 @@ for csv_file in csv_files:
         #Total_GIFT+=1 (in function instead)
         Current_Mo98_dataframe=pandas.read_csv(csv_file_path)
     
-        GIFT_or_GWAS = "GIFT"
+        GWAS_or_GIFT = "GIFT"
+
+        """   
+        Total_GIFT_Mo98_file=open(PATH_TO_MAIN+"R_DATA/Total_GIFT_Mo98.txt",'r+')
+
+        Total_GIFT_Mo98=Total_GIFT_Mo98_file.readlines()[-1]
+
+        Total_GIFT_Mo98_file.close()
+
+        Total_GIFT_Mo98.replace("\n","")
+        Total_GIFT_Mo98=int(Total_GIFT_Mo98)+1
+        Total_GIFT_Mo98_file=open(PATH_TO_MAIN+"R_DATA/Total_GIFT_Mo98.txt",'w')
+        Total_GIFT_Mo98_file.write(Total_GIFT_Mo98)
+        Total_GIFT_Mo98.close() """
   
         Total_GIFT_Mo98=IDEA_3_GATHER_ALL_SNPS_COMBINED(
-                                                        GIFT_or_GWAS,
+                                                        GWAS_or_GIFT,
                                                         Current_Mo98_dataframe,
                                                         "Mo98_ALL_SNPS_GIFT.csv",
                                                         Total_GIFT_Mo98,
@@ -1414,9 +969,9 @@ for csv_file in csv_files:
         #Total_GWAS+=1
         Current_Mo98_dataframe=pandas.read_csv(csv_file_path)
 
-        GIFT_or_GWAS="GWAS"
+        GWAS_or_GIFT="GWAS"
 
-        Total_GWAS_Mo98 = IDEA_3_GATHER_ALL_SNPS_COMBINED(GIFT_or_GWAS,
+        Total_GWAS_Mo98 = IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,
                                                         Current_Mo98_dataframe,
                                                         "Mo98_ALL_SNPS_GWAS.csv",
                                                         Total_GWAS_Mo98, 
@@ -1428,10 +983,10 @@ for csv_file in csv_files:
         print("Entered if statement 1.3",flush=True)
         Current_Na23_dataframe=pandas.read_csv(csv_file_path) 
 
-        GIFT_or_GWAS="GIFT"
+        GWAS_or_GIFT="GIFT"
 
         # TRACE 1
-        Total_GIFT_Na23=IDEA_3_GATHER_ALL_SNPS_COMBINED(GIFT_or_GWAS,
+        Total_GIFT_Na23=IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,
                                                         Current_Na23_dataframe,
                                                         "Na23_ALL_SNPS_GIFT.csv",
                                                         Total_GIFT_Na23,
@@ -1444,9 +999,9 @@ for csv_file in csv_files:
         #Total_GWAS+=1
         Current_Na23_dataframe=pandas.read_csv(csv_file_path)
 
-        GIFT_or_GWAS="GWAS"
+        GWAS_or_GIFT="GWAS"
 
-        Total_GWAS_Na23 = IDEA_3_GATHER_ALL_SNPS_COMBINED(GIFT_or_GWAS,
+        Total_GWAS_Na23 = IDEA_3_GATHER_ALL_SNPS_COMBINED(GWAS_or_GIFT,
                                                         Current_Na23_dataframe,
                                                         "Na23_ALL_SNPS_GWAS.csv",
                                                         Total_GWAS_Na23, 
@@ -1481,7 +1036,7 @@ for csv_file in csv_files:
 
         Current_Mo98_dataframe=pandas.read_csv(csv_file_path)
     
-        GIFT_or_GWAS = "GIFT"
+        GWAS_or_GIFT = "GIFT"
 
         # MOT1 gene location boundaries 
         positive_control_chromosome = 2
@@ -1502,7 +1057,7 @@ for csv_file in csv_files:
                             negative_control_chromosome,
                             negative_control_LB,
                             negative_control_UB,
-                            GIFT_or_GWAS,
+                            GWAS_or_GIFT,
                             int(csv_file[6]) #SUBSAMPLE NUMBER FOR GIFT FILE
                             )
 
@@ -1513,7 +1068,7 @@ for csv_file in csv_files:
 
         Current_Mo98_dataframe=pandas.read_csv(csv_file_path)
 
-        GIFT_or_GWAS="GWAS"
+        GWAS_or_GIFT="GWAS"
 
         # MOT1 gene location boundaries 
         positive_control_chromosome = 2
@@ -1534,7 +1089,7 @@ for csv_file in csv_files:
                             negative_control_chromosome,
                             negative_control_LB,
                             negative_control_UB,
-                            GIFT_or_GWAS,
+                            GWAS_or_GIFT,
                             int(csv_file[4]) #SUBSAMPLE NUMBER FOR GIFT FILE
                             )
 
@@ -1544,7 +1099,7 @@ for csv_file in csv_files:
         print("Entered if statement 2.3",flush=True)
         Current_Na23_dataframe=pandas.read_csv(csv_file_path) 
 
-        GIFT_or_GWAS="GIFT"
+        GWAS_or_GIFT="GIFT"
 
         #chr4:6,391,854-6,395,922
         
@@ -1568,7 +1123,7 @@ for csv_file in csv_files:
                             negative_control_chromosome,
                             negative_control_LB,
                             negative_control_UB,
-                            GIFT_or_GWAS,
+                            GWAS_or_GIFT,
                             int(csv_file[6]) 
                             )
 
@@ -1578,7 +1133,7 @@ for csv_file in csv_files:
  
         Current_Na23_dataframe=pandas.read_csv(csv_file_path)
 
-        GIFT_or_GWAS="GWAS"
+        GWAS_or_GIFT="GWAS"
 
         # HKT1 gene location boundaries 
         positive_control_chromosome = 4
@@ -1600,7 +1155,7 @@ for csv_file in csv_files:
                             negative_control_chromosome,
                             negative_control_LB,
                             negative_control_UB,
-                            GIFT_or_GWAS,
+                            GWAS_or_GIFT,
                             int(csv_file[4]) #SUBSAMPLE NUMBER FOR GIFT FILE
                             )
 
@@ -1794,7 +1349,7 @@ for csv_file in csv_files:
         Current_Mo98_dataframe=pandas.read_csv(csv_file_path)
        
         # set method and level variables
-        GIFT_or_GWAS = "GIFT"
+        GWAS_or_GIFT = "GIFT"
         subsample_level = int(csv_file[6]) 
 
         # update the cumulative t20 dataframe
@@ -1805,7 +1360,7 @@ for csv_file in csv_files:
             Mo98_PSNP5_T20_SNP_locations_df,
             Mo98_ABS_THETA_T20_SNP_locations_df, 
             "Mo98_cumulative_t20_dataframe.csv",
-            GIFT_or_GWAS,
+            GWAS_or_GIFT,
             subsample_level
             )
 
@@ -1814,7 +1369,7 @@ for csv_file in csv_files:
         Current_Mo98_dataframe=pandas.read_csv(csv_file_path)
         
         # set method and level variables
-        GIFT_or_GWAS = "GWAS"
+        GWAS_or_GIFT = "GWAS"
         subsample_level = int(csv_file[4])
 
         # update the cumulative t20 dataframe
@@ -1825,7 +1380,7 @@ for csv_file in csv_files:
             Mo98_PSNP5_T20_SNP_locations_df, # passed in but not needed
             Mo98_ABS_THETA_T20_SNP_locations_df, # passed in but not needed 
             "Mo98_cumulative_t20_dataframe.csv",
-            GIFT_or_GWAS,
+            GWAS_or_GIFT,
             subsample_level
             )
 
@@ -1834,7 +1389,7 @@ for csv_file in csv_files:
         Current_Na23_dataframe=pandas.read_csv(csv_file_path) 
 
         # set method and level variables
-        GIFT_or_GWAS = "GIFT"
+        GWAS_or_GIFT = "GIFT"
         subsample_level = int(csv_file[6])
 
         # update the cumulative t20 dataframe
@@ -1845,7 +1400,7 @@ for csv_file in csv_files:
             Na23_PSNP5_T20_SNP_locations_df, # passed in but not needed
             Na23_ABS_THETA_T20_SNP_locations_df, # passed in but not needed 
             "Na23_cumulative_t20_dataframe.csv",
-            GIFT_or_GWAS,
+            GWAS_or_GIFT,
             subsample_level
             )
 
@@ -1854,7 +1409,7 @@ for csv_file in csv_files:
         Current_Na23_dataframe=pandas.read_csv(csv_file_path) 
 
         # set method and level variables
-        GIFT_or_GWAS = "GWAS"
+        GWAS_or_GIFT = "GWAS"
         subsample_level = int(csv_file[4])
 
         # update the cumulative t20 dataframe
@@ -1865,7 +1420,7 @@ for csv_file in csv_files:
             Na23_PSNP5_T20_SNP_locations_df, # passed in but not needed
             Na23_ABS_THETA_T20_SNP_locations_df, # passed in but not needed 
             "Na23_cumulative_t20_dataframe.csv",
-            GIFT_or_GWAS,
+            GWAS_or_GIFT,
             subsample_level
             )
 

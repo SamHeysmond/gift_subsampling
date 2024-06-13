@@ -18,7 +18,7 @@ source ~/.bashrc
 #conda config --add channels conda-forge
 
 #conda create -n gift_env -y
-#conda activate gift_env
+conda activate gift_env
 #conda install python=3.12
 #conda install r-base -y
 #conda install bioconductor-biocinstaller -y
@@ -26,8 +26,10 @@ source ~/.bashrc
 #conda install r-htmlwidgets -y
 #conda install r-manhattanly -y
 #conda install r-ggrepel -y
+conda install -c conda-forge modin-all
 #pip3 install pandas
-#conda deactivate
+#pip3 install "modin[all]"
+conda deactivate
 
 #conda create -n python3_env -y
 #conda activate python3_env
