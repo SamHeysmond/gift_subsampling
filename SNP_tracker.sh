@@ -2,8 +2,8 @@
 #SBATCH --partition=hmemq
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=32
-#SBATCH --mem=1200g
+#SBATCH --cpus-per-task=20
+#SBATCH --mem=1250g
 #SBATCH --time=7-00:00:00
 #SBATCH --job-name=SNP_tracker_sh
 #SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out

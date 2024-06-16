@@ -333,7 +333,19 @@ import ray
 
 
 ray.init(_plasma_directory="/tmp") # setting to disable out of core in Ray
-mypath="/mnt/c/users/sheys/OneDrive/LIFE_4137_ProjectDS/Project_DS_Files/Github/gift_subsampling/"
+""" mypath="/mnt/c/users/sheys/OneDrive/LIFE_4137_ProjectDS/Project_DS_Files/Github/gift_subsampling/"
 this_df=pandas.read_csv(mypath+"test_text.csv",sep=",",na_filter=False,usecols=["Age"])
 print(this_df.head())
 this_df.to_csv(mypath+"written_test_text.csv",header=True,index=False)
+ """
+print("before")
+
+this_df=pandas.DataFrame(columns=["A","B"])
+this_df.insert(1,"REPLACED B","REPLACED")
+print(this_df.head())
+this_df["SUBSAMPLE_NUM"] = 999
+
+print("after")
+print(this_df.head())
+print("length")
+print(len(this_df))
