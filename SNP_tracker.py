@@ -28,8 +28,8 @@ import concurrent.futures
 import modin.pandas as pandas
 import ray
 
-ray.init(_plasma_directory="/tmp", object_store_memory=500000000000) # setting to disable out of core in Ray and obj store mem increase
-# obj store memory currently at 500GB
+ray.init(_plasma_directory="/tmp", object_store_memory=600000000000) # setting to disable out of core in Ray and obj store mem increase
+# obj store memory currently at 600GB
 
 
 # so i can see all the columns when testing with print
@@ -38,66 +38,10 @@ pandas.options.display.max_columns=None
 
 
 # placeholder till parseargs will work
+# will implement an argument that inputs home user directory automatically
+# -> or lets user decide
 PATH_TO_MAIN = "/gpfs01/home/mbysh17/"
 
-
-# Phenotype,CHR,POS,Subsample_N,N_Times_Significant_GWAS,N_GWAS_tests,N_Sig_GIFT_Absolute_theta,N_Sig_GIFT_pSNP4,N_Sig_GIFT_pSNP5,N_GIFT_tests
-# leaf_ionome_Mo98,2,123,200,85,100,99,79,80,100
-# might remove the N_SIGS_GIFT_ABSOLUTE THETA UNTIL I GET A THRESHOLD TO USE!
-
-""" #IDEA 3 dataframe for ALL SNPs for (for Mo98 GIFT) {MFD}
-Mo98_ALL_SNPS_GIFT_df = pandas.DataFrame(columns=[
-                                                    'CHR', 
-                                                    'POS',
-                                                    'SUBSAMPLE_NUM',  # for each subsamp number 200-1000
-                                                    'TOTAL_PSNP4',
-                                                    'TOTAL_PSNP5',
-                                                    'TOTAL_ABS_THETA',
-                                                    'TIMES_APPEARED', # COULD be 90 or 99 or 100 or 10 who knows
-                                                    'TOTAL_GIFT'   #SHOULD be 100
-                                                    ])
-
-# write to csv
-Mo98_ALL_SNPS_GIFT_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/Mo98_ALL_SNPS_GIFT.csv",header=True,index=False)
-
-#IDEA 3 dataframe for ALL SNPs for (for Mo98 GWAS)  {MFD}
-Mo98_ALL_SNPS_GWAS_df = pandas.DataFrame(columns=[
-                                                    'CHR', 
-                                                    'POS',
-                                                    'SUBSAMPLE_NUM',  # for each subsamp number 200-1000
-                                                    'TOTAL_P',
-                                                    'TIMES_APPEARED', # COULD be 90 or 99 or 100 or 10 who knows
-                                                    'TOTAL_GWAS'   #SHOULD be 100
-                                                    ])
-
-Mo98_ALL_SNPS_GWAS_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/Mo98_ALL_SNPS_GWAS.csv",header=True,index=False)
-
-#IDEA 3 dataframe for ALL SNPs for (for Na23 GIFT)  {MFD}
-Na23_ALL_SNPS_GIFT_df = pandas.DataFrame(columns=[
-                                                    'CHR', 
-                                                    'POS',
-                                                    'SUBSAMPLE_NUM',  # for each subsamp number 200-1000
-                                                    'TOTAL_PSNP4',
-                                                    'TOTAL_PSNP5',
-                                                    'TOTAL_ABS_THETA',
-                                                    'TIMES_APPEARED', # COULD be 90 or 99 or 100 or 10 who knows
-                                                    'TOTAL_GIFT'   #SHOULD be 100
-                                                    ])
-
-Na23_ALL_SNPS_GIFT_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/Na23_ALL_SNPS_GIFT.csv",header=True,index=False)
-
-#IDEA 3 dataframe for ALL SNPs for (for Na23 GWAS) {MFD}
-Na23_ALL_SNPS_GWAS_df = pandas.DataFrame(columns=[
-                                                    'CHR', 
-                                                    'POS',
-                                                    'SUBSAMPLE_NUM',  # for each subsamp number 200-1000
-                                                    'TOTAL_P',
-                                                    'TIMES_APPEARED', # COULD be 90 or 99 or 100 or 10 who knows
-                                                    'TOTAL_GWAS'   #SHOULD be 100
-                                                    ])
-
-Na23_ALL_SNPS_GWAS_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/Na23_ALL_SNPS_GWAS.csv",header=True,index=False)
- """
 
 # Reminder of CSV format (GIFT) NAME leaf_ionome_Mo98_whole_genome_metrics_600_732692.csv
 # CHROM,POS,largest_theta,smallest_theta,absolute_theta,theta_range,largest_relative_theta,smallest_relative_theta,absolute_relative_theta,range_relative_theta,min_p,mean_p,log_mean_p,bigest_theta_p,pSNP4,pSNP5
@@ -152,7 +96,7 @@ def IDEA_3_process_all_snps_file(df_to_process,GIFT_or_GWAS,TOTAL_GIFT_OR_GWAS,s
 
     return df_to_process
 
-# IDEA 3 (CHECKED!)
+# IDEA 3 (CHECKED! X2)
 def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type):
     print("Entered FUNCTION: IDEA_3_R_AND_BATCH",flush=True)
     #########################################
@@ -170,7 +114,7 @@ def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type):
     R_out.write(f'\n')
 
     # for GWAS data....
-    if pval_type=="AVG_P":
+    if pval_type=="AVERAGE_P":
 
         # fetch the data of the csv for the current phenotype and current method (GWAS)
         R_out.write(f'{pval_type}_SUBSAMPLE_{subsample_number}_SNPS_DATA<-read.csv("{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_GWAS_{subsample_number}_ALL.csv",header=TRUE)\n')  
@@ -179,7 +123,7 @@ def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type):
     else:
 
         # fetch the data of the csv for the current phenotype and current method (GIFT)
-        R_out.write(f'{pval_type}_SUBSAMPLE_{subsample_number}_SNPS_DATA<-read.csv("{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_GIFT_{subsample_number}.csv",header=TRUE)\n')  
+        R_out.write(f'{pval_type}_SUBSAMPLE_{subsample_number}_SNPS_DATA<-read.csv("{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_GIFT_{subsample_number}_ALL.csv",header=TRUE)\n')  
 
     # cumulative calculations
     R_out.write(f'mydata <- {pval_type}_SUBSAMPLE_{subsample_number}_SNPS_DATA %>%\n')
@@ -282,7 +226,7 @@ def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type):
     R_batch.close()
     # end of function
 
-# IDEA 1.1 (CHECKED!)
+# IDEA 1.1 (CHECKED! x2)
 def GET_T20_LOCATIONS_AT_1000(dataframe_name,pval_type,phenotype): #parameters of: phenotype, subsample number, and pval type (implied method)
     print("Entered FUNCTION: IDEA_1_GET_T20_LOCATIONS_AT_1000",flush=True)
 
@@ -320,8 +264,8 @@ def GET_T20_LOCATIONS_AT_1000(dataframe_name,pval_type,phenotype): #parameters o
     # return the name of the dataframe (as a path)
     return current_pval_T20_df_path
 
-# IDEA 1.3.1 (CHECKED!)
-def IDEA_1_ACCUMULATE_T20_SNP_DATA(current_dataframe,
+# IDEA 1.3.1 (NEEDS FIX)
+def IDEA_1_ACCUMULATE_T20_SNP_DATA(current_dataframe_main,
                                     GWAS_P_locations_dataframe_path,
                                     PSNP4_locations_dataframe_path,
                                     PSNP5_locations_dataframe_path,
@@ -342,91 +286,95 @@ def IDEA_1_ACCUMULATE_T20_SNP_DATA(current_dataframe,
                                                     'POS',
                                                     'PVAL_TYPE',  # for each subsamp number 200-1000
                                                     'SUBSAMPLE_NUM',
-                                                    'VALUE',
+                                                    'VALUE' #there was an extra comma here- oops
                                                     ])
 
-    if GWAS_or_GIFT=="GWAS":
-        CHR = "chromosomes"
-        POS = "positions"
-        current_dataframe.rename(columns={CHR:'CHR',POS:'POS'}, inplace=True)
-
-    elif GWAS_or_GIFT == "GIFT":
-        CHR="CHROM"
-        POS ="POS"
-        current_dataframe.rename(columns={CHR:'CHR',POS:'POS'}, inplace=True)
+   
 
     if GWAS_or_GIFT=="GWAS":
-        
+        # read in current dataframe (but only certain columns)
+        current_dataframe=current_dataframe_main[['chromosomes','positions','pvals']].copy()
         # read in the location dataframe
-        GWAS_P_locations_dataframe=pandas.read_csv(GWAS_P_locations_dataframe_path)
+        locations_dataframe=pandas.read_csv(GWAS_P_locations_dataframe_path)
 
-        # take the CHR and POS from the locations dataframe as a "df_key"
-        df_key=GWAS_P_locations_dataframe.loc[:,["CHR","POS"]]
+        current_dataframe.rename(columns={'chromosomes':'CHR','positions':'POS','pvals':'VALUE'}, inplace=True)
 
-        df_out_1=current_dataframe.copy()
+        # Should have columns
+        #   CHR, POS, VALUE
+        print("GWAS current_dataframe with column name change",flush=True)
+        print(current_dataframe.head(),flush=True)
 
-        #then use inner join to produce records ONLY where chr and pos match whats in the locations dataframe
-        df_out_1 = current_dataframe.merge(
-            df_key,
-            how='inner',
-            left_on=['CHR','POS'],
-            right_on=['CHR','POS']
-        )
+        df_out =(locations_dataframe.reset_index(drop=True)[["CHR", "POS"]].merge(current_dataframe.reset_index(drop=True), on=["CHR", "POS"], how="inner",left_index=False, right_index=False,))
 
-        # keep these columns
-        df_out_2= df_out_1.loc[:,["CHR","POS","pvals"]]
+        # insert the columns for current PVAL type and subsample number
+        #   insert the pval type e.g. PSNP4 (all the way down this dataframe)
+        df_out.insert(2,"PVAL_TYPE","GWAS_P")
 
-        # CHECK
-        # Rename pvals to value
-        df_out_2.rename(columns={"pvals":"VALUE"})
+        #   insert the subsample level (all the way down this dataframe)
+        df_out.insert(3,"SUBSAMPLE_NUM",subsample_level)
 
-        # adds the tag of GWAS_P for all the values (since they come from GWAS)
-        df_out_2.insert(2,"PVAL_TYPE","GWAS_P")
-
-        # add in subsample num and pval type column data
-        df_out_2.insert(3,"SUBSAMPLE_NUM",subsample_level)
+        # Should have columns
+        #   CHR, POS, PVAL_TYPE, SUBSAMPLE_NUM, VALUE
+        print("GWAS df_out head",flush=True)
+        print(df_out.head(),flush=True)
 
         # concatonate it with the main t20 dataframe
-        cumulative_t20_dataframe=pandas.concat([cumulative_t20_dataframe,df_out_2],ignore_index=True)
+        cumulative_t20_dataframe=pandas.concat([cumulative_t20_dataframe,df_out])
+
+        print("GWAS cumulative t20 dataframe head:",flush=True)
+        print(cumulative_t20_dataframe.head(),flush=True)
 
     elif GWAS_or_GIFT=="GIFT":
+        
         GIFT_locations_dataframes=[PSNP4_locations_dataframe_path,PSNP5_locations_dataframe_path,ABS_THETA_locations_dataframe_path]
         GIFT_column_to_change=['pSNP4','pSNP5','absolute_theta']
         GIFT_column_to_keep=['PSNP4','PSNP5',"ABS_THETA"]
         my_index = 0
-        for index in range(0,3): # 0 , 1 , 2  STOP
+
+        for my_index in range(0,3): # 0 , 1 , 2  STOP
+
+            # take a copy of the curent dataframe instead (only keeping the correct pval type each iteration)
+            current_dataframe=current_dataframe_main[['CHROM','POS',GIFT_column_to_change[my_index]]].copy()
+            
+            # fetch appropriate locations dataframe
             locations_dataframe = pandas.read_csv(GIFT_locations_dataframes[my_index])
 
-            df_key=locations_dataframe
+            # rename chromosome column in the current dataframe (copied from main)
+            current_dataframe.rename(columns={'CHROM':'CHR',GIFT_column_to_change[my_index]:"VALUE"}, inplace=True)
 
-            df_out_1=current_dataframe.copy()
+            # MERGE where the main dataframe contains locations of the locations dataframe (based on CHR and POS)
+            df_out =(locations_dataframe.reset_index(drop=True)[["CHR", "POS"]].merge(current_dataframe.reset_index(drop=True), on=["CHR", "POS"], how="inner",left_index=False, right_index=False))
 
-            df_out_1=df_out_1.merge(
-                                df_key,
-                                how='inner',
-                                left_on=['CHR','POS'],
-                                right_on=['CHR','POS']
-                                )
+            print(f"Header of GIFT merged for {GIFT_column_to_keep[my_index]}",flush=True)
+            # Should have following columns: (example: pSNP4)
+            # CHR, POS, VALUE
+            # 1,   24,   0.00213
+            # ..,   .. ,  ......
+            print(df_out.head(),flush=True)
 
-            # keep these columns
-            df_out_2= df_out_1.loc[:,["CHR","POS",GIFT_column_to_change[my_index]]]
+            # insert the columns for current PVAL type and subsample number
+            #   insert the pval type e.g. PSNP4 (all the way down this dataframe)
+            df_out.insert(2,"PVAL_TYPE",GIFT_column_to_keep[my_index])
 
-            # rename e.g. pSNP4 -> VALUE (replaced comma for a colon- whoopsie)
-            df_out_2.rename(columns={GIFT_column_to_change[my_index]:"VALUE"})
+            #   insert the subsample level (all the way down this dataframe)
+            df_out.insert(3,"SUBSAMPLE_NUM",subsample_level)
 
-            # insert the pval type e.g. PSNP4 (all the way down this dataframe)
-            df_out_2.insert(2,"PVAL_TYPE",GIFT_column_to_keep[my_index])
-
-            # insert the subsample level (all the way down this dataframe)
-            df_out_2.insert(3,"SUBSAMPLE_NUM",subsample_level)
+            print(f"GIFT merged with PVAL_TYPE and SUBSAMPLE_NUM columns",flush=True)
+            # Should have following columns: (example: pSNP4)
+            # CHR, POS, PVAL_TYPE, SUBSAMPLE_NUM,VALUE
+            # 1,   24,   PSNP4,      200     ,   0.00213
+            # ..,   .. ,  ......
+            print(df_out.head(),flush=True)
 
             # concat the current pval data to main dataframe e.g. PSNP4 stuff
-            cumulative_t20_dataframe=pandas.concat([cumulative_t20_dataframe,df_out_2])
+            cumulative_t20_dataframe=pandas.concat([cumulative_t20_dataframe,df_out])
 
+            # testing 
+            print("Cumulative dataframe head",flush=True)
+            print(cumulative_t20_dataframe.head(),flush=True)
+    
             # clear variables to save on memory
-            del df_out_2
-            del df_out_1
-            del df_key
+            del df_out
 
     #write the cumulative_t20 dataframe to csv
     cumulative_t20_dataframe.to_csv(cumulative_t20_dataframe_path,header=True,index=False)
@@ -453,7 +401,7 @@ def IDEA_1_MAKE_R_SCRIPT(
     #CURRENT_SNP_R_SCRIPT.write(f'library("ggplot2")\n')
     CURRENT_SNP_R_SCRIPT.write(f'library("tidyverse")\n')
     CURRENT_SNP_R_SCRIPT.write(f'print("start of IDEA1 R script")\n')
-    CURRENT_SNP_R_SCRIPT.write(f'T20_TRACKED_DATA<- read.csv({PATH_TO_MAIN}"output_files/R_DATA/{cumulative_t20_dataframe_name}.csv", header= TRUE, sep=",")\n')
+    CURRENT_SNP_R_SCRIPT.write(f'T20_TRACKED_DATA<- read.csv("{PATH_TO_MAIN}output_files/R_DATA/{cumulative_t20_dataframe_name}.csv", header= TRUE, sep=",")\n')
     CURRENT_SNP_R_SCRIPT.write(f'# Convert the subsample number to a FACTOR variable\n')
     CURRENT_SNP_R_SCRIPT.write(f'T20_TRACKED_DATA$SUBSAMPLE_NUM<-factor(T20_TRACKED_DATA$SUBSAMPLE_NUM)\n')
     CURRENT_SNP_R_SCRIPT.write(f'\n')
@@ -468,7 +416,7 @@ def IDEA_1_MAKE_R_SCRIPT(
     CURRENT_SNP_R_SCRIPT.write(f'# END OF R SCRIPT')
     CURRENT_SNP_R_SCRIPT.close()
 
-# IDEA 1.5.1 (CHECKED!)
+# IDEA 1.5.1 (CHECKED!) fixed rscript run error
 def IDEA_1_MAKE_BASH_SCRIPT(
         phenotype,
         cumulative_t20_dataframe_name
@@ -503,7 +451,7 @@ def IDEA_1_MAKE_BASH_SCRIPT(
     CURRENT_SNP_BATCH.write(f'conda deactivate\n')
     CURRENT_SNP_BATCH.write(f'conda activate gift_env\n')
     CURRENT_SNP_BATCH.write(f'# R SCRIPT FOR (IDEA 1) BOXPLOT\n')
-    CURRENT_SNP_BATCH.write(f'Rscript {PATH_TO_MAIN}output_files/SNP_tracker_R_scripts/{cumulative_t20_dataframe_name}.R"\n')
+    CURRENT_SNP_BATCH.write(f'Rscript {PATH_TO_MAIN}output_files/SNP_tracker_R_scripts/{cumulative_t20_dataframe_name}.R\n')
     CURRENT_SNP_BATCH.write(f'conda deactivate\n')
     CURRENT_SNP_BATCH.write(f'echo "END OF IDEA 1 batch script" \n')
     CURRENT_SNP_BATCH.write(f'# end of script')
@@ -639,7 +587,7 @@ def IDEA_2_CONTROL_CHECK(current_df,
     
     # END OF FUNCTION
 
-# IDEA 2.3.1 (CHECKED!)
+# IDEA 2.3.1 (CHECKED!x2)
 def IDEA_2_MAKE_R_AND_BASH_SCRIPT(
                         phenotype,
                         control_dataframe_name,
@@ -709,6 +657,8 @@ def IDEA_2_MAKE_R_AND_BASH_SCRIPT(
     CURRENT_SNP_BATCH.close()
 
     # END OF FUNCTION
+
+
 
 # initialise variables
 
@@ -994,7 +944,7 @@ subsample_num_list=[200,400,600,800,1000] # can later update this to read from e
 
 phenotype_list=["Mo98","Na23"] # can later update this to read from the phenotype text file
 
-pvals=["AVG_P","AVG_PSNP4","AVG_PSNP5","AVG_ABS_THETA"] # these should always be the same 4 types
+pvals=["AVERAGE_P","AVERAGE_PSNP4","AVERAGE_PSNP5","AVERAGE_ABS_THETA"] # these should always be the same 4 types
 # R script creation and running
 for phenotype in phenotype_list:
 
@@ -1003,10 +953,10 @@ for phenotype in phenotype_list:
         for pval_type in pvals:
 
             # Example variable inputs are as follows: 
-            # example 1 Mo98,200,TOTAL_P
-            # example 2 Mo98,200,TOTAL_PSNP4
+            # example 1 Mo98,200,AVERAGE_P
+            # example 2 Mo98,200,AVERAGE_PSNP4
             # ...
-            # example x Mo98,400,TOTAL_P
+            # example x Mo98,400,AVERAGE_P
             # ....
             IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type)
 
@@ -1104,6 +1054,14 @@ for list_of_files in list_of_list_of_files:
     elif GIFT_or_GWAS=="GWAS":
 
         this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["chromosomes","positions","pvals"]) for csv_file in list_of_files],ignore_index=True)
+
+    # Testing
+    print("////////////////////////////////////////////////",flush=True)
+    print(f"Head of current df",flush=True)
+    print(this_df.head(),flush=True)
+    print("////////////////////////////////////////////////",flush=True)
+
+
 
     # accumulate snps based on phenotype and gift or gwas
     if this_phenotype=="Mo98":

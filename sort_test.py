@@ -328,6 +328,9 @@ print("Time to concat with Modin: {} seconds".format(round(modin_duration, 3)))
 
 print("Modin is {}x faster than pandas at `concat`!".format(round(pandas_duration / modin_duration, 2))) """
 
+
+# test code
+'''
 import modin.pandas as pandas
 import ray
 
@@ -349,3 +352,94 @@ print("after")
 print(this_df.head())
 print("length")
 print(len(this_df))
+'''
+
+import modin.pandas as pandas
+import ray
+
+
+ray.init(_plasma_directory="/tmp") # setting to disable out of core in Ray
+
+try:
+    cumulative_t20_dataframe=pandas.read_csv("test_env/cumulative.csv")
+except:
+    print("Current t20 dataframe could not be read (not yet made or error occured). This message should only appear twice")
+    cumulative_t20_dataframe=pandas.DataFrame(columns=[
+                                            'CHR', 
+                                            'POS',
+                                            'PVAL_TYPE',  # for each subsamp number 200-1000
+                                            'SUBSAMPLE_NUM',
+                                            'VALUE' #there was an extra comma here- oops
+                                            ])
+
+
+locations_dataframe = pandas.read_csv("test_env/Mo98_AVERAGE_PSNP5_T20_LOCATIONS.csv")
+current_dataframe = pandas.read_csv("test_env/Mo98_GIFT_200_ALL.csv")
+
+copy_df = current_dataframe[['CHR','POS','AVERAGE_PSNP5']].copy()
+print("Header copy")
+print(copy_df.head())
+
+ # rename chromosome column in the current dataframe (copied from main)
+copy_df.rename(columns={'CHROM':'CHR',"AVERAGE_PSNP5":"VALUE"}, inplace=True)
+
+
+# THIS WORKS -> just need to make sure its PSNP5 not average PSNP5
+
+df_out =(locations_dataframe.reset_index(drop=True)[["CHR", "POS"]].merge(copy_df.reset_index(drop=True), on=["CHR", "POS"], how="inner",left_index=False, right_index=False))
+
+
+# insert the columns for current PVAL type and subsample number
+#   insert the pval type e.g. PSNP4 (all the way down this dataframe)
+df_out.insert(2,"PVAL_TYPE","AVERAGE_PSNP5")
+
+#   insert the subsample level (all the way down this dataframe)
+df_out.insert(3,"SUBSAMPLE_NUM","200")
+
+print("Header")
+print(df_out.head())
+
+#df_out.to_csv("test_env/output_csv.csv",index=False)
+
+# concat the current pval data to main dataframe e.g. PSNP4 stuff
+cumulative_t20_dataframe=pandas.concat([cumulative_t20_dataframe,df_out])
+
+
+locations_dataframe = pandas.read_csv("test_env/Mo98_AVERAGE_PSNP4_T20_LOCATIONS.csv")
+current_dataframe = pandas.read_csv("test_env/Mo98_GIFT_200_ALL.csv")
+
+copy_df = current_dataframe[['CHR','POS','AVERAGE_PSNP4']].copy()
+print("Header copy")
+print(copy_df.head())
+
+ # rename chromosome column in the current dataframe (copied from main)
+copy_df.rename(columns={'CHROM':'CHR',"AVERAGE_PSNP4":"VALUE"}, inplace=True)
+
+
+# THIS WORKS -> just need to make sure its PSNP5 not average PSNP5
+
+df_out =(locations_dataframe.reset_index(drop=True)[["CHR", "POS"]].merge(copy_df.reset_index(drop=True), on=["CHR", "POS"], how="inner",left_index=False, right_index=False,))
+
+
+# insert the columns for current PVAL type and subsample number
+#   insert the pval type e.g. PSNP4 (all the way down this dataframe)
+df_out.insert(2,"PVAL_TYPE","AVERAGE_PSNP4")
+
+#   insert the subsample level (all the way down this dataframe)
+df_out.insert(3,"SUBSAMPLE_NUM","200")
+
+print("Header")
+print(df_out.head())
+
+#df_out.to_csv("test_env/output_csv.csv",index=False)
+
+# concat the current pval data to main dataframe e.g. PSNP4 stuff
+cumulative_t20_dataframe=pandas.concat([cumulative_t20_dataframe,df_out])
+
+
+print("Cumulative dataframe head")
+print(cumulative_t20_dataframe.head())
+
+#write the cumulative_t20 dataframe to csv
+cumulative_t20_dataframe.to_csv("test_env/cumulative.csv",header=True,index=False)
+
