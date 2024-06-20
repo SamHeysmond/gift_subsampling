@@ -2,9 +2,9 @@
 #SBATCH --partition=defq
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=3
 #SBATCH --mem=4g
-#SBATCH --time=00:20:00
+#SBATCH --time=01:00:00
 #SBATCH --job-name=subsample_setup
 #SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out
 #SBATCH --error=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.err
@@ -52,7 +52,7 @@ echo "JOB_ID,SUBSAMPLE_N,PHENOTYPE" > core_files/JOB_LIST.csv
 rm core_files/subsampled_phenotype_*.csv
 rm core_files/subsampled_genotype_*.vcf
 
-# Make the scripts ========================================
+# Make the subsample scripts ========================================
 # enter python environment
 conda activate python3_env
 
@@ -60,14 +60,5 @@ conda activate python3_env
 python3 batch_files/subsample_script_setup.py
 
 echo "Subsample_setup.sh finished!"
-
-## OLD CODE FOR MAKING SCRIPTS
-#multiply the subsample sh script 100 times for 100 scripts to be made
-#for ((n=1;n<=100;n++));do
-# copy the template for subsample and run into the parallel folder
-#cp batch_files/subsample_and_run.sh batch_files/parallel/subsample_and_run_${n}.sh
-
-#exit for loop
-#done
 
 #end of script

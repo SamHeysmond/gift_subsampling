@@ -5,7 +5,7 @@
 
 
 # open the list of phenotypes to analyse
-# contains format (no header)
+# contains the following format (no header):
 # leaf_ionome_Mo98
 # leaf_ionome_Na23
 # .... 
@@ -25,6 +25,7 @@ for phenotype in phenotypes_input:
         # make 100 copies of each file 
         # (alter this to change the number of tests to be done)
         for copynum in range(1,101): #increased 1o 101 to get 100 copies
+            # puts all the runs in a folder called "batch_files/parallel/...."
             bash_script_output=open("batch_files/parallel/subrun_"+
                                     str(phenotype)+
                                     "_"+
@@ -43,20 +44,20 @@ for phenotype in phenotypes_input:
             # give appropriate memory and time according to the job's subsample number... 
             # ...(bigger sample -> more resources)
             if subsample_num==int(200):
-                bash_script_output.write(f'#SBATCH --mem=5g\n')
-                bash_script_output.write(f'#SBATCH --time=06:00:00\n')
-            elif subsample_num==int(400):
                 bash_script_output.write(f'#SBATCH --mem=6g\n')
-                bash_script_output.write(f'#SBATCH --time=12:00:00\n')
-            elif subsample_num==int(600):
+                bash_script_output.write(f'#SBATCH --time=08:00:00\n')
+            elif subsample_num==int(400):
                 bash_script_output.write(f'#SBATCH --mem=7g\n')
-                bash_script_output.write(f'#SBATCH --time=20:00:00\n')
-            elif subsample_num==int(800):
+                bash_script_output.write(f'#SBATCH --time=14:00:00\n')
+            elif subsample_num==int(600):
                 bash_script_output.write(f'#SBATCH --mem=8g\n')
-                bash_script_output.write(f'#SBATCH --time=24:00:00\n')
-            elif subsample_num==int(1000):
+                bash_script_output.write(f'#SBATCH --time=22:00:00\n')
+            elif subsample_num==int(800):
                 bash_script_output.write(f'#SBATCH --mem=9g\n')
-                bash_script_output.write(f'#SBATCH --time=36:00:00\n')
+                bash_script_output.write(f'#SBATCH --time=26:00:00\n')
+            elif subsample_num==int(1000):
+                bash_script_output.write(f'#SBATCH --mem=10g\n')
+                bash_script_output.write(f'#SBATCH --time=38:00:00\n')
             bash_script_output.write(f'#SBATCH --job-name=subrun\n')
             bash_script_output.write(f'#SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out\n')
             bash_script_output.write(f'#SBATCH --error=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.err\n')
@@ -72,14 +73,16 @@ for phenotype in phenotypes_input:
             bash_script_output.write(f'#activate environment for subsampling\n')
             bash_script_output.write(f'conda activate subsample_env\n')
 
-            # variables
+            # variables for each subrun
             bash_script_output.write(f'#set variables for this script\n')
             bash_script_output.write(f'i={subsample_num}\n')
             bash_script_output.write(f'phenotype={phenotype}\n')
 
-            #job ID
+            #job ID updating to the csv
             bash_script_output.write(f'#append the JOB ID and subsample number (i) to a file\n')
             bash_script_output.write('echo "${SLURM_JOB_ID},${i},${phenotype}" >> core_files/JOB_LIST.csv \n')
+
+            # main code to run the subsampling
             bash_script_output.write(f'# run the subsample script to get the appropriate number of subsamples\n')
             bash_script_output.write('python3 batch_files/subsample.py -p core_files/master_list.csv -s core_files/all_vcf_samples.txt -n ${i} -t ${phenotype} -op core_files/subsampled_phenotype_${i}_${SLURM_JOB_ID}.csv -og core_files/subsampled_genotype_${i}_${SLURM_JOB_ID}.vcf -ri ${SLURM_JOB_ID}\n')
             bash_script_output.write(f'#deactivate conda environment\n')
@@ -91,6 +94,7 @@ for phenotype in phenotypes_input:
             bash_script_output.write(f'#activate conda environment for the GIFT method\n')
             bash_script_output.write(f'conda activate gift_env\n')
             bash_script_output.write(f'#run GIFT on the subsampled data\n')
+            bash_script_output.write(f'# Use ignore command to prevent the warning from stacking up in the slurm output folder.\n')
             bash_script_output.write('python3 -W ignore core_files/physics_GWAS_OOP.py -v core_files/subsampled_genotype_${i}_${SLURM_JOB_ID}.vcf -f core_files/subsampled_phenotype_${i}_${SLURM_JOB_ID}.csv -p ${phenotype} -o output_files/${phenotype}_whole_genome_metrics_${i}_${SLURM_JOB_ID}.csv -id ${SLURM_JOB_ID} -s ${i}\n')
             bash_script_output.write(f'# exit gift environment\n')
             bash_script_output.write(f'conda deactivate\n')

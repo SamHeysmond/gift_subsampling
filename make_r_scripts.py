@@ -1,10 +1,12 @@
 # SCRIPT INFO 
-# This script will write the custom R scripts used...
-# ... to generate manhattan plots based on GWAS data...
-# for each JOB_ID run!
+# This script will write the custom R scripts used to generate manhattan plots..
+#   .. based on GWAS data, for each JOB_ID run!
+
 import argparse
 
 parser=argparse.ArgumentParser(description="makes R scripts for a given run")
+
+# create the arguments for inputs for this script
 parser.add_argument('-id', 
                     type=str, 
                     metavar='SLURM_JOB_ID', 
@@ -33,12 +35,7 @@ parser.add_argument('-o',
 # stores input data and parses them
 args= parser.parse_args() 
 
-# printing for testing
-#print("Ouput dir: ", args.o)
-#print("Subsample num: ", args.i)
-#print("Input phenotype: ", args.p)
-#print("Run ID: ", args.i)
-
+# make the R file which goes into the given directory (args.o)
 Rscript_output=open(str(args.o)+str(args.id)+"_"+str(args.i)+"_"+str(args.p)+".R","w")
 
 Rscript_output.write(f'#R script for making manhattan plots with ggplot\n')
@@ -99,7 +96,7 @@ Rscript_output.write('          } \n')
 Rscript_output.write('      }\n')
 Rscript_output.write('}\n')
 # cumulative calculations
-Rscript_output.write(f'don <- gwasResults %>%\n')
+Rscript_output.write(f'my_data <- gwasResults %>%\n')
 Rscript_output.write(f'     # Compute chromosome size\n')
 Rscript_output.write(f'     group_by(chromosomes) %>% \n')
 Rscript_output.write(f'     summarise(chr_len=max(positions)) %>%\n')
@@ -111,7 +108,7 @@ Rscript_output.write(f'     left_join(gwasResults, ., by=c("chromosomes"="chromo
 Rscript_output.write(f'     # Add a cumulative position of each SNP\n')
 Rscript_output.write(f'     arrange(chromosomes, positions) %>%\n')
 Rscript_output.write(f'     mutate( BPcum=positions+tot) \n')
-Rscript_output.write(f'axisdf = don %>%\n')
+Rscript_output.write(f'axisdf = my_data %>%\n')
 Rscript_output.write(f'     group_by(chromosomes) %>%\n')
 Rscript_output.write(f'     summarize(center=( max(BPcum) + min(BPcum) ) / 2 )\n')
 # set y limit for the graph (not sure if this changes anything here though- just copied from other script)
@@ -120,7 +117,7 @@ Rscript_output.write(f'ylim <- abs(floor(log10(min(gwasResults$pvals)))) +1\n')
 Rscript_output.write(f'#open png\n')
 Rscript_output.write(f'png("output_files/{args.p}_GWAS_MANHATTAN_{args.i}_{args.id}.png", bg = "white", width = 9.75, height = 3.25, units = "in", res = 1200, pointsize = 4)\n')
 # make the plot
-Rscript_output.write(f'ggplot(don, aes(x=BPcum, y=-log10(pvals), color=as_factor(chromosomes))) +\n')
+Rscript_output.write(f'ggplot(my_data, aes(x=BPcum, y=-log10(pvals), color=as_factor(chromosomes))) +\n')
 Rscript_output.write(f'     # Show all points\n')
 Rscript_output.write(f'     geom_point(alpha=0.5) +\n')
 # commented out
@@ -138,8 +135,8 @@ Rscript_output.write(f'     scale_x_continuous( label = axisdf$chromosomes, brea
 #Rscript_output.write(f'     scale_y_continuous(expand = c(0, 0) ) + # remove space between plot area and x axis\n')
 # Highlighting and labelling based on earlier calculations
 Rscript_output.write(f'     # add highlighting and labels\n')
-Rscript_output.write(f'     geom_point(data = subset(don, is_highlight=="yes"), color="orange", size=1.3) +\n')
-Rscript_output.write(f'     geom_label_repel(data=subset(don, is_annotate=="yes"),\n')
+Rscript_output.write(f'     geom_point(data = subset(my_data, is_highlight=="yes"), color="orange", size=1.3) +\n')
+Rscript_output.write(f'     geom_label_repel(data=subset(my_data, is_annotate=="yes"),\n')
 Rscript_output.write(f'         xlim = c(-Inf,Inf), # added -> make room for labels\n')
 # paused y lim determiner here for now
 #Rscript_output.write(f'         ylim=c(-Inf,Inf), # added -> make room for labels\n')

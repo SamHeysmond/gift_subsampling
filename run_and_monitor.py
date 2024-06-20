@@ -1,4 +1,6 @@
+# gather required packages
 import os, subprocess, time
+
 
 def terminal_pipe(cmd): 
     return subprocess.Popen(f'{cmd}', shell=True, stdout=subprocess.PIPE).communicate()[0].decode("utf-8").strip(' \n')
@@ -22,7 +24,11 @@ def run_and_monitor(sbatch_directory, max_jobs=80):
 
             # remove script from batch jobs list
             batch_jobs.remove(batch_jobs[0])
-        # when there are 100 scripts running wait for 10 mins
+
+        # when there are max num of scripts running wait for a bit
         if int(running) >= max_jobs:
             time.sleep(5)
+            
+# run the function on the directory containing the many batch files
+# in this case thats the "bathc_files/parallel" folder
 run_and_monitor('/gpfs01/home/mbysh17/batch_files/parallel/')
