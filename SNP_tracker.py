@@ -96,136 +96,6 @@ def IDEA_3_process_all_snps_file(df_to_process,GIFT_or_GWAS,TOTAL_GIFT_OR_GWAS,s
 
     return df_to_process
 
-# IDEA 3 (CHECKED! X2)
-def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type):
-    print("Entered FUNCTION: IDEA_3_R_AND_BATCH",flush=True)
-    #########################################
-    ### MAKE R SCRIPT ##################
-    #############################
-
-    # make R script for each P value type (pSNP4, pSNP5, abs theta, GWAS_P)
-    R_out=open(PATH_TO_MAIN+"output_files/SNP_tracker_R_scripts/"+str(phenotype)+"_"+str(subsample_number)+"_"+str(pval_type)+"_MANHATTAN.R","w")
-    R_out.write(f'#R script for making manhattan plots with ggplot\n')
-    R_out.write(f'library("tidyverse")\n')
-    #R_out.write(f'library("ggplot2")\n')
-    #R_out.write(f'library("dplyr")\n')
-    # R_out.write(f'library("ggrepel")\n')   # Dont need ggrepel for now
-    R_out.write(f'print("Start of IDEA 3 R")\n')
-    R_out.write(f'\n')
-
-    # for GWAS data....
-    if pval_type=="AVERAGE_P":
-
-        # fetch the data of the csv for the current phenotype and current method (GWAS)
-        R_out.write(f'{pval_type}_SUBSAMPLE_{subsample_number}_SNPS_DATA<-read.csv("{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_GWAS_{subsample_number}_ALL.csv",header=TRUE)\n')  
-        
-    # for GIFT data
-    else:
-
-        # fetch the data of the csv for the current phenotype and current method (GIFT)
-        R_out.write(f'{pval_type}_SUBSAMPLE_{subsample_number}_SNPS_DATA<-read.csv("{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_GIFT_{subsample_number}_ALL.csv",header=TRUE)\n')  
-
-    # cumulative calculations
-    R_out.write(f'mydata <- {pval_type}_SUBSAMPLE_{subsample_number}_SNPS_DATA %>%\n')
-    R_out.write(f'     # Compute CHR size\n')
-    R_out.write(f'     group_by(CHR) %>% \n')
-    R_out.write(f'     summarise(chr_len=max(POS)) %>%\n')
-    R_out.write(f'     # Calculate cumulative position of each CHR\n')
-    R_out.write(f'     mutate(tot=cumsum(chr_len)-chr_len) %>%\n')
-    R_out.write(f'     select(-chr_len) %>%\n')
-    R_out.write(f'     # Add this info to the initial dataset\n')
-    R_out.write(f'     left_join({pval_type}_SUBSAMPLE_{subsample_number}_SNPS_DATA, ., by=c("CHR"="CHR")) %>%\n')
-    R_out.write(f'     # Add a cumulative position of each SNP\n')
-    R_out.write(f'     arrange(CHR, POS) %>%\n')
-    R_out.write(f'     mutate( BPcum=POS+tot) \n')
-    R_out.write(f'axisdf = mydata %>%\n')
-    R_out.write(f'     group_by(CHR) %>%\n')
-    R_out.write(f'     summarize(center=( max(BPcum) + min(BPcum) ) / 2 )\n')
-
-    # set y limit for the graph (not sure if this changes anything here though)
-    # y limit depends on the pval type in question
-    if pval_type=="AVG_ABS_THETA": # testing without log10
-        R_out.write(f'ylim <- abs(floor(min(mydata))) +1\n')
-    else:
-        R_out.write(f'ylim <- abs(floor(log10(min(mydata)))) +1\n')
-
-    R_out.write(f'#open png\n')
-    # Send output to IDEA 3 summary plot folder
-    R_out.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA3/{phenotype}_{subsample_number}_{pval_type}_MANHATTAN.png", bg = "white", width = 9.75, height = 3.25, units = "in", res = 1200, pointsize = 4)\n')
-
-    # make the plot
-    # this is where the plot depends on the pval type. 
-    # for absolute theta, there is no -log10 since it isnt quite a "pvalue"
-    if pval_type=="AVG_ABS_THETA":
-        R_out.write(f'ggplot(mydata, aes(x=BPcum, y=({pval_type}), color=as_factor(CHR))) +\n')
-    else:
-        R_out.write(f'ggplot(mydata, aes(x=BPcum, y=(-log10({pval_type})), color = as_factor(CHR))) +\n')
-    R_out.write(f'     # Show all points\n')
-    R_out.write(f'     geom_point(alpha=0.5) +\n')
-    R_out.write(f'     # custom X axis:\n')
-    R_out.write(f'     scale_x_continuous( label = axisdf$CHR, breaks= axisdf$center ) +\n')
-    # TEMP PAUSE FOR TESTING
-    #Rscript_output.write(f'     scale_y_continuous(expand = c(0, 0) ) + # remove space between plot area and x axis\n')
-    # label axis
-    R_out.write(f'     # my axis labels\n')
-    if pval_type=="TOTAL_ABS_THETA":
-        R_out.write(f'     labs(y= "({pval_type})", x = "chromosome position")+\n')
-    else:
-        R_out.write(f'     labs(y= "-log10({pval_type})", x = "chromosome position")+\n')
-    # add a theme
-    R_out.write(f'     # Custom the theme:\n')
-    R_out.write(f'     theme_minimal() +\n')
-    R_out.write(f'     guides(colour="none")\n')
-    R_out.write(f'     theme(\n')
-    R_out.write(f'       panel.border = element_blank(),\n')
-    R_out.write(f'       panel.grid.major.x = element_blank(),\n')
-    R_out.write(f'       panel.grid.minor.x = element_blank(),\n')
-    R_out.write(f'       axis.text.x = element_text(angle = 90, size = 8, vjust = 0.5)\n')
-    R_out.write(f'      )\n')
-    R_out.write(f'dev.off()\n')
-    R_out.write(f'print("End of IDEA 3 R script")\n')
-    R_out.write(f'#END OF SCRIPT\n')
-    R_out.close()
-
-    ###################################
-    ### MAKE BATCH SCRIPT ######
-    #####################
-
-    #  make a batch file for the script and put it into batch_files/parallel_stage2/
-
-    # location where the batch scripts will be written to
-    R_batch=open(PATH_TO_MAIN+"batch_files/parallel_stage2/"+str(phenotype)+"_"+str(subsample_number)+"_"+str(pval_type)+"_MANHATTAN.sh","w")
-    
-    # necessary start to the file
-    R_batch.write(f'#!/bin/bash\n')
-    R_batch.write(f'#SBATCH --partition=defq\n')
-    R_batch.write(f'#SBATCH --nodes=1\n')
-    R_batch.write(f'#SBATCH --ntasks=1\n')
-    R_batch.write(f'#SBATCH --cpus-per-task=3\n')
-    R_batch.write(f'#SBATCH --mem=8g\n')
-    R_batch.write(f'#SBATCH --time=1:00:00\n')
-    R_batch.write(f'#SBATCH --job-name=R_subrun\n')
-    R_batch.write(f'#SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out\n')
-    R_batch.write(f'#SBATCH --error=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.err\n')
-    R_batch.write(f'#SBATCH --mail-type=ALL\n')
-    R_batch.write(f'#SBATCH --mail-user=mbysh17@nottingham.ac.uk\n')
-    R_batch.write(f'#===============================\n')
-    R_batch.write(f'echo "start of IDEA 3 batch script"\n')
-    R_batch.write(f'#change to home directory\n')
-    R_batch.write(f'cd /gpfs01/home/mbysh17\n')
-    R_batch.write(f'# source conda environments\n')
-    R_batch.write(f'source ~/.bashrc\n')
-    R_batch.write(f'conda deactivate\n')
-    R_batch.write(f'conda activate gift_env\n')
-    R_batch.write(f'# R SCRIPT FOR (IDEA 3) AVG MANHATTAN PLOT\n')
-    R_batch.write(f'Rscript {PATH_TO_MAIN}output_files/SNP_tracker_R_scripts/{phenotype}_{subsample_number}_{pval_type}_MANHATTAN.R\n')
-    R_batch.write(f'conda deactivate\n')
-    R_batch.write(f'echo "End of IDEA 3 batch script"\n')
-    R_batch.write(f'conda deactivate\n')
-    R_batch.write(f'# END OF FILE\n')
-    R_batch.close()
-    # end of function
-
 # IDEA 1.1 (CHECKED! x2)
 def GET_T20_LOCATIONS_AT_1000(dataframe_name,pval_type,phenotype): #parameters of: phenotype, subsample number, and pval type (implied method)
     print("Entered FUNCTION: IDEA_1_GET_T20_LOCATIONS_AT_1000",flush=True)
@@ -382,81 +252,6 @@ def IDEA_1_ACCUMULATE_T20_SNP_DATA(current_dataframe_main,
     # save on memory by deleting the dataframe variable
     del cumulative_t20_dataframe
 
-# IDEA 1.4.1 (CHECKED!)
-def IDEA_1_MAKE_R_SCRIPT(
-        phenotype,
-        cumulative_t20_dataframe_name,
-        ):
-    print("Entered FUNCTION: IDEA_1_MAKE_R_SCRIPT",flush=True)
-
-    #####################################
-    ####### MAKING THE R SCRIPT
-    ######################################
-
-    cumulative_t20_dataframe_name = cumulative_t20_dataframe_name.replace(".csv","")
-
-    # write the R script to pair with the SNP and its data
-    CURRENT_SNP_R_SCRIPT=open(PATH_TO_MAIN+"output_files/SNP_tracker_R_scripts/"+str(cumulative_t20_dataframe_name)+".R","w")
-    CURRENT_SNP_R_SCRIPT.write(f'#R script for making box plots with ggplot\n')
-    #CURRENT_SNP_R_SCRIPT.write(f'library("ggplot2")\n')
-    CURRENT_SNP_R_SCRIPT.write(f'library("tidyverse")\n')
-    CURRENT_SNP_R_SCRIPT.write(f'print("start of IDEA1 R script")\n')
-    CURRENT_SNP_R_SCRIPT.write(f'T20_TRACKED_DATA<- read.csv("{PATH_TO_MAIN}output_files/R_DATA/{cumulative_t20_dataframe_name}.csv", header= TRUE, sep=",")\n')
-    CURRENT_SNP_R_SCRIPT.write(f'# Convert the subsample number to a FACTOR variable\n')
-    CURRENT_SNP_R_SCRIPT.write(f'T20_TRACKED_DATA$SUBSAMPLE_NUM<-factor(T20_TRACKED_DATA$SUBSAMPLE_NUM)\n')
-    CURRENT_SNP_R_SCRIPT.write(f'\n')
-    CURRENT_SNP_R_SCRIPT.write(f'#open png\n')
-    CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA1/{cumulative_t20_dataframe_name}.png", bg = "white", width = 9.75, height = 3.25, units = "in", res = 1200, pointsize = 4)\n')
-    CURRENT_SNP_R_SCRIPT.write(f'ggplot(T20_TRACKED_DATA, aes(x=PVAL_TYPE, y=VALUE, fill=SUBSAMPLE_NUM)) +\n')
-    CURRENT_SNP_R_SCRIPT.write(f'   geom_boxplot() +\n')
-    CURRENT_SNP_R_SCRIPT.write(f'   facet_wrap(~PVAL_TYPE, scale="free")\n')
-    CURRENT_SNP_R_SCRIPT.write(f'\n')
-    CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
-    CURRENT_SNP_R_SCRIPT.write(f'print("End of IDEA1 R script")\n')
-    CURRENT_SNP_R_SCRIPT.write(f'# END OF R SCRIPT')
-    CURRENT_SNP_R_SCRIPT.close()
-
-# IDEA 1.5.1 (CHECKED!) fixed rscript run error
-def IDEA_1_MAKE_BASH_SCRIPT(
-        phenotype,
-        cumulative_t20_dataframe_name
-        ):
-    print("Entered FUNCTION: IDEA_1_MAKE_BASH_SCRIPT",flush=True)
-    #####################################
-    ####### MAKING THE BATCH SCRIPT
-    ######################################
-    cumulative_t20_dataframe_name = cumulative_t20_dataframe_name.replace(".csv","")
-    # location where the batch scripts will be written to
-    CURRENT_SNP_BATCH=open(PATH_TO_MAIN+"batch_files/parallel_stage2/"+str(cumulative_t20_dataframe_name)+".sh","w")
-    
-    # necessary start to the file
-    CURRENT_SNP_BATCH.write(f'#!/bin/bash\n')
-    CURRENT_SNP_BATCH.write(f'#SBATCH --partition=defq\n')
-    CURRENT_SNP_BATCH.write(f'#SBATCH --nodes=1\n')
-    CURRENT_SNP_BATCH.write(f'#SBATCH --ntasks=1\n')
-    CURRENT_SNP_BATCH.write(f'#SBATCH --cpus-per-task=3\n')
-    CURRENT_SNP_BATCH.write(f'#SBATCH --mem=8g\n')
-    CURRENT_SNP_BATCH.write(f'#SBATCH --time=1:00:00\n')
-    CURRENT_SNP_BATCH.write(f'#SBATCH --job-name=R_subrun\n')
-    CURRENT_SNP_BATCH.write(f'#SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out\n')
-    CURRENT_SNP_BATCH.write(f'#SBATCH --error=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.err\n')
-    CURRENT_SNP_BATCH.write(f'#SBATCH --mail-type=ALL\n')
-    CURRENT_SNP_BATCH.write(f'#SBATCH --mail-user=mbysh17@nottingham.ac.uk\n')
-    CURRENT_SNP_BATCH.write(f'#===============================\n')
-    CURRENT_SNP_BATCH.write(f'echo "start OF IDEA 1 batch script" \n')
-    CURRENT_SNP_BATCH.write(f'#change to home directory\n')
-    CURRENT_SNP_BATCH.write(f'cd /gpfs01/home/mbysh17\n')
-    CURRENT_SNP_BATCH.write(f'# source conda environments\n')
-    CURRENT_SNP_BATCH.write(f'source ~/.bashrc\n')
-    CURRENT_SNP_BATCH.write(f'conda deactivate\n')
-    CURRENT_SNP_BATCH.write(f'conda activate gift_env\n')
-    CURRENT_SNP_BATCH.write(f'# R SCRIPT FOR (IDEA 1) BOXPLOT\n')
-    CURRENT_SNP_BATCH.write(f'Rscript {PATH_TO_MAIN}output_files/SNP_tracker_R_scripts/{cumulative_t20_dataframe_name}.R\n')
-    CURRENT_SNP_BATCH.write(f'conda deactivate\n')
-    CURRENT_SNP_BATCH.write(f'echo "END OF IDEA 1 batch script" \n')
-    CURRENT_SNP_BATCH.write(f'# end of script')
-    CURRENT_SNP_BATCH.close()
-
 # IDEA 2.1.1 (CHECKED!)
 def IDEA_2_CONTROL_CHECK(current_df,
             positive_control_df_name,
@@ -487,10 +282,10 @@ def IDEA_2_CONTROL_CHECK(current_df,
         positive_control_LB = 6391854
         positive_control_UB = 6395922
 
-        # rad50 gene location boundaries
-        negative_control_chromosome = 2
-        negative_control_LB =13600431
-        negative_control_UB =13609104
+        # MLH1 
+        negative_control_chromosome = 4
+        negative_control_LB =5816942
+        negative_control_UB =5821066
 
     if GIFT_or_GWAS == "GWAS":
         CHR = "chromosomes"
@@ -504,7 +299,7 @@ def IDEA_2_CONTROL_CHECK(current_df,
     temp_positive_control_df=current_df.copy()
     temp_negative_control_df=current_df.copy()
 
-    # select rows that fit the positive or negative control regions
+    # select rows that fit the positive and/or negative control regions
     temp_positive_control_df = temp_positive_control_df[(temp_positive_control_df[CHR]==positive_control_chromosome) & (temp_positive_control_df[POS]>= positive_control_LB) & (temp_positive_control_df[POS]<= positive_control_UB)]
     temp_negative_control_df = temp_negative_control_df[(temp_negative_control_df[CHR]==negative_control_chromosome) & (temp_negative_control_df[POS]>= negative_control_LB) & (temp_negative_control_df[POS]<= negative_control_UB)]
 
@@ -570,13 +365,14 @@ def IDEA_2_CONTROL_CHECK(current_df,
 
         try:
             negative_control_df=pandas.read_csv(PATH_TO_MAIN+"output_files/R_DATA/"+negative_control_df_name)
-            negative_control_df=pandas.concat([negative_control_df,temp_negative_control_df],ignore_index=True)
-            negative_control_df=temp_negative_control_df
+
             print("Successfully read the negative control df",flush=True)
+
+            negative_control_df=pandas.concat([negative_control_df,temp_negative_control_df],ignore_index=True)
 
         except:
             print("Tried to read negative control dataframe but it didnt exist...",flush=True)
-            print("Setting current temp positive control to dataframe...",flush=True)
+            print("Setting current temp negative control to dataframe...",flush=True)
             negative_control_df=temp_negative_control_df
 
         negative_control_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/"+negative_control_df_name,header=True,index=False)
@@ -586,79 +382,6 @@ def IDEA_2_CONTROL_CHECK(current_df,
     print("IDEA_2 function done",flush=True)
     
     # END OF FUNCTION
-
-# IDEA 2.3.1 (CHECKED!x2)
-def IDEA_2_MAKE_R_AND_BASH_SCRIPT(
-                        phenotype,
-                        control_dataframe_name,
-                        positive_or_negative
-                        ):
-    print("Entered FUNCTION: IDEA_2_MAKE_R_AND_BASH_SCRIPT",flush=True)
-
-    #####################################
-    ####### MAKING THE R SCRIPT
-    ######################################
-    control_dataframe_name=control_dataframe_name.replace(".csv","")
-
-    # write the R script to pair with the SNP and its data
-    CURRENT_SNP_R_SCRIPT=open(PATH_TO_MAIN+"output_files/SNP_tracker_R_scripts/"+control_dataframe_name+".R","w")
-    CURRENT_SNP_R_SCRIPT.write(f'#R script for making box plots with ggplot\n')
-    CURRENT_SNP_R_SCRIPT.write(f'library("tidyverse")\n')
-    #CURRENT_SNP_R_SCRIPT.write(f'library("ggplot2")\n')
-    CURRENT_SNP_R_SCRIPT.write(f'print("start of IDEA 2 R script")\n')
-    CURRENT_SNP_R_SCRIPT.write(f'{control_dataframe_name}_data<- read.csv("{PATH_TO_MAIN}output_files/R_DATA/{control_dataframe_name}.csv", header= TRUE, sep=",")\n')
-    CURRENT_SNP_R_SCRIPT.write(f'\n')
-    CURRENT_SNP_R_SCRIPT.write(f'# Convert the subsample number to a FACTOR variable\n')
-    CURRENT_SNP_R_SCRIPT.write(f'{control_dataframe_name}_data$SUBSAMPLE_NUM<-factor({control_dataframe_name}_data$SUBSAMPLE_NUM)\n')
-    CURRENT_SNP_R_SCRIPT.write(f'\n')
-    CURRENT_SNP_R_SCRIPT.write(f'#open png\n')
-    CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA2/{control_dataframe_name}.png", bg = "white", width = 9.75, height = 3.25, units = "in", res = 1200, pointsize = 4)\n')
-    CURRENT_SNP_R_SCRIPT.write(f'ggplot({control_dataframe_name}_data, aes(x=PVAL_TYPE, y=VALUE, fill=SUBSAMPLE_NUM)) +\n')
-    CURRENT_SNP_R_SCRIPT.write(f'   geom_boxplot() +\n')
-    CURRENT_SNP_R_SCRIPT.write(f'   facet_wrap(~PVAL_TYPE, scale="free")\n')
-    CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
-    CURRENT_SNP_R_SCRIPT.write(f'print("End of IDEA 2 R script")\n')
-    CURRENT_SNP_R_SCRIPT.write(f'# END OF R SCRIPT')
-    CURRENT_SNP_R_SCRIPT.close()
-
-    #####################################
-    ####### MAKING THE BATCH SCRIPT
-    ######################################
-
-    # location where the batch scripts will be written to
-    CURRENT_SNP_BATCH=open(PATH_TO_MAIN+"batch_files/parallel_stage2/"+control_dataframe_name+".sh","w")
-    
-    # necessary start to the file
-    CURRENT_SNP_BATCH.write(f'#!/bin/bash\n')
-    CURRENT_SNP_BATCH.write(f'#SBATCH --partition=defq\n')
-    CURRENT_SNP_BATCH.write(f'#SBATCH --nodes=1\n')
-    CURRENT_SNP_BATCH.write(f'#SBATCH --ntasks=1\n')
-    CURRENT_SNP_BATCH.write(f'#SBATCH --cpus-per-task=3\n')
-    CURRENT_SNP_BATCH.write(f'#SBATCH --mem=8g\n')
-    CURRENT_SNP_BATCH.write(f'#SBATCH --time=1:00:00\n')
-    CURRENT_SNP_BATCH.write(f'#SBATCH --job-name=R_subrun\n')
-    CURRENT_SNP_BATCH.write(f'#SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out\n')
-    CURRENT_SNP_BATCH.write(f'#SBATCH --error=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.err\n')
-    CURRENT_SNP_BATCH.write(f'#SBATCH --mail-type=ALL\n')
-    CURRENT_SNP_BATCH.write(f'#SBATCH --mail-user=mbysh17@nottingham.ac.uk\n')
-    CURRENT_SNP_BATCH.write(f'#===============================\n')
-    CURRENT_SNP_BATCH.write(f'echo "start OF IDEA 2 batch script"\n')
-    CURRENT_SNP_BATCH.write(f'#change to home directory\n')
-    CURRENT_SNP_BATCH.write(f'cd /gpfs01/home/mbysh17\n')
-    CURRENT_SNP_BATCH.write(f'# source conda environments\n')
-    CURRENT_SNP_BATCH.write(f'source ~/.bashrc\n')
-    CURRENT_SNP_BATCH.write(f'conda deactivate\n')
-    CURRENT_SNP_BATCH.write(f'conda activate gift_env\n') # in gift_env but may change to R env if needed
-    CURRENT_SNP_BATCH.write(f'# R SCRIPT FOR (IDEA 2) BOXPLOT\n')
-    CURRENT_SNP_BATCH.write(f'Rscript {PATH_TO_MAIN}output_files/SNP_tracker_R_scripts/{control_dataframe_name}.R\n')
-    CURRENT_SNP_BATCH.write(f'conda deactivate\n')
-    CURRENT_SNP_BATCH.write(f'echo "END OF IDEA 2 batch script"\n')
-    CURRENT_SNP_BATCH.write(f'# end of file\n')
-    CURRENT_SNP_BATCH.close()
-
-    # END OF FUNCTION
-
-
 
 # initialise variables
 
@@ -919,19 +642,9 @@ for list_of_files in list_of_list_of_files:
     # delete df to save mem
     del this_df
 
-##########
-#########################
-#########################################
-
-####################################################
-# IDEA 2.2 #####################################
-############################################
-IDEA_2_MAKE_R_AND_BASH_SCRIPT("Mo98", "Mo98_positive_control.csv","positive")
-IDEA_2_MAKE_R_AND_BASH_SCRIPT("Mo98", "Mo98_negative_control.csv","negative")
-IDEA_2_MAKE_R_AND_BASH_SCRIPT("Na23", "Na23_positive_control.csv","positive")
-IDEA_2_MAKE_R_AND_BASH_SCRIPT("Na23", "Na23_negative_control.csv","negative")
 
 print("IDEA 2 FINISHED",flush=True)
+
 ############################################
 # IDEA 2.2 #####################################
 ####################################################
@@ -945,20 +658,7 @@ subsample_num_list=[200,400,600,800,1000] # can later update this to read from e
 phenotype_list=["Mo98","Na23"] # can later update this to read from the phenotype text file
 
 pvals=["AVERAGE_P","AVERAGE_PSNP4","AVERAGE_PSNP5","AVERAGE_ABS_THETA"] # these should always be the same 4 types
-# R script creation and running
-for phenotype in phenotype_list:
 
-    for subsample_number in subsample_num_list:
-
-        for pval_type in pvals:
-
-            # Example variable inputs are as follows: 
-            # example 1 Mo98,200,AVERAGE_P
-            # example 2 Mo98,200,AVERAGE_PSNP4
-            # ...
-            # example x Mo98,400,AVERAGE_P
-            # ....
-            IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type)
 
 print("IDEA 3 FINISHED",flush=True)
 ############################################
@@ -1091,16 +791,6 @@ for list_of_files in list_of_list_of_files:
 
     # delete df to save mem
     del this_df
-
-####################################################
-# IDEA 1.4 ######################################
-IDEA_1_MAKE_R_SCRIPT("Mo98","Mo98_cumulative_t20_dataframe.csv")
-IDEA_1_MAKE_R_SCRIPT("Na23","Na23_cumulative_t20_dataframe.csv")
-
-####################################################
-# IDEA 1.5 ######################################
-IDEA_1_MAKE_BASH_SCRIPT("Mo98","Mo98_cumulative_t20_dataframe.csv")
-IDEA_1_MAKE_BASH_SCRIPT("Na23","Na23_cumulative_t20_dataframe.csv")
 
 print("END OF IDEA 1",flush=True)
 
