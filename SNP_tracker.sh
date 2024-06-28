@@ -2,8 +2,8 @@
 #SBATCH --partition=hmemq
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=25
-#SBATCH --mem=1250g
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=1350g
 #SBATCH --time=7-00:00:00
 #SBATCH --job-name=SNP_tracker_sh
 #SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out
@@ -16,7 +16,6 @@ cd /gpfs01/home/mbysh17
 
 # source conda environment
 source ~/.bashrc
-
 
 # clear current directory 
 rm -rf output_files/R_DATA/

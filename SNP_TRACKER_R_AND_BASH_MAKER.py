@@ -23,12 +23,12 @@ def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type):
         # fetch the data of the csv for the current phenotype and current method (GWAS)
         #R_out.write(f'{pval_type}_SUBSAMPLE_{subsample_number}_SNPS_DATA<-read.csv("{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_GWAS_{subsample_number}_ALL.csv",header=TRUE)\n')
         # named the variable for all the csv info "csv_data" to shorten code  
-        R_out.write(f'csv_data<-read.csv("{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_GWAS_{subsample_number}_ALL.csv",header=TRUE)\n')
+        R_out.write(f'csv_data<-read.csv("{PATH_TO_MAIN}output_files/R_DATA_FILTERED/{phenotype}_GWAS_{subsample_number}_ALL.csv",header=TRUE)\n')
     # for GIFT data
     else:
 
         # fetch the data of the csv for the current phenotype and current method (GIFT)
-        R_out.write(f'csv_data<-read.csv("{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_GIFT_{subsample_number}_ALL.csv",header=TRUE)\n')  
+        R_out.write(f'csv_data<-read.csv("{PATH_TO_MAIN}output_files/R_DATA_FILTERED/{phenotype}_GIFT_{subsample_number}_ALL.csv",header=TRUE)\n')  
 
     # cumulative calculations
     R_out.write(f'mydata <- csv_data %>%\n')
@@ -226,15 +226,52 @@ def IDEA_1_MAKE_R_SCRIPT(
     CURRENT_SNP_R_SCRIPT.write(f'# Convert the subsample number to a FACTOR variable\n')
     CURRENT_SNP_R_SCRIPT.write(f'final_df$SUBSAMPLE_NUM<-factor(final_df$SUBSAMPLE_NUM)\n')
     CURRENT_SNP_R_SCRIPT.write(f'\n')
-    CURRENT_SNP_R_SCRIPT.write(f'#open png\n')
-    CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA1/{cumulative_t20_dataframe_name}.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
-    CURRENT_SNP_R_SCRIPT.write(f'ggplot(final_df, aes(x=PVAL_TYPE, y=VALUE, fill=SUBSAMPLE_NUM)) +\n')
-    CURRENT_SNP_R_SCRIPT.write(f'   guides(fill = guide_legend(override.aes = list(size = 7)))+\n')
-    CURRENT_SNP_R_SCRIPT.write(f'   geom_boxplot(outlier.shape = NA) +\n')
-    CURRENT_SNP_R_SCRIPT.write(f'   geom_point(size=0.5,color="black",alpha = 1,position = position_jitterdodge(jitter.width = 0.1),show.legend=FALSE)+\n')
-    CURRENT_SNP_R_SCRIPT.write(f'   facet_wrap(~PVAL_TYPE, scale="free")\n')
-    CURRENT_SNP_R_SCRIPT.write(f'\n')
-    CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
+
+
+    # old graph plot (in facet mode but with varying axis)
+    # CURRENT_SNP_R_SCRIPT.write(f'#open png\n')
+    # CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA1/{cumulative_t20_dataframe_name}.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
+    # CURRENT_SNP_R_SCRIPT.write(f'ggplot(final_df, aes(x=PVAL_TYPE, y=VALUE, fill=SUBSAMPLE_NUM)) +\n')
+    # CURRENT_SNP_R_SCRIPT.write(f'   guides(fill = guide_legend(override.aes = list(size = 7)))+\n')
+    # CURRENT_SNP_R_SCRIPT.write(f'   geom_boxplot(outlier.shape = NA) +\n')
+    # CURRENT_SNP_R_SCRIPT.write(f'   geom_point(size=0.5,color="black",alpha = 1,position = position_jitterdodge(jitter.width = 0.1),show.legend=FALSE)+\n')
+    # CURRENT_SNP_R_SCRIPT.write(f'   facet_wrap(~PVAL_TYPE, scale="free")\n')
+    # CURRENT_SNP_R_SCRIPT.write(f'\n')
+    # CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
+
+    # new graph plot with NO facet mode and define axis
+    my_pval_list=["GWAS_P","PSNP4","PSNP5","ABS_THETA"]
+
+    # specific y lims for pvals
+    if phenotype=="Mo98":
+        ylim=80
+    elif phenotype=="Na23":
+        ylim=75
+
+    for item in my_pval_list:
+        if item == "ABS_THETA":
+            CURRENT_SNP_R_SCRIPT.write(f'#open png\n')
+            CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA1/{cumulative_t20_dataframe_name}_{item}.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'ggplot(subset(final_df,PVAL_TYPE=="{item}"), aes(x=PVAL_TYPE, y=VALUE, fill=SUBSAMPLE_NUM)) +\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   guides(fill = guide_legend(override.aes = list(size = 7)))+\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   geom_boxplot(outlier.shape = NA) +\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   geom_point(size=0.5,color="black",alpha = 1,position = position_jitterdodge(jitter.width = 0.1),show.legend=FALSE)+\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   scale_y_continuous(limits=c(0,250))\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+            CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+        else:
+            CURRENT_SNP_R_SCRIPT.write(f'#open png\n')
+            CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA1/{cumulative_t20_dataframe_name}_{item}.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'ggplot(subset(final_df,PVAL_TYPE=="-log10( {item} )"), aes(x=PVAL_TYPE, y=VALUE, fill=SUBSAMPLE_NUM)) +\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   guides(fill = guide_legend(override.aes = list(size = 7)))+\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   geom_boxplot(outlier.shape = NA) +\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   geom_point(size=0.5,color="black",alpha = 1,position = position_jitterdodge(jitter.width = 0.1),show.legend=FALSE)+\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   scale_y_continuous(limits=c(0,{ylim}))\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+            CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+
     CURRENT_SNP_R_SCRIPT.write(f'print("End of IDEA1 R script")\n')
     CURRENT_SNP_R_SCRIPT.write(f'# END OF R SCRIPT')
     CURRENT_SNP_R_SCRIPT.close()
@@ -341,14 +378,61 @@ def IDEA_2_MAKE_R_AND_BASH_SCRIPT(
     CURRENT_SNP_R_SCRIPT.write(f'# Convert the subsample number to a FACTOR variable\n')
     CURRENT_SNP_R_SCRIPT.write(f'final_df$SUBSAMPLE_NUM<-factor(final_df$SUBSAMPLE_NUM)\n')
     CURRENT_SNP_R_SCRIPT.write(f'\n')
-    CURRENT_SNP_R_SCRIPT.write(f'#open png\n')
-    CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA2/{control_dataframe_name}.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
-    CURRENT_SNP_R_SCRIPT.write(f'ggplot(final_df, aes(x=PVAL_TYPE, y=VALUE, fill=SUBSAMPLE_NUM)) +\n')
-    CURRENT_SNP_R_SCRIPT.write(f'   guides(fill = guide_legend(override.aes = list(size = 7)))+\n')
-    CURRENT_SNP_R_SCRIPT.write(f'   geom_boxplot(outlier.shape = NA) +\n')
-    CURRENT_SNP_R_SCRIPT.write(f'   geom_point(size=0.5,color="black",alpha = 1,position = position_jitterdodge(jitter.width = 0.1),show.legend=FALSE)+\n')
-    CURRENT_SNP_R_SCRIPT.write(f'   facet_wrap(~PVAL_TYPE, scale="free")\n')
-    CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
+
+    # old graph method with facet_wrap
+    # CURRENT_SNP_R_SCRIPT.write(f'#open png\n')
+    # CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA2/{control_dataframe_name}.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
+    # CURRENT_SNP_R_SCRIPT.write(f'ggplot(final_df, aes(x=PVAL_TYPE, y=VALUE, fill=SUBSAMPLE_NUM)) +\n')
+    # CURRENT_SNP_R_SCRIPT.write(f'   guides(fill = guide_legend(override.aes = list(size = 7)))+\n')
+    # CURRENT_SNP_R_SCRIPT.write(f'   geom_boxplot(outlier.shape = NA) +\n')
+    # CURRENT_SNP_R_SCRIPT.write(f'   geom_point(size=0.5,color="black",alpha = 1,position = position_jitterdodge(jitter.width = 0.1),show.legend=FALSE)+\n')
+    # CURRENT_SNP_R_SCRIPT.write(f'   facet_wrap(~PVAL_TYPE, scale="free")\n')
+    # CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
+
+    # new graph plot with NO facet mode and define axis
+    my_pval_list=["GWAS_P","PSNP4","PSNP5","ABS_THETA"]
+
+    #specific y limit to make the data spread out as much as possible
+    if phenotype=="Mo98":
+
+        if positive_or_negative=="positive":
+            ylim=75
+
+        elif positive_or_negative=="negative":
+            ylim=25
+            
+    elif phenotype=="Na23":
+
+        if positive_or_negative=="positive":
+            ylim=50
+
+        elif positive_or_negative=="negative":
+            ylim=20
+
+    for item in my_pval_list:
+        if item == "ABS_THETA":
+            CURRENT_SNP_R_SCRIPT.write(f'#open png\n')
+            CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA2/{control_dataframe_name}_{item}.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'ggplot(subset(final_df,PVAL_TYPE=="{item}"), aes(x=PVAL_TYPE, y=VALUE, fill=SUBSAMPLE_NUM)) +\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   guides(fill = guide_legend(override.aes = list(size = 7)))+\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   geom_boxplot(outlier.shape = NA) +\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   geom_point(size=0.5,color="black",alpha = 1,position = position_jitterdodge(jitter.width = 0.1),show.legend=FALSE)+\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   scale_y_continuous(limits=c(0,125))\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+            CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+        else:
+            CURRENT_SNP_R_SCRIPT.write(f'#open png\n')
+            CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA2/{control_dataframe_name}_{item}.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'ggplot(subset(final_df,PVAL_TYPE=="-log10( {item} )"), aes(x=PVAL_TYPE, y=VALUE, fill=SUBSAMPLE_NUM)) +\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   guides(fill = guide_legend(override.aes = list(size = 7)))+\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   geom_boxplot(outlier.shape = NA) +\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   geom_point(size=0.5,color="black",alpha = 1,position = position_jitterdodge(jitter.width = 0.1),show.legend=FALSE)+\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   scale_y_continuous(limits=c(0,{ylim}))\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+            CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+
     CURRENT_SNP_R_SCRIPT.write(f'print("End of IDEA 2 R script")\n')
     CURRENT_SNP_R_SCRIPT.write(f'# END OF R SCRIPT')
     CURRENT_SNP_R_SCRIPT.close()

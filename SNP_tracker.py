@@ -28,8 +28,8 @@ import concurrent.futures
 import modin.pandas as pandas
 import ray
 
-ray.init(_plasma_directory="/tmp", object_store_memory=600000000000) # setting to disable out of core in Ray and obj store mem increase
-# obj store memory currently at 600GB
+ray.init(_plasma_directory="/tmp", object_store_memory=700000000000) # setting to disable out of core in Ray and obj store mem increase
+# obj store memory currently at 700GB
 
 
 # so i can see all the columns when testing with print
@@ -265,7 +265,7 @@ def IDEA_2_CONTROL_CHECK(current_df,
     # list used for splitting 1 line from a GIFT csv into separate lines for each pval type (in the list)
     if this_phenotype=="Mo98":
         #MO98 data
-        #MOT1 gene location boundaries 
+        #MOT1 gene location boundaries (might need to add 1000 to each od LD)
         positive_control_chromosome = 2
         positive_control_LB = 10933005
         positive_control_UB = 10934604
@@ -347,7 +347,7 @@ def IDEA_2_CONTROL_CHECK(current_df,
         try:
             positive_control_df=pandas.read_csv(PATH_TO_MAIN+"output_files/R_DATA/"+positive_control_df_name)
 
-            print("Successfully read the negative control df",flush=True)
+            print("Successfully read the positive control df",flush=True)
 
             positive_control_df=pandas.concat([positive_control_df,temp_positive_control_df],ignore_index=True)
             
