@@ -70,6 +70,8 @@ def get_bhy_thres(pvals, fdr_thres=0.05):
     s_pvals = sorted(pvals)
     s = 1.0
     for i, p in enumerate(s_pvals):
+
+		# is it >2 because used enumerate here? or is it diff to R script for other reason?
         if i > 2:
             s = s + 1.0/(i-1)
         thes_pval = ((i + 1.0) / m_float) * fdr_thres / s
@@ -116,6 +118,14 @@ class field:
 			total=0
 
 			# Make a list of all the genotype values.
+			# for example:
+			# 0/1, 1/1, 0/0 -> 0,1,1,1,0,0 -> sum = 3, total = 6 -> current_value = 0.5
+			# example 2:
+			# 0/1, 1/1, 0/0, 0/1 -> 0,1,1,1,0,0,0,1 ->  sum =4  total = 8 -> current_value =0.5
+
+			# example 2:
+			# 1/1, 1/1, 1/1, 0/1 -> 1,1,1,1,1,1,0,1 ->  sum =7  total = 8 -> current_value =0...?
+
 			for things in current_genotypes:
 				if things == "0" or things == "1":
 					current_value.append(int(things))
@@ -125,6 +135,11 @@ class field:
 				current_value=sum(current_value)
 				current_value=current_value/total
 				# current_value=round(current_value * 2) / 2 # round to the nearest 0.5 in case of pop-level genotyping or polyploids
+
+				# does it still round somehow?
+
+				# case of dominant and recessive alleles example:
+				# AA = +1, Aa = 0, aa = -1
 				if current_value == 0:
 					genotype_values.append(-1)
 				if current_value == 0.5:
@@ -147,11 +162,15 @@ class field:
 		self.line=line
 		#? can maybe remove everything but ordered states when finished for efficency
 
-	# Filter here
+	# Filter here (doesnt this count for 30 not 15 since its 15 min on - and on + states)
 	def sense_check(self, min_SNPs=15): 
 		ordered_states = self.ordered_states
 		if ordered_states: # Check that there is something in ordered_states
+
+			# counts number of +1 states
 			count_plus=ordered_states.count(1)
+
+			# counts number of -1 states
 			count_minus=ordered_states.count(-1)
 			if count_plus >= min_SNPs and count_minus >= min_SNPs:
 				return True

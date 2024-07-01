@@ -23,7 +23,7 @@ source ~/.bashrc
 # conda config --add channels conda-forge
 
 # #conda create -n gift_env -y
-# conda activate gift_env
+conda activate gift_env
 # conda install python=3.10
 # conda install r-base -y
 # conda install bioconductor-biocinstaller -y
@@ -31,13 +31,18 @@ source ~/.bashrc
 # conda install r-htmlwidgets -y
 # conda install r-manhattanly -y
 # conda install r-ggrepel -y
+conda install r-ggplot2 -y
+conda install r-dplyr -y
+conda install r-ggstatsplot -y # need to cite this (type into R to find the citation again)
 # pip3 install pandas
+conda deactivate
+
 
 # # modin install tricky- try one of the below
-# # try the ray install one first
+# # try the ray install one first but other lines may be necessary
 # pip install "modin[ray]"
 # # pip install modin --pre
-# # pip install "modin[all]"
+# # pip install "modin[all]" 
 # # pip install -U modin
 # # pip3 install "modin[all]"
 
@@ -95,10 +100,10 @@ source ~/.bashrc
 # conda deactivate
 
 # create bcftools environment
-conda create -n bcftools_env
-conda activate bcftools_env
-conda install bcftools -y
-conda deactivate
+# conda create -n bcftools_env
+# conda activate bcftools_env
+# conda install bcftools -y
+# conda deactivate
 
 
 echo "Script finished!"

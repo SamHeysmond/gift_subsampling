@@ -28,7 +28,7 @@ def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type):
     else:
 
         # fetch the data of the csv for the current phenotype and current method (GIFT)
-        R_out.write(f'csv_data<-read.csv("{PATH_TO_MAIN}output_files/R_DATA_FILTERED/{phenotype}_GIFT_{subsample_number}_ALL.csv",header=TRUE)\n')  
+        R_out.write(f'csv_data<-read.csv("{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_GIFT_{subsample_number}_ALL.csv",header=TRUE)\n')  
 
     # cumulative calculations
     R_out.write(f'mydata <- csv_data %>%\n')
@@ -107,7 +107,7 @@ def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type):
         R_out.write(f'     geom_hline(yintercept=-log10(0.05/{subsample_number}), linetype="dashed", color = "red")+\n')
         R_out.write(f'     #threshold line (BHY)\n')
         R_out.write(f'     geom_hline(yintercept=bhy_thres, linetype="dashed", color = "blue")+\n')
-        R_out.write(f'     annotate("text",x=10000000,y=bhy_thres+1,xmin=10000000,ymin=bhy_thres,size=3,label=paste0("% above BHY threshold: ",percent_sig))+\n')
+        R_out.write(f'     annotate("text",x=10000000,y=bhy_thres+1,size=3,label=paste0("% above BHY threshold: ",percent_sig))+\n')
 
     # add a theme
     R_out.write(f'     # Custom the theme:\n')
@@ -179,8 +179,10 @@ def IDEA_1_MAKE_R_SCRIPT(
     # write the R script to pair with the SNP and its data
     CURRENT_SNP_R_SCRIPT=open(PATH_TO_MAIN+"output_files/SNP_tracker_R_scripts/"+str(cumulative_t20_dataframe_name)+".R","w")
     CURRENT_SNP_R_SCRIPT.write(f'#R script for making box plots with ggplot\n')
-    #CURRENT_SNP_R_SCRIPT.write(f'library("ggplot2")\n')
-    CURRENT_SNP_R_SCRIPT.write(f'library("tidyverse")\n')
+    CURRENT_SNP_R_SCRIPT.write(f'library("ggplot2")\n')
+    CURRENT_SNP_R_SCRIPT.write(f'library("dplyr")\n')
+    CURRENT_SNP_R_SCRIPT.write(f'library("ggstatsplot")\n')
+    #CURRENT_SNP_R_SCRIPT.write(f'library("tidyverse")\n')
     CURRENT_SNP_R_SCRIPT.write(f'print("start of IDEA1 R script")\n')
     CURRENT_SNP_R_SCRIPT.write(f'T20_TRACKED_DATA<- read.csv("{PATH_TO_MAIN}output_files/R_DATA/{cumulative_t20_dataframe_name}.csv", header= TRUE, sep=",")\n')
     CURRENT_SNP_R_SCRIPT.write(f'\n')
@@ -226,6 +228,8 @@ def IDEA_1_MAKE_R_SCRIPT(
     CURRENT_SNP_R_SCRIPT.write(f'# Convert the subsample number to a FACTOR variable\n')
     CURRENT_SNP_R_SCRIPT.write(f'final_df$SUBSAMPLE_NUM<-factor(final_df$SUBSAMPLE_NUM)\n')
     CURRENT_SNP_R_SCRIPT.write(f'\n')
+    CURRENT_SNP_R_SCRIPT.write(f'threshold_data_csv<-read.csv("{PATH_TO_MAIN}output_files/R_DATA/THRESHOLDS.csv", header= TRUE, sep=",")\n')
+
 
 
     # old graph plot (in facet mode but with varying axis)
@@ -241,7 +245,8 @@ def IDEA_1_MAKE_R_SCRIPT(
 
     # new graph plot with NO facet mode and define axis
     my_pval_list=["GWAS_P","PSNP4","PSNP5","ABS_THETA"]
-
+    av_list=["AVERAGE_P","AVERAGE_PSNP4","AVERAGE_PSNP5"] # "AVERAGE_ABS_THETA" Not needed here
+    pval_index = 0
     # specific y lims for pvals
     if phenotype=="Mo98":
         ylim=80
@@ -252,18 +257,74 @@ def IDEA_1_MAKE_R_SCRIPT(
         if item == "ABS_THETA":
             CURRENT_SNP_R_SCRIPT.write(f'#open png\n')
             CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA1/{cumulative_t20_dataframe_name}_{item}.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
-            CURRENT_SNP_R_SCRIPT.write(f'ggplot(subset(final_df,PVAL_TYPE=="{item}"), aes(x=PVAL_TYPE, y=VALUE, fill=SUBSAMPLE_NUM)) +\n')
+            CURRENT_SNP_R_SCRIPT.write(f'this_graph_data<-subset(final_df,PVAL_TYPE=="{item}")\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+            CURRENT_SNP_R_SCRIPT.write(f'myplot<-ggplot(this_graph_data, aes(x=SUBSAMPLE_NUM, y=VALUE, fill=SUBSAMPLE_NUM))+\n')
             CURRENT_SNP_R_SCRIPT.write(f'   guides(fill = guide_legend(override.aes = list(size = 7)))+\n')
             CURRENT_SNP_R_SCRIPT.write(f'   geom_boxplot(outlier.shape = NA) +\n')
             CURRENT_SNP_R_SCRIPT.write(f'   geom_point(size=0.5,color="black",alpha = 1,position = position_jitterdodge(jitter.width = 0.1),show.legend=FALSE)+\n')
-            CURRENT_SNP_R_SCRIPT.write(f'   scale_y_continuous(limits=c(0,250))\n')
-            CURRENT_SNP_R_SCRIPT.write(f'\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   scale_y_continuous(limits=c(0,250))+\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   scale_fill_manual(name = "Subsample numbers",\n')
+            CURRENT_SNP_R_SCRIPT.write(f'       values = c("200" = "#e04e43", "400" = "#e0892b", "600" = "#d1d145", "800" = "#5fb547", "1000" = "#51dee0")) +\n')
+            CURRENT_SNP_R_SCRIPT.write(f'    guides(fill = guide_legend(order = 1))+\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   theme(legend.position = "right",\n')
+            CURRENT_SNP_R_SCRIPT.write(f'       legend.text = element_text(size = 13),\n')
+            CURRENT_SNP_R_SCRIPT.write(f'       legend.title = element_text(size = 13),\n')
+            CURRENT_SNP_R_SCRIPT.write(f'       legend.key.size = unit(0.8,"cm"))\n')
+            CURRENT_SNP_R_SCRIPT.write(f'print(myplot)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
+
+            # stats test (KW)
+            CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA1/{cumulative_t20_dataframe_name}_{item}_KW_TEST.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'ggbetweenstats(\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   data=this_graph_data,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   x = SUBSAMPLE_NUM,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   y=VALUE,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   type = "nonparametric",\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   p.adjust.method = "bonferroni",\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   pairwise.display = "all")\n')
             CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
             CURRENT_SNP_R_SCRIPT.write(f'\n')
         else:
+            # import and calculate with threshold data
+            CURRENT_SNP_R_SCRIPT.write(f'# subset for the current phenotype and pval type\n')
+            CURRENT_SNP_R_SCRIPT.write(f'threshold_data<-subset(threshold_data_csv,PHENOTYPE=="{phenotype}" & PVAL_TYPE=="{av_list[pval_index]}")\n')
+            CURRENT_SNP_R_SCRIPT.write(f'#subset for each type of threshold\n')
+            CURRENT_SNP_R_SCRIPT.write(f'#Bonferroni (BF)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'BF_threshold_data<-subset(threshold_data,THRESHOLD_TYPE=="BF" )\n')
+            CURRENT_SNP_R_SCRIPT.write(f'BF_threshold_data$SUBSAMPLE_NUM<-factor(BF_threshold_data$SUBSAMPLE_NUM)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+            CURRENT_SNP_R_SCRIPT.write(f'#(BHY)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'BHY_threshold_data<-subset(threshold_data,THRESHOLD_TYPE=="BHY" )\n')
+            CURRENT_SNP_R_SCRIPT.write(f'BHY_threshold_data$SUBSAMPLE_NUM<-factor(BHY_threshold_data$SUBSAMPLE_NUM)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+            CURRENT_SNP_R_SCRIPT.write(f'# dataframe for BF threshold info\n')
+            CURRENT_SNP_R_SCRIPT.write(f'threshold_lines1 <- data.frame(\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   SUBSAMPLE_NUM = BF_threshold_data$SUBSAMPLE_NUM,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   x = as.numeric(BF_threshold_data$SUBSAMPLE_NUM) - 0.25,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   xend = as.numeric(BF_threshold_data$SUBSAMPLE_NUM) + 0.25,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   y = BF_threshold_data$THRESHOLD_VALUE,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   yend = BF_threshold_data$THRESHOLD_VALUE,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   threshold_type = "BF Threshold")\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+            CURRENT_SNP_R_SCRIPT.write(f'# dataframe for the BHY threshold\n')
+            CURRENT_SNP_R_SCRIPT.write(f'threshold_lines2 <- data.frame(\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   SUBSAMPLE_NUM = BHY_threshold_data$SUBSAMPLE_NUM,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   x = as.numeric(BHY_threshold_data$SUBSAMPLE_NUM) - 0.25,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   xend = as.numeric(BHY_threshold_data$SUBSAMPLE_NUM) + 0.25,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   y = BHY_threshold_data$THRESHOLD_VALUE,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   yend = BHY_threshold_data$THRESHOLD_VALUE,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   threshold_type = "BHY Threshold")\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+            CURRENT_SNP_R_SCRIPT.write(f'# combine the threshold dataframes\n')
+            CURRENT_SNP_R_SCRIPT.write(f'threshold_lines <- rbind(threshold_lines1, threshold_lines2)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+
+            # main data graph
             CURRENT_SNP_R_SCRIPT.write(f'#open png\n')
             CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA1/{cumulative_t20_dataframe_name}_{item}.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
-            CURRENT_SNP_R_SCRIPT.write(f'ggplot(subset(final_df,PVAL_TYPE=="-log10( {item} )"), aes(x=PVAL_TYPE, y=VALUE, fill=SUBSAMPLE_NUM)) +\n')
+            CURRENT_SNP_R_SCRIPT.write(f'this_graph_data<-subset(final_df,PVAL_TYPE=="-log10( {item} )")\n')
+            CURRENT_SNP_R_SCRIPT.write(f'ggplot(this_graph_data, aes(x=SUBSAMPLE_NUM, y=VALUE, fill=SUBSAMPLE_NUM))+\n')
             CURRENT_SNP_R_SCRIPT.write(f'   guides(fill = guide_legend(override.aes = list(size = 7)))+\n')
             CURRENT_SNP_R_SCRIPT.write(f'   geom_boxplot(outlier.shape = NA) +\n')
             CURRENT_SNP_R_SCRIPT.write(f'   geom_point(size=0.5,color="black",alpha = 1,position = position_jitterdodge(jitter.width = 0.1),show.legend=FALSE)+\n')
@@ -271,6 +332,22 @@ def IDEA_1_MAKE_R_SCRIPT(
             CURRENT_SNP_R_SCRIPT.write(f'\n')
             CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
             CURRENT_SNP_R_SCRIPT.write(f'\n')
+
+            # stats test (KW)
+            CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA1/{cumulative_t20_dataframe_name}_{item}_KW_TEST.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'ggbetweenstats(\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   data=this_graph_data,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   x = SUBSAMPLE_NUM,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   y=VALUE,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   type = "nonparametric",\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   p.adjust.method = "bonferroni",\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   pairwise.display = "all")\n')
+            CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+
+            # increment the pval_index 
+            pval_index+=1
+
 
     CURRENT_SNP_R_SCRIPT.write(f'print("End of IDEA1 R script")\n')
     CURRENT_SNP_R_SCRIPT.write(f'# END OF R SCRIPT')
@@ -333,8 +410,11 @@ def IDEA_2_MAKE_R_AND_BASH_SCRIPT(
     # write the R script to pair with the SNP and its data
     CURRENT_SNP_R_SCRIPT=open(PATH_TO_MAIN+"output_files/SNP_tracker_R_scripts/"+control_dataframe_name+".R","w")
     CURRENT_SNP_R_SCRIPT.write(f'#R script for making box plots with ggplot\n')
-    CURRENT_SNP_R_SCRIPT.write(f'library("tidyverse")\n')
-    #CURRENT_SNP_R_SCRIPT.write(f'library("ggplot2")\n')
+    # #install.packages("ggstatsplot") through conda first
+    #CURRENT_SNP_R_SCRIPT.write(f'library("tidyverse")\n')
+    CURRENT_SNP_R_SCRIPT.write(f'library("ggplot2")\n')
+    CURRENT_SNP_R_SCRIPT.write(f'library("dplyr")\n')
+    CURRENT_SNP_R_SCRIPT.write(f'library("ggstatsplot")\n')
     CURRENT_SNP_R_SCRIPT.write(f'print("start of IDEA 2 R script")\n')
     CURRENT_SNP_R_SCRIPT.write(f'csv_data<- read.csv("{PATH_TO_MAIN}output_files/R_DATA/{control_dataframe_name}.csv", header= TRUE, sep=",")\n')
     CURRENT_SNP_R_SCRIPT.write(f'\n')
@@ -379,18 +459,16 @@ def IDEA_2_MAKE_R_AND_BASH_SCRIPT(
     CURRENT_SNP_R_SCRIPT.write(f'final_df$SUBSAMPLE_NUM<-factor(final_df$SUBSAMPLE_NUM)\n')
     CURRENT_SNP_R_SCRIPT.write(f'\n')
 
-    # old graph method with facet_wrap
-    # CURRENT_SNP_R_SCRIPT.write(f'#open png\n')
-    # CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA2/{control_dataframe_name}.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
-    # CURRENT_SNP_R_SCRIPT.write(f'ggplot(final_df, aes(x=PVAL_TYPE, y=VALUE, fill=SUBSAMPLE_NUM)) +\n')
-    # CURRENT_SNP_R_SCRIPT.write(f'   guides(fill = guide_legend(override.aes = list(size = 7)))+\n')
-    # CURRENT_SNP_R_SCRIPT.write(f'   geom_boxplot(outlier.shape = NA) +\n')
-    # CURRENT_SNP_R_SCRIPT.write(f'   geom_point(size=0.5,color="black",alpha = 1,position = position_jitterdodge(jitter.width = 0.1),show.legend=FALSE)+\n')
-    # CURRENT_SNP_R_SCRIPT.write(f'   facet_wrap(~PVAL_TYPE, scale="free")\n')
-    # CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
-
     # new graph plot with NO facet mode and define axis
     my_pval_list=["GWAS_P","PSNP4","PSNP5","ABS_THETA"]
+
+    # list of titles of the averages (needed for analysis of threshold)
+    av_list=["AVERAGE_P","AVERAGE_PSNP4","AVERAGE_PSNP5"] # "AVERAGE_ABS_THETA" Not needed here
+
+    # writes in the threshold data once to save space
+    CURRENT_SNP_R_SCRIPT.write(f'threshold_data_csv<-read.csv("{PATH_TO_MAIN}output_files/R_DATA/THRESHOLDS.csv", header= TRUE, sep=",")\n')
+
+
 
     #specific y limit to make the data spread out as much as possible
     if phenotype=="Mo98":
@@ -408,30 +486,113 @@ def IDEA_2_MAKE_R_AND_BASH_SCRIPT(
 
         elif positive_or_negative=="negative":
             ylim=20
+    pval_index = 0
+    for pval_type in my_pval_list:
 
-    for item in my_pval_list:
-        if item == "ABS_THETA":
+        # no thresholds implemented for ABS_THETA, so just draws in the boxplot as needed
+        if pval_type == "ABS_THETA":
+            # main data graph
             CURRENT_SNP_R_SCRIPT.write(f'#open png\n')
-            CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA2/{control_dataframe_name}_{item}.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
-            CURRENT_SNP_R_SCRIPT.write(f'ggplot(subset(final_df,PVAL_TYPE=="{item}"), aes(x=PVAL_TYPE, y=VALUE, fill=SUBSAMPLE_NUM)) +\n')
+            CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA2/{control_dataframe_name}_{pval_type}.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'this_graph_data<-subset(final_df,PVAL_TYPE=="{pval_type}")\n')
+            CURRENT_SNP_R_SCRIPT.write(f'myplot<-ggplot(this_graph_data, aes(x=SUBSAMPLE_NUM, y=VALUE, fill=SUBSAMPLE_NUM))+ \n')
             CURRENT_SNP_R_SCRIPT.write(f'   guides(fill = guide_legend(override.aes = list(size = 7)))+\n')
             CURRENT_SNP_R_SCRIPT.write(f'   geom_boxplot(outlier.shape = NA) +\n')
             CURRENT_SNP_R_SCRIPT.write(f'   geom_point(size=0.5,color="black",alpha = 1,position = position_jitterdodge(jitter.width = 0.1),show.legend=FALSE)+\n')
-            CURRENT_SNP_R_SCRIPT.write(f'   scale_y_continuous(limits=c(0,125))\n')
-            CURRENT_SNP_R_SCRIPT.write(f'\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   scale_y_continuous(limits=c(0,125))+\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   scale_fill_manual(name = "Subsample numbers",\n')
+            CURRENT_SNP_R_SCRIPT.write(f'       values = c("200" = "#e04e43", "400" = "#e0892b", "600" = "#d1d145", "800" = "#5fb547", "1000" = "#51dee0"))+\n')
+            CURRENT_SNP_R_SCRIPT.write(f'    guides(fill = guide_legend(order = 1))+\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   theme(legend.position = "right",\n')
+            CURRENT_SNP_R_SCRIPT.write(f'       legend.text = element_text(size = 13),\n')
+            CURRENT_SNP_R_SCRIPT.write(f'       legend.title = element_text(size = 13),\n')
+            CURRENT_SNP_R_SCRIPT.write(f'       legend.key.size = unit(0.8,"cm"))\n')
+            CURRENT_SNP_R_SCRIPT.write(f'print(myplot)\n')
             CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
             CURRENT_SNP_R_SCRIPT.write(f'\n')
+            # KW stats test
+            CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA2/{control_dataframe_name}_{pval_type}_KW_TEST.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'ggbetweenstats(\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   data=this_graph_data,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   x = SUBSAMPLE_NUM,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   y=VALUE,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   type = "nonparametric",\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   p.adjust.method = "bonferroni",\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   pairwise.display = "all")\n')
+            CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
         else:
+            # import threshold data
+            CURRENT_SNP_R_SCRIPT.write(f'# subset for the current phenotype and pval type\n')
+            CURRENT_SNP_R_SCRIPT.write(f'threshold_data<-subset(threshold_data_csv,PHENOTYPE=="{phenotype}" & PVAL_TYPE=="{av_list[pval_index]}")\n')
+            CURRENT_SNP_R_SCRIPT.write(f'#subset for each type of threshold\n')
+            CURRENT_SNP_R_SCRIPT.write(f'#Bonferroni (BF)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'BF_threshold_data<-subset(threshold_data,THRESHOLD_TYPE=="BF" )\n')
+            CURRENT_SNP_R_SCRIPT.write(f'BF_threshold_data$SUBSAMPLE_NUM<-factor(BF_threshold_data$SUBSAMPLE_NUM)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+            CURRENT_SNP_R_SCRIPT.write(f'#(BHY)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'BHY_threshold_data<-subset(threshold_data,THRESHOLD_TYPE=="BHY" )\n')
+            CURRENT_SNP_R_SCRIPT.write(f'BHY_threshold_data$SUBSAMPLE_NUM<-factor(BHY_threshold_data$SUBSAMPLE_NUM)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+            CURRENT_SNP_R_SCRIPT.write(f'# dataframe for BF threshold info\n')
+            CURRENT_SNP_R_SCRIPT.write(f'threshold_lines1 <- data.frame(\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   SUBSAMPLE_NUM = BF_threshold_data$SUBSAMPLE_NUM,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   x = as.numeric(BF_threshold_data$SUBSAMPLE_NUM) - 0.25,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   xend = as.numeric(BF_threshold_data$SUBSAMPLE_NUM) + 0.25,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   y = BF_threshold_data$THRESHOLD_VALUE,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   yend = BF_threshold_data$THRESHOLD_VALUE,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   threshold_type = "BF Threshold")\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+            CURRENT_SNP_R_SCRIPT.write(f'# dataframe for the BHY threshold\n')
+            CURRENT_SNP_R_SCRIPT.write(f'threshold_lines2 <- data.frame(\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   SUBSAMPLE_NUM = BHY_threshold_data$SUBSAMPLE_NUM,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   x = as.numeric(BHY_threshold_data$SUBSAMPLE_NUM) - 0.25,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   xend = as.numeric(BHY_threshold_data$SUBSAMPLE_NUM) + 0.25,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   y = BHY_threshold_data$THRESHOLD_VALUE,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   yend = BHY_threshold_data$THRESHOLD_VALUE,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   threshold_type = "BHY Threshold")\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+            CURRENT_SNP_R_SCRIPT.write(f'# combine the threshold dataframes\n')
+            CURRENT_SNP_R_SCRIPT.write(f'threshold_lines <- rbind(threshold_lines1, threshold_lines2)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+            # Main data plot
             CURRENT_SNP_R_SCRIPT.write(f'#open png\n')
-            CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA2/{control_dataframe_name}_{item}.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
-            CURRENT_SNP_R_SCRIPT.write(f'ggplot(subset(final_df,PVAL_TYPE=="-log10( {item} )"), aes(x=PVAL_TYPE, y=VALUE, fill=SUBSAMPLE_NUM)) +\n')
+            CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA2/{control_dataframe_name}_{pval_type}.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'this_graph_data<-subset(final_df,PVAL_TYPE=="-log10( {pval_type} )")\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+            CURRENT_SNP_R_SCRIPT.write(f'myplot<-ggplot(this_graph_data, aes(x=SUBSAMPLE_NUM, y=VALUE, fill=SUBSAMPLE_NUM))+ \n')
             CURRENT_SNP_R_SCRIPT.write(f'   guides(fill = guide_legend(override.aes = list(size = 7)))+\n')
             CURRENT_SNP_R_SCRIPT.write(f'   geom_boxplot(outlier.shape = NA) +\n')
             CURRENT_SNP_R_SCRIPT.write(f'   geom_point(size=0.5,color="black",alpha = 1,position = position_jitterdodge(jitter.width = 0.1),show.legend=FALSE)+\n')
-            CURRENT_SNP_R_SCRIPT.write(f'   scale_y_continuous(limits=c(0,{ylim}))\n')
-            CURRENT_SNP_R_SCRIPT.write(f'\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   scale_y_continuous(limits=c(0,{ylim}))+\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   geom_segment(data = threshold_lines,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'       aes(x = x, xend = xend, y = y, yend = yend, color = threshold_type), \n')
+            CURRENT_SNP_R_SCRIPT.write(f'       linetype = "dashed", show.legend = TRUE) +\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   scale_color_manual(name = "Thresholds",\n')
+            CURRENT_SNP_R_SCRIPT.write(f'       values = c("BF Threshold" = "red", "BHY Threshold" = "blue")) +\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   scale_fill_manual(name = "Subsample numbers",\n')
+            CURRENT_SNP_R_SCRIPT.write(f'       values = c("200" = "#e04e43", "400" = "#e0892b", "600" = "#d1d145", "800" = "#5fb547", "1000" = "#51dee0")) +\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   guides(fill = guide_legend(order = 1), color = guide_legend(order = 2)) +\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   theme(legend.position = "right",\n')
+            CURRENT_SNP_R_SCRIPT.write(f'       legend.text = element_text(size = 13),\n')
+            CURRENT_SNP_R_SCRIPT.write(f'       legend.title = element_text(size = 13),\n')
+            CURRENT_SNP_R_SCRIPT.write(f'       legend.key.size = unit(0.8,"cm"))\n')
+            CURRENT_SNP_R_SCRIPT.write(f'print(myplot)\n')
             CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
+            # Stats test plot (Kruskal wallace)
             CURRENT_SNP_R_SCRIPT.write(f'\n')
+            CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA2/{control_dataframe_name}_{pval_type}_KW_TEST.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'ggbetweenstats(\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   data=this_graph_data,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   x = SUBSAMPLE_NUM,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   y=VALUE,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   type = "nonparametric",\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   p.adjust.method = "bonferroni",\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   pairwise.display = "all")\n')
+            CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
+
+            # increment the pval_index
+            pval_index+=1
+
 
     CURRENT_SNP_R_SCRIPT.write(f'print("End of IDEA 2 R script")\n')
     CURRENT_SNP_R_SCRIPT.write(f'# END OF R SCRIPT')

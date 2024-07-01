@@ -11,66 +11,67 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=mbysh17@nottingham.ac.uk
 
-# this script comes after stage 2 but before stage 4? (or 3 techinically?)
-
 #change to core directory
 cd /gpfs01/home/mbysh17/core_files
 # source conda environments
 source ~/.bashrc
 
 
-# # activate gatk environment
-# conda activate gatk_env
+# activate gatk environment
+conda activate gatk_env
 
-# # create FASTA sequence dictionary file
-# gatk CreateSequenceDictionary -R TAIR10_chr_all.fas
+# create FASTA sequence dictionary file
+gatk CreateSequenceDictionary -R TAIR10_chr_all.fas
 
-# conda deactivate 
+conda deactivate 
 
-# echo "fasta dictionary created"
+echo "fasta dictionary created"
 
-# # activate samtools env
-# conda activate samtools_env
+# activate samtools env
+conda activate samtools_env
 
-# #create fasta index file
-# samtools faidx TAIR10_chr_all.fas
+#create fasta index file
+samtools faidx TAIR10_chr_all.fas
 
-# conda deactivate
+conda deactivate
 
-# echo "fasta index created"
-
-
-# conda activate bcftools_env
-
-# bcftools +fill-tags 1001genomes_snp_biallelic_only_ACGTN.vcf  -Ov --output output_1.vcf -- -t AN,AC
+echo "fasta index created"
 
 
-# bcftools filter -i 'AN < 15' output_1.vcf -Ov -o output_2.vcf
+conda activate bcftools_env
 
-# conda deactivate
+bcftools +fill-tags 1001genomes_snp_biallelic_only_ACGTN.vcf  -Ov --output output_1.vcf -- -t AN,AC
 
-# echo "bcftools job done"
+# filter by allele numer
+#bcftools filter -i 'AN < 30' output_1.vcf -Ov -o output_2.vcf
 
+# filter by allele count 
+bcftools filter -i 'AC < 30' output_1.vcf -Ov -o output_2.vcf
 
+conda deactivate
 
-
-# conda activate gatk_env
-
-# # First add the AN (allele number) to the VCF 
-# # code doesnt work here but i think already in it? (FAILED!)
-# #gatk VariantAnnotator -R TAIR10_chr_all.fas -V 1001genomes_snp_biallelic_only_ACGTN.vcf -O output_1.vcf --annotation AlleleFraction
-# #gatk VariantAnnotator -R TAIR10_chr_all.fas -V 1001genomes_snp_biallelic_only_ACGTN.vcf -O output_1.vcf --annotation AlleleFraction
+echo "bcftools job done"
 
 
-# # Filter out SNPs with fewer than 15 alternate alleles (FAILED!)
-# #gatk SelectVariants -R TAIR10_chr_all.fas -V 1001genomes_snp_biallelic_only_ACGTN.vcf -select "AN < 15"  -O output_2.vcf
 
-# # Convert the VCF to a table with the columns "CHROM" and "POS"
-# gatk VariantsToTable -V output_2.vcf -F CHROM -F POS -O output_3.table
 
-# conda deactivate
+conda activate gatk_env
 
-# echo "done with filtering SNPs"
+# First add the AN (allele number) to the VCF 
+# code doesnt work here but i think already in it? (FAILED!)
+#gatk VariantAnnotator -R TAIR10_chr_all.fas -V 1001genomes_snp_biallelic_only_ACGTN.vcf -O output_1.vcf --annotation AlleleFraction
+#gatk VariantAnnotator -R TAIR10_chr_all.fas -V 1001genomes_snp_biallelic_only_ACGTN.vcf -O output_1.vcf --annotation AlleleFraction
+
+
+# Filter out SNPs with fewer than 15 alternate alleles (FAILED!)
+#gatk SelectVariants -R TAIR10_chr_all.fas -V 1001genomes_snp_biallelic_only_ACGTN.vcf -select "AN < 15"  -O output_2.vcf
+
+# Convert the VCF to a table with the columns "CHROM" and "POS"
+gatk VariantsToTable -V output_2.vcf -F CHROM -F POS -O output_3.table
+
+conda deactivate
+
+echo "done with filtering SNPs"
 
 # filter some csvs with this data in python
 

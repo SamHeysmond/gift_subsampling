@@ -27,6 +27,7 @@ method_type_list=["GIFT","GWAS"]
 
 # df containing snp locations to be removed
 removal_df = pandas.read_csv(f"{PATH_TO_MAIN}core_files/output_3.table",sep='\t')
+removal_df.rename(columns={"CHROM":'CHR'},inplace=True)
 
 # filtering the average csv files 
 # note: this can be  turned into multiprocessing OR multithreading if you'd like
@@ -50,11 +51,24 @@ for phenotype in phenotype_list:
 
         base_df = pandas.read_csv(f"{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_GWAS_{subsample_number}_ALL.csv")
         
-        merged_df=pandas.merge(base_df,removal_df,how='outer',indicator=True)
+        # outer will bring in everything- if it overlaps itll be "both", otherwise itll be "left only" or "right only"
+        # we want to keep the "left only" data
+        merged_df=pandas.merge(base_df,removal_df,how="outer",on=['CHR','POS'],indicator=True)
 
-        almost_final_df=merged_df.loc[merged_df._merge=="left_only"]
+        print(merged_df.head,flush=True)
 
-        final_df=almost_final_df.drop(columns=['_merge'])
+        # Delete rows where data is in both 
+        merged_df = merged_df.drop(merged_df[merged_df['_merge'] == 'both'].index)
+
+        # Delete rows where data is right only
+        merged_df = merged_df.drop(merged_df[merged_df['_merge'] == 'right_only'].index)
+
+        print(merged_df.head,flush=True)
+
+        # remove merge column; no longer needed
+        final_df=merged_df.drop(columns=['_merge'])
+        final_df=final_df.dropna()
+        print(final_df.head,flush=True)
 
         # save to FILTERED file
         final_df.to_csv(f"{PATH_TO_MAIN}output_files/R_DATA_FILTERED/{phenotype}_GWAS_{subsample_number}_ALL.csv",header=True,index=False)
