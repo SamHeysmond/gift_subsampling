@@ -16,7 +16,6 @@ cd /gpfs01/home/mbysh17/core_files
 # source conda environments
 source ~/.bashrc
 
-
 # activate gatk environment
 conda activate gatk_env
 
@@ -37,7 +36,6 @@ conda deactivate
 
 echo "fasta index created"
 
-
 conda activate bcftools_env
 
 bcftools +fill-tags 1001genomes_snp_biallelic_only_ACGTN.vcf  -Ov --output output_1.vcf -- -t AN,AC
@@ -45,15 +43,12 @@ bcftools +fill-tags 1001genomes_snp_biallelic_only_ACGTN.vcf  -Ov --output outpu
 # filter by allele numer
 #bcftools filter -i 'AN < 30' output_1.vcf -Ov -o output_2.vcf
 
-# filter by allele count 
+# filter by allele count (maybe try AC<15 if needed?)
 bcftools filter -i 'AC < 30' output_1.vcf -Ov -o output_2.vcf
 
 conda deactivate
 
 echo "bcftools job done"
-
-
-
 
 conda activate gatk_env
 

@@ -48,5 +48,5 @@ python3 -u batch_files/Rscript_run_and_monitor.py
 # exit conda environment
 conda deactivate
 
-echo "end of SNP_tracker.sh"
+echo "end of SNP_tracker_R_and_BASH_maker.sh"
 #end of script

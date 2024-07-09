@@ -13,8 +13,8 @@ pandas.set_option('display.max_columns',None)
 pandas.options.display.max_columns=None
 
 # IDEA 3 (updated R)
-def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type,threshold_df):
-    print("Entered FUNCTION: calc threshold",flush=True)
+def calc_thresholds(phenotype,subsample_number,pval_type,threshold_df):
+    print("Entered FUNCTION: calc thresholds",flush=True)
     
     threshold_df= pandas.read_csv(f'{PATH_TO_MAIN}output_files/R_DATA/THRESHOLDS.csv')
 
@@ -27,7 +27,11 @@ def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type,threshold_df):
           # for GWAS data....
         if pval_type=="AVERAGE_P":
 
-            csv_df = pandas.read_csv(f"{PATH_TO_MAIN}output_files/R_DATA_FILTERED/{phenotype}_GWAS_{subsample_number}_ALL.csv")
+            #csv_df = pandas.read_csv(f"{PATH_TO_MAIN}output_files/R_DATA_FILTERED/{phenotype}_GWAS_{subsample_number}_ALL.csv")
+
+            # CHANGED back to R_DATA since thats where the filtered GWAS data goes now
+            csv_df = pandas.read_csv(f"{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_GWAS_{subsample_number}_ALL.csv")
+
 
         # for GIFT data (PSNP4 and 5 specifically)
         else:
@@ -124,7 +128,7 @@ for phenotype in phenotype_list:
             # ...
             # example x Mo98,400,AVERAGE_P
             # ....
-            IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type,threshold_df)
+            calc_thresholds(phenotype,subsample_number,pval_type,threshold_df)
 
             
 

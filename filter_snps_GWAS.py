@@ -163,7 +163,10 @@ for R_file in R_files:
     R_batch.write(f'conda deactivate\n')
     R_batch.write(f'conda activate r_env\n')
     R_batch.write(f'# R SCRIPT FOR GWAS FILTERED RERUN\n')
+
+    # change ending back to .R for the R script
     R_file.replace(".sh",".R")
+
     R_batch.write(f'Rscript {PATH_TO_MAIN}output_files/{R_file}\n')
     R_batch.write(f'conda deactivate\n')
     R_batch.write(f'echo "End of GWAS filtered rerun script"\n')

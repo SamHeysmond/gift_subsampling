@@ -64,6 +64,7 @@ For referencing and information on external software, websites etc, please see "
 + The core script for GIFT analysis, this script will run a GIFT analysis on one set of input data per run.
 + This script has an inbuilt R script maker for the results so it also creates manhattan plot graphics.
 + The code has been updated to calculate and plot top 20 SNP data for each type of SNP E.G. PSNP4
++ Figure: 1A-Z 
 + Authors: Assistant Prof S Bray, Prof J Wattis, Prof C Rauch
 + Edited by: Sam Heysmond
 
@@ -78,13 +79,26 @@ For referencing and information on external software, websites etc, please see "
 > ## 10 {slurm_job_id}_{i}_{phenotype}.R
 + The individual R scripts that make manhattan plots for the GWAS data (since GIFT code includes the creation of an R script).
 + Calculates and plots the top 20 SNPs for the current dataset
++ Figure: 1A-Z 
 + ((THIS SCRIPT WILL NEED RUNNING LATER AFTER FILTERING GWAS DATA))
 + Author: Sam Heysmond
 
+> ## X filtering_GWAS.sh
++ Copies all csv files in "output_files/" into a folder "output_files/csv_before_filter"
++ Runs: SCRIPT X (filter_snps_GWAS.py), SCRIPT X (GWAS_run_and_monitor.py)
++ Author: 
 
-##### FILTER STUFF GOES HERE
-> ## 13
-+ The
+> ## X filter_snps_GWAS.py
++ Reads all csv files in "output_files/csv_before_filter" 
++ Filters only the GWAS csv files from this list (uses multithreading to process multiple csvs at once)
+  + Outputs the files back into "output_files/" overwriting the original csv (GWAS ONLY)
++ Makes SCRIPT X ({job_ID}_{subsample_number}_{phenotype}.sh) a bash script (which will run the R script for GWAS)
+  + Puts it into R_parallel
++ Author: Sam Heysmond
+
+> ## X {job_ID}_{subsample_number}_{phenotype}.sh
++ The script to run R scripts for GWAS generated in stage 1
++ Figure: 1A-Z
 + Author: 
 
 # SCRIPTS : STAGE 2
@@ -100,12 +114,24 @@ For referencing and information on external software, websites etc, please see "
 + The python script which concatonates the GWAS and GIFT data and processes it to satisfied summary plot/IDEAS 1-3 as described in the workflow timeline.
 + Author: Sam Heysmond
 
+> ## X calc_thresholds.sh
++ Runs: SCRIPT X (calc_thresholds.py)
++ Author: 
+
+> ## X calc_thresholds.py
++ looks inside of R_DATA (For gift) and R_DATA_FILTERED (for GWAS)
+  + CHANGE THIS AFTER RE-RUNNING THE SCRIPTS SINCE IT WILL ALL BE IN R_DATA
++ Makes the file R_DATA/THRESHOLDS.csv
++ Author: 
+
 > ## 13 SNP_tracker_R_and_BASH_maker.sh
 + Runs: SCRIPT 14 (SNP_tracker_R_and_BASH_maker.py), SCRIPT 17 (Rscript_run_and_monitor.py)
 + Author: 
 
 > ## 14 SNP_tracker_R_and_BASH_maker.py
 + Creates:  SCRIPT 15({phenotype}_cumulative_t20_dataframe.sh) SCRIPT 16 ({phenotype}_cumulative_t20_dataframe.R), SCRIPT 17 ({phenotype}\_{positive/negative}\_control.sh), SCRIPT 18 ({phenotype}_{positive/negative}_control.R), SCRIPT 19 ({phenotype}\_{subsample_number}_{pval_type}_MANHATTAN.sh),SCRIPT 20 ({phenotype}\_{subsample_number}_{pval_type}_MANHATTAN.R)
++ WARNING: calculates threshold within the code for IDEA3, but IDEA1,2 use the file THRESHOLDS.csv
+  + Try to update this in future to make use of this file to speed up runtime
 + Author: 
 
 > ## 15 {phenotype}_cumulative_t20_dataframe.sh
@@ -114,6 +140,7 @@ For referencing and information on external software, websites etc, please see "
 
 > ## 16 {phenotype}_cumulative_t20_dataframe.R
 + Top 20 SNPs at 1000 subsample for each SNP type (in both GWAS and GIFT) tracked through 1000 to 200 subsample level.
++ Figure: 2A-Z , 3A-Z 
 + Author: 
   
 > ## 17 {phenotype}_{positive/negative}_control.sh
@@ -122,6 +149,8 @@ For referencing and information on external software, websites etc, please see "
 
 > ## 18 {phenotype}_{positive/negative}_control.R
 + R script for IDEA 2
++ Figure: 2A-Z , 3A-Z 
++ Author:
 
 > ## 19 {phenotype}_{subsample_number}_{pval_type}_MANHATTAN.sh
 + Runs: SCRIPT 20 ({phenotype}_{subsample_number}_{pval_type}_MANHATTAN.R)
@@ -129,56 +158,42 @@ For referencing and information on external software, websites etc, please see "
   
 > ## 20 {phenotype}_{subsample_number}_{pval_type}_MANHATTAN.R
 + The
++ Figure: 2A-Z 
 + Author: 
-
-> ## 13
-+ The
 
 > ## 21 Rscript_run_and_monitor.py
 + Runs: SCRIPT 15 ({phenotype}_cumulative_t20_dataframe.sh), SCRIPT 17 ({phenotype}\_{positive/negative}\_control.sh) , SCRIPT 19 ({phenotype}_{subsample_number}_{pval_type}_MANHATTAN.sh)
 + Author: 
 
-
-+ Author: 
-  
 > ## 13
 + The
 + Author: 
-  
-> ## 13
-+ The
-+ Author: 
-
-> ## 13
-+ The
-+ Author: 
-
 
 # SCRIPTS : STAGE 3
+
+> ## 22 Stage_3.sh
++ Runs: SCRIPT 23 (Zoom_In.py) , SCRIPT X (GO analysis for TAIR10 PENDING)
++ Author: 
+  
+> ## 23 Zoom_In.py
++ Figure: 4A-Z 
++ Author: 
+
+# PENDING POSITION
+
+> ## X filtering_vcf.sh (dont need?)
++ The
++ Runs: SCRIPT X (filter_snps.py)
++ Author: 
+  
+> ## X filter_snps.py (dont need?)
++ Looks into the R_DATA file and filters out the SNPs in GWAS that GIFT already removed
++ Outputs the filtered GWAS data into R_DATA_FILTERED
++ THIS NEEDS CHANGING TO LOOK AT ALL FILES IN "output_files" FOLDER INSTEAD! OR replace for other script combo(filtering_GWAS.sh/filter_snps_GWAS.py) <- ive replaced with these files
++ Author: 
   
 
 
-
-
-> ## 13
-+ The
-+ Author: 
-  
-> ## 13
-+ The
-+ Author: 
-
-> ## 13
-+ The
-+ Author: 
-  
-> ## 13
-+ The
-+ Author: 
-  
-> ## 13
-+ The
-+ Author: 
 
 > ## 13
 + The
