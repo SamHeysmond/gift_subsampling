@@ -39,12 +39,6 @@ for phenotype in phenotype_list:
 
     for subsample_number in subsample_num_list:
 
-        # Example variable inputs are as follows: 
-        # example 1 Mo98,200,AVERAGE_P
-        # example 2 Mo98,200,AVERAGE_PSNP4
-        # ...
-        # example x Mo98,400,AVERAGE_P
-        # ....
         print("Iteration started",flush=True)
         print(f"phenotype: {phenotype}",flush=True)
         print(f"subsample_number: {subsample_number}",flush=True)

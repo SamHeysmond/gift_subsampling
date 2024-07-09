@@ -2,8 +2,8 @@
 #SBATCH --partition=defq
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=8g
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=20g
 #SBATCH --time=24:00:00
 #SBATCH --job-name=env_setup
 #SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out
@@ -21,20 +21,26 @@ source ~/.bashrc
 # conda config --add channels r
 # conda config --add channels bioconda
 # conda config --add channels conda-forge
+conda config --add channels fvogt257
 
-# #conda create -n gift_env -y
-conda activate gift_env
-# conda install python=3.10
-# conda install r-base -y
-# conda install bioconductor-biocinstaller -y
-# conda install r-tidyverse -y
-# conda install r-htmlwidgets -y
-# conda install r-manhattanly -y
-# conda install r-ggrepel -y
-conda install r-ggplot2 -y
-conda install r-dplyr -y
-conda install r-ggstatsplot -y # need to cite this (type into R to find the citation again)
-# pip3 install pandas
+# # #conda create -n gift_env -y
+# conda activate gift_env
+# # conda install python=3.10 -y
+# # conda install r-base -y
+# # conda install bioconductor-biocinstaller -y
+# # conda install r-tidyverse -y
+# # conda install r-htmlwidgets -y
+# # conda install r-manhattanly -y
+# # conda install r-ggrepel -y
+# conda install r-ggplot2 -y
+# conda install r-dplyr -y
+# conda install r-ggstatsplot -y # need to cite this (type into R to find the citation again)
+# # pip3 install pandas
+# conda deactivate
+
+conda create -n vcf2gwas_env -y
+conda activate vcf2gwas_env
+conda install vcf2gwas -y
 conda deactivate
 
 

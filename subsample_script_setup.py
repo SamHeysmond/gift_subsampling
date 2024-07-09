@@ -117,7 +117,10 @@ for phenotype in phenotypes_input:
             bash_script_output.write('python3 batch_files/make_r_scripts.py -id ${SLURM_JOB_ID} -i ${i} -p ${phenotype} -o output_files/\n')
             bash_script_output.write(f'conda deactivate\n')
             bash_script_output.write(f'conda activate r_env\n')
-            bash_script_output.write('Rscript output_files/${SLURM_JOB_ID}_${i}_${phenotype}.R\n')
+
+            # updated to NOT run the R script since this pipeline filters the GWAS data after this step
+            #bash_script_output.write('Rscript output_files/${SLURM_JOB_ID}_${i}_${phenotype}.R\n')
+
             bash_script_output.write(f'conda deactivate\n')
             bash_script_output.write(f'#end of script')
             bash_script_output.close()

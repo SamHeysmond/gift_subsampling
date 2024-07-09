@@ -1,0 +1,64 @@
+#!/bin/bash
+#SBATCH --partition=defq
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=10g
+#SBATCH --time=01:00:00
+#SBATCH --job-name=Stage_3
+#SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out
+#SBATCH --error=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.err
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=mbysh17@nottingham.ac.uk
+#===============================
+# This script runs all stage 3 scripts required for figures in stage 3
+#===============================
+echo "start of stage3 script"
+
+#change to core directory
+cd /gpfs01/home/mbysh17/core_files
+
+# source conda environments
+source ~/.bashrc
+
+#change to home directory
+cd /gpfs01/home/mbysh17/
+
+# remove and make the necessary directories
+
+rm -r /gpfs01/home/mbysh17/output_files/stage_3_scripts/
+mkdir /gpfs01/home/mbysh17/output_files/stage_3_scripts/
+
+rm -r /gpfs01/home/mbysh17/output_files/summary_plots/stage_3/
+mkdir /gpfs01/home/mbysh17/output_files/summary_plots/stage_3/
+
+# activate python environment
+conda activate python3_env
+
+python batch_files/Zoom_In.py
+
+conda deactivate
+
+# activate R environment
+conda activate r_env
+
+Rscript output_files/stage_3_scripts/Mo98_GWAS_AVERAGE_P_Zoom.R
+Rscript output_files/stage_3_scripts/Mo98_GIFT_AVERAGE_PSNP4_Zoom.R
+Rscript output_files/stage_3_scripts/Mo98_GIFT_AVERAGE_PSNP5_Zoom.R
+Rscript output_files/stage_3_scripts/Mo98_GIFT_AVERAGE_ABS_THETA_Zoom.R
+
+Rscript output_files/stage_3_scripts/Na23_GWAS_AVERAGE_P_Zoom.R
+Rscript output_files/stage_3_scripts/Na23_GIFT_AVERAGE_PSNP4_Zoom.R
+Rscript output_files/stage_3_scripts/Na23_GIFT_AVERAGE_PSNP5_Zoom.R
+Rscript output_files/stage_3_scripts/Na23_GIFT_AVERAGE_ABS_THETA_Zoom.R
+
+conda deactivate
+
+echo "Zoom script finished"
+
+
+# run the GO code for Arabidopsis data (python script and Unix commands to follow)
+
+
+# end of script
+

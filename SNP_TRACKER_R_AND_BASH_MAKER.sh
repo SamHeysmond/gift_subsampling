@@ -40,7 +40,7 @@ mkdir output_files/summary_plots/IDEA3/
 conda activate gift_env
 
 # this script makes the batch file and R scripts for figures of stage 2 of analysis
-python3 batch_files/SNP_TRACKER_R_AND_BASH_MAKER.py
+python3 batch_files/SNP_tracker_R_and_BASH_maker.py
 
 # run the modified "SNP" run and modifier to execute the R scripts in parallel
 python3 -u batch_files/Rscript_run_and_monitor.py
