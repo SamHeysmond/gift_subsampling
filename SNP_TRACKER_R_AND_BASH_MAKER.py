@@ -23,7 +23,12 @@ def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type):
         # fetch the data of the csv for the current phenotype and current method (GWAS)
         #R_out.write(f'{pval_type}_SUBSAMPLE_{subsample_number}_SNPS_DATA<-read.csv("{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_GWAS_{subsample_number}_ALL.csv",header=TRUE)\n')
         # named the variable for all the csv info "csv_data" to shorten code  
-        R_out.write(f'csv_data<-read.csv("{PATH_TO_MAIN}output_files/R_DATA_FILTERED/{phenotype}_GWAS_{subsample_number}_ALL.csv",header=TRUE)\n')
+
+        #R_out.write(f'csv_data<-read.csv("{PATH_TO_MAIN}output_files/R_DATA_FILTERED/{phenotype}_GWAS_{subsample_number}_ALL.csv",header=TRUE)\n')
+
+        # changed to just look into the R_DATA folder where filtered GWAS data are now sent to
+        R_out.write(f'csv_data<-read.csv("{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_GWAS_{subsample_number}_ALL.csv",header=TRUE)\n')
+
     # for GIFT data
     else:
 

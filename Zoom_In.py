@@ -28,7 +28,7 @@ for phenotype in phenotype_list:
         if method_type=="GIFT":
             R_out.write(f'gwasResults<-read.csv("{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_{method_type}_1000_ALL.csv",header=TRUE)\n')
         elif method_type=="GWAS":
-            R_out.write(f'gwasResults<-read.csv("{PATH_TO_MAIN}output_files/R_DATA_FILTERED/{phenotype}_{method_type}_1000_ALL.csv",header=TRUE)\n')
+            R_out.write(f'gwasResults<-read.csv("{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_{method_type}_1000_ALL.csv",header=TRUE)\n')
         R_out.write(f'\n')
         R_out.write(f'threshold_data_csv<-read.csv("{PATH_TO_MAIN}output_files/R_DATA/THRESHOLDS.csv",header=TRUE,sep=",")\n')
         R_out.write(f'threshold_data<-subset(threshold_data_csv,PHENOTYPE==\"{phenotype}\" & PVAL_TYPE==\"{pval_type}\" & SUBSAMPLE_NUM==\"1000\")\n')

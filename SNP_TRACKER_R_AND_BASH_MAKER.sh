@@ -17,7 +17,6 @@ cd /gpfs01/home/mbysh17
 # source conda environment
 source ~/.bashrc
 
-
 # clear current directory output if exists
 rm -rf batch_files/parallel_stage2/
 rm -rf batch_files/completed_parallel_stage2/

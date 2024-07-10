@@ -73,11 +73,11 @@ echo "done with filtering SNPs"
 conda activate gift_env
 
 #change to home directory
-cd /gpfs01/home/mbysh17/
+# cd /gpfs01/home/mbysh17/
 
-python batch_files/filter_snps.py
+# python batch_files/filter_snps.py
 
-conda deactivate
+# conda deactivate
 
 echo "filter script finished"
 

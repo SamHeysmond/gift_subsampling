@@ -16,12 +16,14 @@ cd /gpfs01/home/mbysh17/
 # source conda environments
 source ~/.bashrc
 
+# activate environment for python use
 conda activate gift_env
 
+# run thresholds calculator script
 python batch_files/calc_thresholds.py
 
+# exit conda environment
 conda deactivate 
-
 
 echo "thres bash script done"
 # end of file

@@ -21,7 +21,7 @@ source ~/.bashrc
 # conda config --add channels r
 # conda config --add channels bioconda
 # conda config --add channels conda-forge
-conda config --add channels fvogt257
+# conda config --add channels fvogt257
 
 # # #conda create -n gift_env -y
 # conda activate gift_env
@@ -38,10 +38,10 @@ conda config --add channels fvogt257
 # # pip3 install pandas
 # conda deactivate
 
-conda create -n vcf2gwas_env -y
-conda activate vcf2gwas_env
-conda install vcf2gwas -y
-conda deactivate
+# conda create -n vcf2gwas_env -y
+# conda activate vcf2gwas_env
+# conda install vcf2gwas -y
+# conda deactivate
 
 
 # # modin install tricky- try one of the below
@@ -109,6 +109,12 @@ conda deactivate
 # conda create -n bcftools_env
 # conda activate bcftools_env
 # conda install bcftools -y
+# conda deactivate
+
+# create bedtools environment
+conda create -n bedtools_env -y
+conda activate bedtools_env
+conda install bedtools -y
 # conda deactivate
 
 
