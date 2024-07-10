@@ -3,6 +3,7 @@ file structure for the analysis:
 ```
 User Home
 |----batch_files
+|   |----get_files.sh
 |   |----conda_environment_setup.sh
 |   |----make_r_scripts.py
 |   |----Rscript_run_and_monitor.py
@@ -10,73 +11,98 @@ User Home
 |   |----run_and_monitor.sh
 |   |----SNP_tracker.py
 |   |----SNP_tracker.sh
+|   |----subsample.py
 |   |----subsample_script_setup.py
 |   |----subsample_setup.sh
+|   |----filtering_vcf.sh
+|   |----GWAS_run_and_monitor.py
+|   |----filter_snps_GWAS.py
+|   |----filtering_GWAS.sh
+|   |----calc_thresholds.sh
+|   |----calt_thresholds.py
+|   |----SNP_tracker_R_and_BASH_maker.py
+|   |----SNP_tracker_R_and_BASH_maker.sh
+|   |----Zoom_In.py
+|   |----Stage_3.sh
+|   |----cross_referencing.py
+|   |----cross_reference_script.sh
 |   |----parallel/
 |       |----Stage_1_subrun_scripts e.g. subrun_leaf_ionome_Na23_1000_100.sh (before complete)
 |   |----completed_parallel
 |       |---- Stage_1_subrun_scripts e.g. subrun_leaf_ionome_Na23_1000_100.sh (after complete)
 |   |----parallel_stage2/
-|       |----IDEA_1_Script_before_run e.g. Mo98_cumulative_t20_dataframe.sh
-|       |----IDEA_2_Script_before_run e.g. Na23_negative_control.sh
-|       |----IDEA_3_Script_before_run e.g. Mo98_800_AVERAGE_P_MANHATTAN.sh
+|       |----IDEA 1 Script (before run) e.g. Mo98_cumulative_t20_dataframe.sh
+|       |----IDEA_2_Script (before run) e.g. Na23_negative_control.sh
+|       |----IDEA_3_Script (before run) e.g. Mo98_800_AVERAGE_P_MANHATTAN.sh
 |   |----completed_parallel_stage2/
-|       |----IDEA_1_Script_after_run e.g. Mo98_cumulative_t20_dataframe.sh
-|       |----IDEA_2_Script_after_run e.g. Na23_negative_control.sh
-|       |----IDEA_3_Script_after_run e.g. Mo98_800_AVERAGE_P_MANHATTAN.sh
+|       |----IDEA 1 Script (after run) e.g. Mo98_cumulative_t20_dataframe.sh
+|       |----IDEA 2 Script (after run) e.g. Na23_negative_control.sh
+|       |----IDEA 3 Script (after run) e.g. Mo98_800_AVERAGE_P_MANHATTAN.sh
+|   |----R_parallel/
+|       |----{number}_{id}_{subsample_number}_{phenotype}.R (GWAS R script)
+|   |----completed_R_parallel/
+|       |----{number}_{id}_{subsample_number}_{phenotype}.R (GWAS R script)
+|
 |
 |----core_files/
+|   |----SNP_Matrix (folder)
 |   |----1001genomes_snp_biallelic_only_ACGTN.vcf
 |   |----master_list.csv
 |   |----phenotypes_list.txt
 |   |----physics_GWAS_OOP.py
 |   |----all_vcf_samples.txt
 |   |----JOB_LIST.csv
+|   |----TAIR10_GFF3_genes.gff
+|   |----output_1.vcf
+|   |----output_2.vcf
+|   |----output_3.table
 |   |----subsample_text_files/
 |       |----subsamples_600_812188.txt (example)
 |
+|
 |----output_files/
-|   |----leaf_ionome_Mo98_GWAS_MANHATTAN_1000_812222.png (manhattan plot example)
-|   |----812222_1000_leaf_ionome_Mo98.R (R script example)
+|   |----{phenotype}_{GIFT/GWAS}_MANHATTAN_{subsample_num}_{ID}.png 
+|   |----{ID}_{subsample_num}_{phenotype}.R
 |   |----leaf_ionome_Mo98_whole_genome_metrics_1000_812222.csv (csv example: GIFT data)
 |   |----leaf_ionome_Mo98_GWAS_1000_812222.csv (csv example: GWAS data)
-|   |----leaf_ionome_Mo98_GWAS_T20_SNPS_1000_812222.csv(T20 GWAS csv data)
+|   |----{phenotype}_{GIFT/GWAS}_T20_SNPS_{subsample_num}_{ID}.csv (T20 GWAS csv data)
 |   |----R_DATA/
+|       |----{phenotype}_{GIFT/GWAS}_{subsample_num}_ALL.csv
+|       |----{phenotype}_{positive/negative}_control.csv
+|       |----{phenotype}_cumulative_t20_dataframe.csv
+|       |----{phenotype}_AVERAGE_{pval_type}_T20_LOCATIONS.csv
+|       |----THRESHOLDS.csv
+|
 |   |----SNP_tracker_R_scripts/
+|       |----{phenotype}_{subsample_num}_AVERAGE_{pval_type}_MANHATTAN.R
+|       |----{phenotype}_{positive/negative}_control.R
+|       |----{phenotype}_cumulative_t20_dataframe.R
+|
 |   |----summary_plots/
+|       |----IDEA1
+|           |----{phenotype}_cumulative_t20_dataframe_{pval_type}.png
+|           |----{phenotype}_cumulative_t20_dataframe_{pval_type}_KW_TEST.png
 |
-|+ file 3) 4 Manhattan plots for each subrun (1 for GWAS and 3 for GIFT) e.g. leaf_ionome_Mo98_GWAS_MANHATTAN_1000_812222.png
-+ file 4) 4 R scripts per subrun that make each of the manhattan plots 
-+ file 5) 4 csv files per subrun that contain data on the top 20 most significant SNPs
-+ file 6) 2 csv files per subrun that contain all the SNP data analysed (1 for GIFT, 1 for GWAS)
+|       |----IDEA2
+|           |----{phenotype}_{positive/negative}_control_{pval_type}.png
+|           |----{phenotype}_{positive/negative}_control_{pval_type}_KW_TEST.png
+|        
+|       |----IDEA3
+|           |----{phenotype}_{subsample_num}_AVERAGE_{pval_type}_MANHATTAN.png
 |
+|       |----stage_3
+|           |----{phenotype}_{GIFT/GWAS}_AVERAGE_{pval_type}_ZOOM.png
+|
+|   |----stage_3_scripts/
+|       |----{phenotype}_{GIFT/GWAS}_AVERAGE_{pval_type}_ZOOM.R
+|
+|   |----GO_DATA/
+|       |----{phenotype}_{GIFT/GWAS}_{subsample_num}_ALL.bed
+|       |----Intersect_results{phenotype}_{GIFT/GWAS}_{subsample_num}_ALL.txt
+|       |----FINAL_Intersect_results_{phenotype}_{GIFT/GWAS}_{subsample_num}_ALL.txt
 |
 |
 |----slurm0andE
 |   |---- slurm_error.err
 |   |---- slurm_out.out
-|
-|
-|
 ```
-
-
-==
-
-packages/button
-├── lib
-│   ├── button.d.ts
-│   ├── button.js
-│   ├── button.js.map
-│   ├── button.stories.d.ts
-│   ├── button.stories.js
-│   ├── button.stories.js.map
-│   ├── index.d.ts
-│   ├── index.js
-│   └── index.js.map
-├── package.json
-├── src
-│   ├── button.stories.tsx
-│   ├── button.tsx
-│   └── index.ts
-└── tsconfig.json
