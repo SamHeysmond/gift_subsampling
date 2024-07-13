@@ -290,6 +290,17 @@ def IDEA_1_MAKE_R_SCRIPT(
             CURRENT_SNP_R_SCRIPT.write(f'   pairwise.display = "all")\n')
             CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
             CURRENT_SNP_R_SCRIPT.write(f'\n')
+
+            # Friedman test
+            CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA1/{cumulative_t20_dataframe_name}_{item}_FRIEDMAN_TEST.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'ggwithinstats(\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   data=this_graph_data,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   x = SUBSAMPLE_NUM,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   y=VALUE,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   type = "nonparametric",\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   pairwise.display = "all")\n')
+            CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
         else:
             # import and calculate with threshold data
             CURRENT_SNP_R_SCRIPT.write(f'# subset for the current phenotype and pval type\n')
@@ -359,6 +370,17 @@ def IDEA_1_MAKE_R_SCRIPT(
             CURRENT_SNP_R_SCRIPT.write(f'   y=VALUE,\n')
             CURRENT_SNP_R_SCRIPT.write(f'   type = "nonparametric",\n')
             CURRENT_SNP_R_SCRIPT.write(f'   p.adjust.method = "bonferroni",\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   pairwise.display = "all")\n')
+            CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+
+            # FRIEDMAN TEST
+            CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA1/{cumulative_t20_dataframe_name}_{item}_FRIEDMAN_TEST.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'ggwithinstats(\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   data=this_graph_data,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   x = SUBSAMPLE_NUM,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   y=VALUE,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   type = "nonparametric",\n')
             CURRENT_SNP_R_SCRIPT.write(f'   pairwise.display = "all")\n')
             CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
             CURRENT_SNP_R_SCRIPT.write(f'\n')
@@ -538,6 +560,17 @@ def IDEA_2_MAKE_R_AND_BASH_SCRIPT(
             CURRENT_SNP_R_SCRIPT.write(f'   p.adjust.method = "bonferroni",\n')
             CURRENT_SNP_R_SCRIPT.write(f'   pairwise.display = "all")\n')
             CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
+
+            # FRIEDMAN stats test
+            CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA2/{control_dataframe_name}_{pval_type}_FRIEDMAN_TEST.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'ggwithinstats(\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   data=this_graph_data,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   x = SUBSAMPLE_NUM,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   y=VALUE,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   type = "nonparametric",\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   pairwise.display = "all")\n')
+            CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
+
         else:
             # import threshold data
             CURRENT_SNP_R_SCRIPT.write(f'# subset for the current phenotype and pval type\n')
@@ -605,6 +638,18 @@ def IDEA_2_MAKE_R_AND_BASH_SCRIPT(
             CURRENT_SNP_R_SCRIPT.write(f'   y=VALUE,\n')
             CURRENT_SNP_R_SCRIPT.write(f'   type = "nonparametric",\n')
             CURRENT_SNP_R_SCRIPT.write(f'   p.adjust.method = "bonferroni",\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   pairwise.display = "all")\n')
+            CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
+
+
+            # stat test FRIEDMAN
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+            CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA2/{control_dataframe_name}_{pval_type}_FRIEDMAN_TEST.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'ggwithinstats(\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   data=this_graph_data,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   x = SUBSAMPLE_NUM,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   y=VALUE,\n')
+            CURRENT_SNP_R_SCRIPT.write(f'   type = "nonparametric",\n')
             CURRENT_SNP_R_SCRIPT.write(f'   pairwise.display = "all")\n')
             CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
 
