@@ -139,15 +139,16 @@ for file in os.listdir(PATH_TO_MAIN+"output_files"):
 
 for R_file in R_files:
     # location where the batch scripts will be written to
-    R_file.replace(".R",".sh")
-    R_batch=open(PATH_TO_MAIN+"batch_files/R_parallel/"+str(R_files.index(R_file))+"_"+str(R_file),"w")
+
+    R_file_name = R_file.replace(".R","")
+    R_batch=open(PATH_TO_MAIN+"batch_files/R_parallel/"+str(R_files.index(R_file))+"_"+str(R_file_name)+".sh","w")
     # necessary start to the file
     R_batch.write(f'#!/bin/bash\n')
     R_batch.write(f'#SBATCH --partition=defq\n')
     R_batch.write(f'#SBATCH --nodes=1\n')
     R_batch.write(f'#SBATCH --ntasks=1\n')
     R_batch.write(f'#SBATCH --cpus-per-task=3\n')
-    R_batch.write(f'#SBATCH --mem=8g\n')
+    R_batch.write(f'#SBATCH --mem=7g\n')
     R_batch.write(f'#SBATCH --time=1:00:00\n')
     R_batch.write(f'#SBATCH --job-name=R_subrun_filtered_rerun\n')
     R_batch.write(f'#SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out\n')
@@ -163,11 +164,7 @@ for R_file in R_files:
     R_batch.write(f'conda deactivate\n')
     R_batch.write(f'conda activate r_env\n')
     R_batch.write(f'# R SCRIPT FOR GWAS FILTERED RERUN\n')
-
-    # change ending back to .R for the R script
-    R_file.replace(".sh",".R")
-
-    R_batch.write(f'Rscript {PATH_TO_MAIN}output_files/{R_file}\n')
+    R_batch.write(f'Rscript {PATH_TO_MAIN}output_files/{R_file_name}.R\n')
     R_batch.write(f'conda deactivate\n')
     R_batch.write(f'echo "End of GWAS filtered rerun script"\n')
     R_batch.write(f'conda deactivate\n')

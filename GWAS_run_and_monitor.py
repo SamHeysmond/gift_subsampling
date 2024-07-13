@@ -3,7 +3,7 @@ import os, subprocess, time
 def terminal_pipe(cmd): 
     return subprocess.Popen(f'{cmd}', shell=True, stdout=subprocess.PIPE).communicate()[0].decode("utf-8").strip(' \n')
 
-def run_and_monitor(sbatch_directory, max_jobs=80):
+def run_and_monitor(sbatch_directory, max_jobs=40):
     # get list of all sbatch files in directory
     batch_jobs=os.listdir(sbatch_directory)
     # get rid of anything that is not a shell file
@@ -26,4 +26,5 @@ def run_and_monitor(sbatch_directory, max_jobs=80):
         if int(running) >= max_jobs:
             time.sleep(5)
 run_and_monitor('/gpfs01/home/mbysh17/batch_files/R_parallel/')
-print("GWAS_and_monitor.py finished!")
+
+# End of script
