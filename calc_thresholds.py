@@ -1,5 +1,4 @@
 # import packages
-
 import pandas
 from math import log10
 
@@ -118,10 +117,8 @@ for phenotype in phenotype_list:
             # ....
             calc_thresholds(phenotype,subsample_number,pval_type,threshold_df)
 
-            
-
 # export the threshold table to R_DATA
 
-
-
 print("Threshold Calcs finished",flush=True)
+
+# end of script

@@ -7,36 +7,26 @@ pandas.set_option('display.max_columns',None)
 pandas.options.display.max_columns=None
 
 
-# function to process csv file
+# function to process csv file and filter out the SNPs with AC<30
 def process_csv(csv_f):
     print("Iteration started",flush=True)
     print(f"reading file: {PATH_TO_MAIN}output_files/{csv_f}",flush=True)
-    # print(f"phenotype: {phenotype}",flush=True)
-    # print(f"subsample_number: {subsample_number}",flush=True)
 
     base_df = pandas.read_csv(f"{PATH_TO_MAIN}output_files/{csv_f}")
     
     # outer will bring in everything- if it overlaps itll be "both", otherwise itll be "left only" or "right only"
     # we want to keep the "left only" data
-    print("Merge command...",flush=True)
     merged_df=pandas.merge(base_df,removal_df,how="outer",on=['chromosomes','positions'],indicator=True)
 
-    print(merged_df.head(),flush=True)
-
     # Delete rows where data is in both 
-    print("Drop command 1...",flush=True)
     merged_df = merged_df.drop(merged_df[merged_df['_merge'] == 'both'].index)
 
     # Delete rows where data is right only
-    print("Drop command 2...",flush=True)
     merged_df = merged_df.drop(merged_df[merged_df['_merge'] == 'right_only'].index)
-
-    print(merged_df.head(),flush=True)
 
     # remove merge column; no longer needed
     final_df=merged_df.drop(columns=['_merge'])
     final_df=final_df.dropna()
-    print(final_df.head(),flush=True)
 
     # save to FILTERED file
     print("saving to csv...",flush=True)
@@ -45,20 +35,16 @@ def process_csv(csv_f):
     print("Iteration finished",flush=True)
 
 
-# placeholder till parseargs will work
+# placeholder till argsparse is implemented here
 # will implement an argument that inputs home user directory automatically
 # -> or lets user decide
 PATH_TO_MAIN = "/gpfs01/home/mbysh17/"
-
-print("inside python script",flush=True)
 
 # df containing snp locations to be removed
 removal_df = pandas.read_csv(f"{PATH_TO_MAIN}core_files/output_3.table",sep='\t')
 
 # rename columns to fit the GWAS output csv header
 removal_df.rename(columns={"CHROM":'chromosomes',"POS":"positions"},inplace=True)
-
-print("head of removal df:", removal_df.head(),flush=True)
 
 csv_files=[]
 
@@ -106,41 +92,36 @@ print("////////////////////////////////////////////////",flush=True)
 print("Some of GWAS files list",GWAS_files[0:5],flush=True)
 print("////////////////////////////////////////////////",flush=True)
 
-
-
 # filtering the GWAS csv files 
-# note: this can be  turned into multiprocessing OR multithreading if you'd like
 
-# Na23_GWAS_200_ALL.csv
 # only need to do this for GWAS as already done in the GIFT code
 
-
-# can change to ThreadPoolExecutor instead if uts I/O bound
-# use processpoolexecutor if its CPU bound
+# multithreaded runs of filtering for each CSV to speed up processing of all the csvs
 with concurrent.futures.ThreadPoolExecutor() as executor:
 
     # runs the function with all items in the list as inputs
-    # do so in parallel
+    # does so in parallel
     executor.map(process_csv, GWAS_files)
 
+# create empty list for the R files (created in a previous script) to go in
 R_files=[]
+
 # fetch all the R scripts
 for file in os.listdir(PATH_TO_MAIN+"output_files"):
     if file.endswith(".R"):
         file_split=file.split("_")
-        if file_split[3]=="whole":
+
+        if file_split[3]=="whole": #pass on any GIFT scripts
             pass
-        else:
-            #print(file,": ++++++++++++ ADDED ++++++++++++ !",flush=True)
+
+        else: #only add GWAS scripts
             R_files.append(file)
     else:
-        #print(file,": ////////// SKIPPED //////// !!")
         pass
 
 for R_file in R_files:
-    # location where the batch scripts will be written to
-
     R_file_name = R_file.replace(".R","")
+    # location where the batch scripts will be written to
     R_batch=open(PATH_TO_MAIN+"batch_files/R_parallel/"+str(R_files.index(R_file))+"_"+str(R_file_name)+".sh","w")
     # necessary start to the file
     R_batch.write(f'#!/bin/bash\n')
@@ -156,6 +137,7 @@ for R_file in R_files:
     R_batch.write(f'#SBATCH --mail-type=ALL\n')
     R_batch.write(f'#SBATCH --mail-user=mbysh17@nottingham.ac.uk\n')
     R_batch.write(f'#===============================\n')
+    # The below script will run the specified R script on the filtered GWAS data
     R_batch.write(f'echo "start of GWAS filtered rerun script"\n')
     R_batch.write(f'#change to home directory\n')
     R_batch.write(f'cd /gpfs01/home/mbysh17\n')

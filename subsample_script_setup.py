@@ -1,8 +1,7 @@
 # SCRIPT INFO
 # This script will make the dozens of subruns for each...
-# PHENOTYPE, SUBSAMPLE NUMBER, and COPY of that subsample num (100 copies each)
-# so for 2 phenotypes that's -> 2x 5 x 100 files = 1000 batch files...whew
-
+# METHOD, PHENOTYPE, SUBSAMPLE NUMBER, and COPY of that subsample num (100 copies each)
+# so for 2 phenotypes that's -> 2x 2x 5 x 100 files = 2000 batch files...whew
 
 # open the list of phenotypes to analyse
 # contains the following format (no header):
@@ -18,13 +17,13 @@ subsample_list=[200,400,600,800,1000]
 #loop through each phenotype with the following settings
 for phenotype in phenotypes_input:
     phenotype = phenotype.replace('\n','')
-    print ("Current phenotype is: ", phenotype)
+
     # loop for each different amount of samples
     for subsample_num in subsample_list:
 
         # make 100 copies of each file 
         # (alter this to change the number of tests to be done)
-        for copynum in range(1,101): #increased 1o 101 to get 100 copies
+        for copynum in range(1,101): #increased to 101 to get 100 copies
             # puts all the runs in a folder called "batch_files/parallel/...."
             bash_script_output=open("batch_files/parallel/subrun_"+
                                     str(phenotype)+
@@ -112,17 +111,17 @@ for phenotype in phenotypes_input:
             bash_script_output.write('echo "GWAS for: ${SLURM_JOB_ID} finished"\n')
 
             # calling for the python script to first MAKE the R script for GWAS manhattan plots
-            # to make manhattan plots from the GWAS data
             bash_script_output.write(f'conda activate python3_env\n')
             bash_script_output.write('python3 batch_files/make_r_scripts.py -id ${SLURM_JOB_ID} -i ${i} -p ${phenotype} -o output_files/\n')
-            bash_script_output.write(f'conda deactivate\n')
-            bash_script_output.write(f'conda activate r_env\n')
+            
+            # # updated to NOT run the R script since this pipeline filters the GWAS data after this step
+            # bash_script_output.write(f'conda deactivate\n')
+            # bash_script_output.write(f'conda activate r_env\n')
+            # #bash_script_output.write('Rscript output_files/${SLURM_JOB_ID}_${i}_${phenotype}.R\n')
 
-            # updated to NOT run the R script since this pipeline filters the GWAS data after this step
-            #bash_script_output.write('Rscript output_files/${SLURM_JOB_ID}_${i}_${phenotype}.R\n')
-
-            bash_script_output.write(f'conda deactivate\n')
-            bash_script_output.write(f'#end of script')
+            # bash_script_output.write(f'conda deactivate\n')
+            # bash_script_output.write(f'#end of script')
+            
             bash_script_output.close()
 print("====================\n")
 print("subsample_script_setup.py has finished!")

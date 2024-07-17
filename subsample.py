@@ -1,7 +1,7 @@
 ## Script description
 # This script will subsample
 # Required files:
-# 1) input vcf of all genotypes
+# 1) input vcf of all genotypes (used in bcftools command towards the end)
 # 2) input phenotype file (.csv format)
 # Output files:
 # 1) A subsampled vcf e.g. core_files/subsampled_500.vcf 
@@ -70,44 +70,49 @@ samples_list_vcf =[]
 
 #set input file
 input_file_samples_vcf=open(args.s,'r')
+
 #read each line and append to the list
 for line in input_file_samples_vcf:
-    #line = read_next_line(input_file_samples_vcf)
+
+    # clean up the line by removing newline tags
     cleanline = line.replace('\n','')
+
     samples_list_vcf.append(str(cleanline))
-#print("Samples list vcf: ", samples_list_vcf)
 
 # open phenotype data file
 input_file_phenotype_data = open(args.p,'r')
 
+# 2) gather all phenotype information for the appropriate phenotype into a dataframe
 row=0
 for line in input_file_phenotype_data:
     line = line.replace('\n','')
     line=line.split(',')
     if row == 0:
+
         # find index of the header for the trait/phenotype we are looking into
         phenotype_index = line.index(args.t)
+
         #create dataframe with the correct two headers (ID,phenotype/trait data)
         consensus_dataframe = pandas.DataFrame(columns=[line[0], line[phenotype_index]])
 
-    else: #otherwise look to add data to the dataframe
+    else: # otherwise look to add data to the dataframe from the pehnotype csv
+
         # if it has NA in the specific phenotype column
         if "NA" in str(line[phenotype_index]).upper():
-            print("NA detected, ommitting this line")
+            print("NA detected, ommitting this line",flush=True)
 
         else: #add new row to the consensus dataframe
             new_row=pandas.Series({"1001_Genomes_ID":line[0],str(args.t):line[phenotype_index]})
             consensus_dataframe=pandas.concat([consensus_dataframe, new_row.to_frame().T], ignore_index=True)
 
+    # increment investigated row
     row +=1
 
+# close phenotype file
 input_file_phenotype_data.close()
 
-#print("Consensus_dataframe BEFORE checking for consensus")
-#print(consensus_dataframe)
-
 # 3) make a consensus list of all samples that exist in both the vcf list and the excel list
-# using the excel list as a basis (in the form of a pandas dataframe)
+# using the excel list (phenotype) as a basis (in the form of a pandas dataframe)
 consensus_dataframe = consensus_dataframe.reset_index()  # make sure indexes pair with number of rows
 
 for index, row in consensus_dataframe.iterrows():
@@ -119,33 +124,31 @@ for index, row in consensus_dataframe.iterrows():
         pass 
 
     else: #remove the row
-        #print("Sample from phenotype file not found in vcf, removing ID : ", row["1001_Genomes_ID"])
         consensus_dataframe = consensus_dataframe.drop([index])
-
-#print("Consensus_dataframe AFTER checking for consensus")
-#print(consensus_dataframe)
 
 # now randomly select a list of ID's for the subsample number e.g. 200 or 400 etc
 subsampled_dataframe = consensus_dataframe.sample(n=int(args.n))
 consensus_dataframe = consensus_dataframe.reset_index()  # make sure indexes pair with number of rows
-#print("Subsampled dataframe")
-#print(subsampled_dataframe)
 
+# open file for writing all the IDs that were subsampled for this particular run
 subsampled_IDs=open('core_files/subsample_text_files/subsamples_'+str(args.n)+'_'+str(args.ri)+'.txt','w')
 
 # open the output phenotype file
 output_file_subsampled_phenotype = open(args.op,"w")
 
-#consensus_dataframe = consensus_dataframe.reset_index()  # make sure indexes pair with number of rows
 current_row=0
 for index, row in subsampled_dataframe.iterrows():
+
     #write in each ID from the subsampled dataframe
     subsampled_IDs.write(str(row["1001_Genomes_ID"])+'\n')
-    if current_row==0:
+
+    if current_row==0: # write in the headers
         output_file_subsampled_phenotype.write(str("1001_Genomes_ID")+','+str(args.t)+'\n') 
+        
     else: 
         #write in each ID and phenotype information from the subsampled dataframe to a subsampled phenotype file
         output_file_subsampled_phenotype.write(str(row["1001_Genomes_ID"])+','+str(row[str(args.t)])+'\n') 
+
     current_row+=1
 
 # close files vvv
@@ -161,5 +164,5 @@ os.system('bcftools view --samples-file core_files/subsample_text_files/subsampl
 # output subsampled vcf (output:1) finished being made! 
 
 # testing print
-print("End of subsample script reached")
+print("End of subsample script reached",flush=True)
 # end of file

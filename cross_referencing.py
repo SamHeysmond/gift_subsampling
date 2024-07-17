@@ -27,8 +27,8 @@ my_batch.write(f'#SBATCH --partition=defq\n')
 my_batch.write(f'#SBATCH --nodes=1\n')
 my_batch.write(f'#SBATCH --ntasks=1\n')
 my_batch.write(f'#SBATCH --cpus-per-task=4\n')
-my_batch.write(f'#SBATCH --mem=20g\n')
-my_batch.write(f'#SBATCH --time=48:00:00\n')
+my_batch.write(f'#SBATCH --mem=10g\n')
+my_batch.write(f'#SBATCH --time=24:00:00\n')
 my_batch.write(f'#SBATCH --job-name=cross_reference_script\n')
 my_batch.write(f'#SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out\n')
 my_batch.write(f'#SBATCH --error=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.err\n')
@@ -59,7 +59,6 @@ for csv_file in csv_files_Arabidopsis_Thaliana:
     current_phenotype=csv_file_name[0]
     print(f"current phenotype: {current_phenotype}")
 
-
     current_subsample_num=int(csv_file_name[2])
 
     print(f"current subsample_num: {current_subsample_num}")
@@ -70,7 +69,7 @@ for csv_file in csv_files_Arabidopsis_Thaliana:
         # i will use 1000, 200 Mo98, Na23, AVERAGE_P, PSNP5 for now
 
     def log_function(value):
-        return -(math.log(10,value))
+        return -(math.log(value,10))
 
     if current_method=="GWAS":
 
@@ -90,10 +89,38 @@ for csv_file in csv_files_Arabidopsis_Thaliana:
 
         print("Threshold value)",flush=True)
         print(BHY_thresh_value,flush=True)
+         
+        print("=====================================",flush=True)
+        print("Head of GWAS databaste (top 10) before log10 ",flush=True)
+        print(plant_data.head(10))
+
 
         plant_data["AVERAGE_P"] = plant_data["AVERAGE_P"].apply(log_function)
 
+
+        print("=====================================",flush=True)
+        print("Head of GWAS databaste (top 10) after log10 ",flush=True)
+        print(plant_data.head(10))
+
         plant_data=plant_data.loc[plant_data['AVERAGE_P']>=BHY_thresh_value]
+
+        print("=====================================",flush=True)
+        print("Head of GWAS databaste (top 10) after threshold filtering",flush=True)
+        print(plant_data.head(10))
+
+        # sort in descending order (so biggest are first after log transformation)
+        plant_data=plant_data.sort_values(by="AVERAGE_P",ascending=False)
+
+        print("=====================================",flush=True)
+        print("Head of GIFT databaste (top 10) after sorting",flush=True)
+        print(plant_data.head(10))
+
+        # take top 1000 results (1000 most significant)
+        if len(plant_data)>=1000:
+            plant_data=plant_data.iloc[:1000]
+            print("=====================================",flush=True)
+            print("Head of GWAS databaste (top 10) after cutting top 1000",flush=True)
+            print(plant_data.head(10))
 
     elif current_method == "GIFT":
 
@@ -113,10 +140,36 @@ for csv_file in csv_files_Arabidopsis_Thaliana:
         print("Threshold value)",flush=True)
         print(BHY_thresh_value,flush=True)
 
+        print("=====================================",flush=True)
+        print("Head of GIFT databaste (top 10) before log10 ",flush=True)
+        print(plant_data.head(10))
+
         plant_data["AVERAGE_PSNP5"] = plant_data["AVERAGE_PSNP5"].apply(log_function)
+
+        print("=====================================",flush=True)
+        print("Head of GIFT databaste (top 10) after log10 ",flush=True)
+        print(plant_data.head(10))
 
         plant_data=plant_data.loc[plant_data['AVERAGE_PSNP5']>=BHY_thresh_value]
 
+        print("=====================================",flush=True)
+        print("Head of GIFT databaste (top 10) after threshold filtering",flush=True)
+        print(plant_data.head(10))
+
+        # sort in descending order (so biggest are first after log transformation)
+        plant_data=plant_data.sort_values(by="AVERAGE_PSNP5",ascending=False)
+
+        print("=====================================",flush=True)
+        print("Head of GIFT databaste (top 10) after sorting",flush=True)
+        print(plant_data.head(10))
+
+        # take top 1000 results (1000 most significant)
+        if len(plant_data)>=1000:
+            plant_data=plant_data.iloc[:1000]
+            print("=====================================",flush=True)
+            print("Head of GIFT databaste (top 10) after cutting top 1000",flush=True)
+            print(plant_data.head(10))
+   
     # rename headers if necessary
     #plant_data.rename(columns={""},inplace=True)
 
@@ -143,8 +196,8 @@ for csv_file in csv_files_Arabidopsis_Thaliana:
 
     # write to bed file
     bedfile_name=PATH_TO_MAIN+str("output_files/GO_DATA/")+csv_file.replace(".csv",".bed")
-    intersect_result_file_name=PATH_TO_MAIN+str("output_files/GO_DATA/Intersect_results")+csv_file.replace(".csv",".txt")
-    final_intersect_result_file_name=PATH_TO_MAIN+str("output_files/GO_DATA/FINAL_Intersect_results")+csv_file.replace(".csv",".txt")
+    intersect_result_file_name=PATH_TO_MAIN+str("output_files/GO_DATA/Intersect_results_")+csv_file.replace(".csv",".txt")
+    final_intersect_result_file_name=PATH_TO_MAIN+str("output_files/GO_DATA/FINAL_Intersect_results_")+csv_file.replace(".csv",".txt")
     plant_data.to_csv(bedfile_name,index=False,header=False,sep='\t')
     plant_data_gff3_location=str(PATH_TO_MAIN+"core_files/TAIR10_GFF3_genes.gff")
 
@@ -166,12 +219,14 @@ for csv_file in csv_files_Arabidopsis_Thaliana:
     # works byut needs filtering
     #my_batch.write("awk '{print $12}' "+intersect_result_file_name+" | sort -u > "+intersect_result_file_name+"\n")
 
-    my_batch.write("awk -F '[=;]' '{print $2}' "+intersect_result_file_name+"  > "+final_intersect_result_file_name+"\n")
+    #my_batch.write("awk -F '[=;]' '{print $2}' "+intersect_result_file_name+"  > "+final_intersect_result_file_name+"\n")
 
+    my_batch.write("awk -F '[=;]' '{print $2}' "+intersect_result_file_name+" | sort --unique 1>  "+final_intersect_result_file_name+"\n")
 
     my_batch.write(f'\n')
 
     print("End of for loop:",flush=True)
+
 my_batch.write(f'conda deactivate \n')
 my_batch.write(f'echo "END OF cross_reference_script" \n')
 my_batch.write(f'# end of script')

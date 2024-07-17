@@ -42,12 +42,14 @@ for phenotype in phenotype_list:
             gene_start=10933005
             gene_end = 10934604
             pos_control_gene_name="MOT1"
+            reverse_gene = True
             
         elif phenotype=="Na23":
             chr_of_interest = 4
             gene_start=6391854
             gene_end = 6395922
             pos_control_gene_name="HKT1"
+            reverse_gene = False
 
         R_out.write(f'chr_of_interest <-{chr_of_interest}\n')
         R_out.write(f'gene_start = {gene_start}\n')
@@ -77,29 +79,37 @@ for phenotype in phenotype_list:
         R_out.write(f'          title = paste("Zoom in of chromosome:", chr_of_interest, "from", bp_start, "to", bp_end),\n')
         if pval_type =="AVERAGE_ABS_THETA":
             R_out.write(f'          x = "BP", y = "AVERAGE_ABS_THETA")+\n')
-            R_out.write(f'    geom_segment(x = {gene_start}, y = max(df_filtered${pval_type}),\n')
-            R_out.write(f'    xend = {gene_end}, yend = max(df_filtered${pval_type}),\n')
+            if reverse_gene == True:
+                R_out.write(f'    geom_segment(x = {gene_end}, y = max(df_filtered${pval_type})+5,\n')
+                R_out.write(f'    xend ={gene_start} , yend = max(df_filtered${pval_type})+5,\n')
+            else:
+                R_out.write(f'    geom_segment(x = {gene_start}, y = max(df_filtered${pval_type})+5,\n')
+                R_out.write(f'    xend = {gene_end}, yend = max(df_filtered${pval_type})+5,\n')
         else:
             R_out.write(f'  x = "BP", y = "-log10({pval_type})")+\n')
-            R_out.write(f'    geom_segment(x = {gene_start}, y = max(-log10(df_filtered${pval_type})),\n')
-            R_out.write(f'      xend = {gene_end}, yend = max(-log10(df_filtered${pval_type})),\n')
-        R_out.write(f'      lineend = "round", linejoin = "round",linewidth = 2, arrow = arrow(length = unit(0.3, "inches")),\n')
+            if reverse_gene == True:
+                R_out.write(f'    geom_segment(x = {gene_end}, y = (max(-log10(df_filtered${pval_type}))+5),\n')
+                R_out.write(f'      xend = {gene_start}, yend = max(-log10(df_filtered${pval_type}))+5,\n')
+            else:
+                R_out.write(f'    geom_segment(x = {gene_start}, y = (max(-log10(df_filtered${pval_type}))+5),\n')
+                R_out.write(f'      xend = {gene_end}, yend = max(-log10(df_filtered${pval_type}))+5,\n')
+        R_out.write(f'      lineend = "round", linejoin = "round",linewidth = 1, arrow = arrow(length = unit(0.3, "inches")),\n')
         R_out.write(f'      colour = "#EC7014")+\n')
         R_out.write(f'\n')
         R_out.write(f'annotate("text",x = (gene_start+gene_end)/2,\n')
         if pval_type =="AVERAGE_ABS_THETA":
-            R_out.write(f'y = max(df_filtered${pval_type}) + 0.5,\n')
+            R_out.write(f'y = max(df_filtered${pval_type}) + 5,\n')
         else:
-            R_out.write(f'y = max(-log10(df_filtered${pval_type})) + 0.5,\n')
+            R_out.write(f'y = max(-log10(df_filtered${pval_type})) + 5,\n')
             
         R_out.write(f'label = paste("{pos_control_gene_name}"),color = "blue",hjust = 0.5)+\n')
         R_out.write(f'\n')
         R_out.write(f'annotate("rect", xmin = gene_start, xmax = gene_end, \n')
         R_out.write(f'\n')
         if pval_type =="AVERAGE_ABS_THETA":
-            R_out.write(f'ymin = 0, ymax = max(df_filtered${pval_type}),\n')
+            R_out.write(f'ymin = 0, ymax = max(df_filtered${pval_type})+5,\n')
         else:
-             R_out.write(f'ymin = 0, ymax = max(-log10(df_filtered${pval_type})),\n')
+             R_out.write(f'ymin = 0, ymax = max(-log10(df_filtered${pval_type}))+5,\n')
        
         R_out.write(f'alpha = .2)+\n')
         R_out.write(f'\n')

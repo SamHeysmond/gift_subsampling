@@ -649,13 +649,7 @@ IDEA_2_MAKE_R_AND_BASH_SCRIPT("Na23", "Na23_positive_control.csv","positive")
 IDEA_2_MAKE_R_AND_BASH_SCRIPT("Na23", "Na23_negative_control.csv","negative")
 
 print("IDEA 2 FINISHED",flush=True)
-############################################
-# IDEA 2.2 #####################################
-####################################################
 
-####################################################
-# IDEA 3.4 #####################################
-############################################
 subsample_num_list=[200,400,600,800,1000] # can later update this to read from earlier scripts or something
 
 phenotype_list=["Mo98","Na23"] # can later update this to read from the phenotype text file
@@ -677,31 +671,17 @@ for phenotype in phenotype_list:
             IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type)
 
 print("IDEA 3 FINISHED",flush=True)
-############################################
-# IDEA 3.4 #####################################
-####################################################
-
-####################################################
-# IDEA 1 ######################################
 
 # set up cumulative T20 dataframe paths for each phenotype
-
 Mo98_cumulative_t20_dataframe_path = PATH_TO_MAIN+"output_files/R_DATA/Mo98_cumulative_t20_dataframe.csv"
-
 Na23_cumulative_t20_dataframe_path = PATH_TO_MAIN+"output_files/R_DATA/Na23_cumulative_t20_dataframe.csv"
 
 
-####################################################
-# IDEA 1 ######################################
-csv_file_index=0
-
-####################################################
-# IDEA 1.4 ######################################
+# make the R scripts for IDEA 1
 IDEA_1_MAKE_R_SCRIPT("Mo98","Mo98_cumulative_t20_dataframe.csv")
 IDEA_1_MAKE_R_SCRIPT("Na23","Na23_cumulative_t20_dataframe.csv")
 
-####################################################
-# IDEA 1.5 ######################################
+# make the bash scripts for IDEA 1
 IDEA_1_MAKE_BASH_SCRIPT("Mo98","Mo98_cumulative_t20_dataframe.csv")
 IDEA_1_MAKE_BASH_SCRIPT("Na23","Na23_cumulative_t20_dataframe.csv")
 

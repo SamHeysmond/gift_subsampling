@@ -17,18 +17,16 @@ cd /gpfs01/home/mbysh17
 # source conda environment
 source ~/.bashrc
 
-# clear current directory 
+# clear summary data directory if it already exists
 rm -rf output_files/R_DATA/
 
-# Set up directory
+# Set up directory for all summary data to go into 
 mkdir output_files/R_DATA/
 
 # enter python 3 environment
 conda activate gift_env
 
-# Make the R scripts needed for second stage of analysis
-# this script also makes the batch file to run each R script it makes
-#python3 batch_files/SNP_tracker.py -d /gpfs01/home/mbysh17/output_files/
+# concatonate files needed for second stage of analysis
 python3 batch_files/SNP_tracker.py
 
 # exit conda environment

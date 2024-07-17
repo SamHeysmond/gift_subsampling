@@ -1,6 +1,6 @@
 # GIFT vs GWAS subsampling and testing
 This README.md file gives a summary of what each of the files on the github contains. Any references for local files are also detailed in their description. 
-For referencing and information on external software, websites etc, please see "External_References_And_Info.md"
+For referencing and information on external software, websites etc, please see [Other_references.md](Other_references.md)
 ---
 ## Key:
 > {variable_name} = A varible that is assigned many values e.g. {subsample_num} may be 200,400 or 1000
@@ -41,15 +41,15 @@ For referencing and information on external software, websites etc, please see "
     + Version numbers
 + Author: Sam Heysmond
 
-> ## 2 filtering_vcf.sh 
-+ Creates a table "core_files/output_3.table" which contains all SNPs that need to be taken out of GWAS data to match the data of GIFT.
+> ## 2 filtering_vcf.sh
++ Creating a table of all SNPs below AC of 30 from the main vcf
 + Author: Sam Heysmond
 
 ---
 # SCRIPTS : STAGE 1
 
 > ## 3 subsample_setup.sh
-+ Sets up folders and files needed for analysis
++ Sets up folders and files needed for subsample analysis
   + But first removes previous files in those locations to ensure no data remains to start with
     + (This can be disabled by commenting out the rm commands and echo command for JOB_LIST.csv)
 + Runs: subsample_script_setup.py (SCRIPT 4)
@@ -221,6 +221,7 @@ For referencing and information on external software, websites etc, please see "
 + Genotype information from the 1001 genomes project on biallelic SNPs data from Arabidopsis Thaliana
   + This file was modified by Assistant Prof S Bray and created from "1001genomes_snp-short-indel_only_ACGTN.vcf" in the database.
 + Reference: [1001 Genomes Project database](https://1001genomes.org/data/GMI-MPI/releases/v3.1/)
++ Edited by: Assistant prof S Bray
 
 > ## 3 master_list.csv
 + Leaf and seed ionome phenotype data from 1001 Genomes database on Arabidopsis Thaliana
@@ -231,11 +232,9 @@ For referencing and information on external software, websites etc, please see "
 + Reference: N/A
 
 > ## 5 TAIR10_GFF_genes.gff
-+ List of which phenotype columns to analyse. The scripts will use this to know what phenotypes to look into.
-+ Reference: N/A
++ GFF3 file filtered to only contain gene information.
++ Reference: Assistant prof S Bray
 
-
-  
 ---
 # DATA FILES (OUTPUT)
 ### These are data files that are output during the analysis. These files may also be input for other scripts but are classed initially as output as we did not begin with these files.

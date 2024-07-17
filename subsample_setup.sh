@@ -20,13 +20,11 @@ source ~/.bashrc
 #activate environment for subsampling
 conda activate subsample_env
 
-#obtain list of all samples in the vcf file
+#obtain list of all sample IDs in the vcf file
 bcftools query -l core_files/1001genomes_snp_biallelic_only_ACGTN.vcf > core_files/all_vcf_samples.txt
 
 #deactivate conda environment
 conda deactivate
-
-# maybe add a way to make output_files/ directory and remove old one?
 
 # make directory for the subsample text files to go in
 # but remove the previous one if it exists
@@ -43,12 +41,12 @@ rm -rf batch_files/completed_parallel
 mkdir batch_files/completed_parallel
 
 # make job list file in core files
-# first remove old JOB_LIST
-# but remove the previous one if it exists
+# first remove old JOB_LIST if it exists
 rm core_files/JOB_LIST.csv
+# write in the header for the csv
 echo "JOB_ID,SUBSAMPLE_N,PHENOTYPE" > core_files/JOB_LIST.csv
 
-# remove leftover csv and vcf files in core files
+# remove leftover csv and vcf files in core files if any exist from previous runs
 rm core_files/subsampled_phenotype_*.csv
 rm core_files/subsampled_genotype_*.vcf
 

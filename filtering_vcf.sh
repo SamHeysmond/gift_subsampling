@@ -13,6 +13,7 @@
 
 #change to core directory
 cd /gpfs01/home/mbysh17/core_files
+
 # source conda environments
 source ~/.bashrc
 
@@ -38,12 +39,11 @@ echo "fasta index created"
 
 conda activate bcftools_env
 
+# add in the tags for AN and AC into the vcf -> creating a new vcf
 bcftools +fill-tags 1001genomes_snp_biallelic_only_ACGTN.vcf  -Ov --output output_1.vcf -- -t AN,AC
 
-# filter by allele numer
-#bcftools filter -i 'AN < 30' output_1.vcf -Ov -o output_2.vcf
-
-# filter by allele count (maybe try AC<15 if needed?)
+# filter by allele count to match filtering in GIFT python script
+# this will give all SNPs that contain less than 30 AC
 bcftools filter -i 'AC < 30' output_1.vcf -Ov -o output_2.vcf
 
 conda deactivate
@@ -52,33 +52,25 @@ echo "bcftools job done"
 
 conda activate gatk_env
 
-# First add the AN (allele number) to the VCF 
-# code doesnt work here but i think already in it? (FAILED!)
-#gatk VariantAnnotator -R TAIR10_chr_all.fas -V 1001genomes_snp_biallelic_only_ACGTN.vcf -O output_1.vcf --annotation AlleleFraction
-#gatk VariantAnnotator -R TAIR10_chr_all.fas -V 1001genomes_snp_biallelic_only_ACGTN.vcf -O output_1.vcf --annotation AlleleFraction
-
-
-# Filter out SNPs with fewer than 15 alternate alleles (FAILED!)
-#gatk SelectVariants -R TAIR10_chr_all.fas -V 1001genomes_snp_biallelic_only_ACGTN.vcf -select "AN < 15"  -O output_2.vcf
-
 # Convert the VCF to a table with the columns "CHROM" and "POS"
 gatk VariantsToTable -V output_2.vcf -F CHROM -F POS -O output_3.table
 
 conda deactivate
 
-echo "done with filtering SNPs"
+echo "done with filtering for SNPs"
 
-# filter some csvs with this data in python
+# filter some csvs with this data in python (no longer needed)
 
-conda activate gift_env
+# conda activate gift_env
 
-#change to home directory
+# #change to home directory
 # cd /gpfs01/home/mbysh17/
 
+# # filter out the SNPs with less than 30 AC from the compiled csv files
 # python batch_files/filter_snps.py
 
 # conda deactivate
 
-echo "filter script finished"
+# echo "filter script finished"
 
 # end of filter script
