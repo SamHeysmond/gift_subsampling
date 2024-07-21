@@ -1,12 +1,12 @@
 # Introduction
-GWAS has been the go-to method for analysing SNP data for years but its underlying methods may lead to lack of biological sensitivity due to relying on averages to calculate significance. I have been tasked with comparing GIFT, a new method for analysing SNP data, to GWAS. In this analysis I aim to test how well GIFT performs compared to GWAS through downsampling of data, specifically to see how well GIFT and GWAS hold up when sample sizes are low. I also aim to investigate some of the positive detected peaks to validate the detection of GIFT. In summary, I begin with some VCF (genotype) and csv (masterlist) data on Arabidopsis Thaliana and hope to end up with some figures that will demonstrate the effectiveness of GIFT and GWAS at lower sample sizes.
+GWAS has been the go-to method for analysing SNP data for years but its underlying mathematical model may lead to lack of biological sensitivity due to relying on averages to calculate significance. I have been tasked with comparing GIFT, a new method for analysing SNP data, to GWAS. In this analysis I aim to test how well GIFT performs compared to GWAS through downsampling of data, specifically to see how well GIFT and GWAS hold up when sample sizes are low. I also aim to investigate some of the positive detected peaks to validate the detection of GIFT. In summary, I begin with some VCF (genotype) and csv (masterlist) data on Arabidopsis Thaliana and hope to end up with some figures that will demonstrate the effectiveness of GIFT and GWAS at lower sample sizes.
 
 ---
 # Timeline
 The timeline is split into 3 main stages:
 ### 1) Subsampling the data and running GWAS vs GIFT (on Arabidopsis Thaliana data)
 ### 2) Concatonating the results from stage 1 and comparing GIFT vs GWAS on the basis of 3 main ideas (see stage 2 for more on these). 
-### 3) Investigating significant results from GIFT and GWAS by zooming into the peaks and performing GO analysis to see which genes are picked up by each method.
+### 3) Investigating significant results from GIFT and GWAS by zooming into the peaks and performing cross rerefrence analysis to see which genes are picked up by each method.
 
 ### Indexing will be denoted as such: Stage.Step.Section e.g. 1.3.2
 ---
@@ -199,7 +199,7 @@ The timeline is split into 3 main stages:
 > # 3.1.0 Investigating the peaks at 1000 subsamples and crossreferencing SNPs with genes
 
 ## 3.1.1 Instructions
-+ For our final stage of analysis we began by running "sbatch Stage_3.sh" from the batch_files folder to run the scripts in the below scripts section.
++ For our final stage of analysis we began by running "sbatch Stage_3.sh" from the batch_files folder to run the scripts in the below scripts section. We also conducted a brief literature search to gather a list of genes of interest  for both phenotypes (including MOT1 for Mo98 and HKT1 for Na23). This was so we could track when and where each gene was detected as significant.
 
 ## 3.1.2 Files (input)
 + TAIR10_GFF_genes.gff
@@ -207,66 +207,32 @@ The timeline is split into 3 main stages:
   + Format: {phenotype}_{method_type}_1000_ALL.csv
 + THRESHOLDS.csv
   + Previously calculated thresholds file
++ core_files/Mo_genes_data.csv
+  + List of genes of interest for the Mo phenotype
++ core_files/Na_genes_data.csv
+  + List of genes of interest for the Na phenotype
 
 ## 3.1.3 Files (output)
 + Folder 1) stage_3_scripts/ folder with the R scripts to make the ZOOM plots
   + format : {phenotype}\_{GIFT/GWAS}\_AVERAGE_{pval_type}_ZOOM.R
 + Folder 2) summary_plots/stage_3/ folder fille with ZOOM plots
   + format : {phenotype}_{GIFT/GWAS}_AVERAGE_{pval_type}_ZOOM.png
-+ Folder 3) GO_DATA
-  + Bed files for top 1000 significant SNPs 
++ Folder 3) GENES_DATA
+  + Bed files for significant SNPs 
     + format : {phenotype}_{GIFT/GWAS}_{subsample_num}_ALL.bed
   + Intersect results between the GFF and bed files
     + format : Intersect_results{phenotype}_{GIFT/GWAS}_{subsample_num}_ALL.txt
   + FINAL intersect results that have been filtered to only give unique gene IDs
     + format : FINAL_Intersect_results_{phenotype}_{GIFT/GWAS}_{subsample_num}_ALL.txt
+  + Detection summary of genes of interest for each phenotype
+    + Na23_Gene_Tracker.csv 
+    + Mo98_Gene_Tracker.csv
 
 ## 3.1.4 scripts needed
 + Stage_3.sh
 + Zoom_In.py
 + cross_referencing.py
++ cross_referencing_2.py
 
 ## 3.1.5  Expected outcome
-+ We gathered zoomed in manhattan plots containing information on the peak and key positive control genes in the area and the SNP positions around the peak relative to thresholds. We also obtained lists of gene IDs that the top 1000 SNPs (from select combinations of subsamples, methods and phentoypes) had crossed over with.
-
-> # 3.2.0 GO analysis
-## 3.2.1 -Instructions
-+ To investigate which functions the significant genes were involved in we finally performed a GO analysis using DAVID.
-
-## 3.2.2 Files (input)
-+ File 1) Intersect results from the previous step in the folder GO_DATA/
-  + format : FINAL_Intersect_results_{phenotype}_{GIFT/GWAS}_{subsample_num}_ALL.txt
-
-## 3.2.3 Files (output)
-+ N/A we wrote select outputs from the website manually into a table
-
-## 3.2.4 websites needed
-+ DAVID
-+ PANTHERS
-
-## 3.2.5 Expected outcome
-+ We found descriptions of biological processes, cellular components and molecular function for genes that were significantly related to one another in the GO analysis.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
++ We gathered zoomed in manhattan plots containing information on the peak and key positive control genes in the area and the SNP positions around the peak relative to thresholds. We also obtained lists of gene IDs had harboured SNPs which crossed over with their locations in the genome. These gene IDs were cross referenced to gene names and we measured which genes were detected in each combination of phenotype, method and subsample number (e.g. Mo, GWAS, 400), giving us two tables to summarise.

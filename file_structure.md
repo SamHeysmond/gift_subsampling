@@ -56,6 +56,8 @@ User Home
 |   |----output_1.vcf
 |   |----output_2.vcf
 |   |----output_3.table
+|   |----Mo_genes_data.csv
+|   |----Na_genes_data.csv
 |   |----subsample_text_files/
 |       |----subsamples_600_812188.txt (example)
 |
@@ -96,13 +98,17 @@ User Home
 |   |----stage_3_scripts/
 |       |----{phenotype}_{GIFT/GWAS}_AVERAGE_{pval_type}_ZOOM.R
 |
-|   |----GO_DATA/
+|   |----GENES_DATA/
 |       |----{phenotype}_{GIFT/GWAS}_{subsample_num}_ALL.bed
 |       |----Intersect_results{phenotype}_{GIFT/GWAS}_{subsample_num}_ALL.txt
 |       |----FINAL_Intersect_results_{phenotype}_{GIFT/GWAS}_{subsample_num}_ALL.txt
+|       |----Na23_Gene_Tracker.csv 
+|       |----Mo98_Gene_Tracker.csv
 |
 |
 |----slurm0andE
 |   |---- slurm_error.err
 |   |---- slurm_out.out
 ```
+
+

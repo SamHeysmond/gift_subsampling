@@ -5,16 +5,27 @@ import math
 PATH_TO_MAIN = "/gpfs01/home/mbysh17/"
 
 # add all excel files to lists
-csv_files_Arabidopsis_Thaliana=[
-    "Mo98_GIFT_1000_ALL.csv",
-    "Mo98_GIFT_200_ALL.csv",
-    "Na23_GIFT_1000_ALL.csv",
-    "Na23_GIFT_200_ALL.csv",
-    "Mo98_GWAS_1000_ALL.csv",
-    "Mo98_GWAS_200_ALL.csv",
-    "Na23_GWAS_1000_ALL.csv",
-    "Na23_GWAS_200_ALL.csv"
-    ]
+# csv_files_Arabidopsis_Thaliana=[
+#     "Mo98_GIFT_1000_ALL.csv",
+#     "Mo98_GIFT_200_ALL.csv",
+#     "Na23_GIFT_1000_ALL.csv",
+#     "Na23_GIFT_200_ALL.csv",
+#     "Mo98_GWAS_1000_ALL.csv",
+#     "Mo98_GWAS_200_ALL.csv",
+#     "Na23_GWAS_1000_ALL.csv",
+#     "Na23_GWAS_200_ALL.csv"
+#     ]
+
+
+csv_files_Arabidopsis_Thaliana=[]
+
+for file in os.listdir(PATH_TO_MAIN+"output_files/R_DATA/"):
+    if file.endswith(".csv") and file.__contains__("ALL")==True:
+        csv_files_Arabidopsis_Thaliana.append(file)
+        print(file,": ++++++++++++ ADDED ++++++++++++ !", flush = True)
+    else:
+        pass
+
 
 #Begin writing the batch script that will do the cross referencing
 
@@ -115,13 +126,6 @@ for csv_file in csv_files_Arabidopsis_Thaliana:
         print("Head of GIFT databaste (top 10) after sorting",flush=True)
         print(plant_data.head(10))
 
-        # take top 1000 results (1000 most significant)
-        if len(plant_data)>=1000:
-            plant_data=plant_data.iloc[:1000]
-            print("=====================================",flush=True)
-            print("Head of GWAS databaste (top 10) after cutting top 1000",flush=True)
-            print(plant_data.head(10))
-
     elif current_method == "GIFT":
 
         print("Threshold data before filter",flush=True)
@@ -163,12 +167,6 @@ for csv_file in csv_files_Arabidopsis_Thaliana:
         print("Head of GIFT databaste (top 10) after sorting",flush=True)
         print(plant_data.head(10))
 
-        # take top 1000 results (1000 most significant)
-        if len(plant_data)>=1000:
-            plant_data=plant_data.iloc[:1000]
-            print("=====================================",flush=True)
-            print("Head of GIFT databaste (top 10) after cutting top 1000",flush=True)
-            print(plant_data.head(10))
    
     # rename headers if necessary
     #plant_data.rename(columns={""},inplace=True)
@@ -195,9 +193,9 @@ for csv_file in csv_files_Arabidopsis_Thaliana:
     # plant_data['END']=plant_data['END'] + 100000
 
     # write to bed file
-    bedfile_name=PATH_TO_MAIN+str("output_files/GO_DATA/")+csv_file.replace(".csv",".bed")
-    intersect_result_file_name=PATH_TO_MAIN+str("output_files/GO_DATA/Intersect_results_")+csv_file.replace(".csv",".txt")
-    final_intersect_result_file_name=PATH_TO_MAIN+str("output_files/GO_DATA/FINAL_Intersect_results_")+csv_file.replace(".csv",".txt")
+    bedfile_name=PATH_TO_MAIN+str("output_files/GENES_DATA/")+csv_file.replace(".csv",".bed")
+    intersect_result_file_name=PATH_TO_MAIN+str("output_files/GENES_DATA/Intersect_results_")+csv_file.replace(".csv",".txt")
+    final_intersect_result_file_name=PATH_TO_MAIN+str("output_files/GENES_DATA/FINAL_Intersect_results_")+csv_file.replace(".csv",".txt")
     plant_data.to_csv(bedfile_name,index=False,header=False,sep='\t')
     plant_data_gff3_location=str(PATH_TO_MAIN+"core_files/TAIR10_GFF3_genes.gff")
 

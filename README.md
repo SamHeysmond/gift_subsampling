@@ -203,10 +203,17 @@ For referencing and information on external software, websites etc, please see [
 + Author: Sam Heysmond
   
 > ## 31 Zoom_In.py
++ Creates R scripts that make a Zoomed in manhattan plot around the peaks for Na and Mo phenotypes
 + Figure contribution: 4A-Z 
 + Author: Sam Heysmond
 
-> ## 31 cross_referencing.py
+> ## 32 cross_referencing.py
++ Cross references significant SNPs with Arabidopsis thaliana genes by making a shell script to do so.
++ Figure contribution: Table 1 
++ Author: Sam Heysmond
+
+> ## 33 cross_referencing_2.py
++ Cross references genes that were picked up by the previous script (SCRIPT 32) against dataframes of genes of interest to track when and where they were detected as significant.
 + Figure contribution: Table 1 
 + Author: Sam Heysmond
   
@@ -234,6 +241,14 @@ For referencing and information on external software, websites etc, please see [
 > ## 5 TAIR10_GFF_genes.gff
 + GFF3 file filtered to only contain gene information.
 + Reference: Assistant prof S Bray
+
+> ## 6 Mo_genes_data.csv
++ List of gene ID and names of interest for genes related to Mo phenotype
++ Reference: N/A
+
+> ## 7 Na_genes_data.csv
++ List of gene ID and names of interest for genes related to Na phenotype
++ Reference: N/A
 
 ---
 # DATA FILES (OUTPUT)
@@ -353,11 +368,16 @@ Reference: N/A
 + List of gene IDs filtered out from OUTPUT 25
 + Reference: N/A
 
-> ## 27 slurm_error.err
+> ## 27 {phenotype}_Gene_Tracker.csv
++ Detection summary of genes of interest for each phenotype
++ Reference: N/A
+
+> ## 28 slurm_error.err
 + All the errors output by the Ada server
 + Reference: N/A
 
-> ## 28 slurm_out.out
+
+> ## 29 slurm_out.out
 + All the output given by the Ada server
   + This is usually things we intend to be output such as "print('Script finished',flush=True)" in python scripts.
 + Reference: N/A

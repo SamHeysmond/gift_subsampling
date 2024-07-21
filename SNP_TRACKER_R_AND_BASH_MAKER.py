@@ -267,7 +267,7 @@ def IDEA_1_MAKE_R_SCRIPT(
             CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
 
             # stats test (KW)
-            CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA1/{cumulative_t20_dataframe_name}_{item}_KW_TEST.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA1/{cumulative_t20_dataframe_name}_{item}_KW_TEST.png", bg = "white", width = 6.25, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
             CURRENT_SNP_R_SCRIPT.write(f'ggbetweenstats(\n')
             CURRENT_SNP_R_SCRIPT.write(f'   data=this_graph_data,\n')
             CURRENT_SNP_R_SCRIPT.write(f'   x = SUBSAMPLE_NUM,\n')
@@ -340,7 +340,7 @@ def IDEA_1_MAKE_R_SCRIPT(
             CURRENT_SNP_R_SCRIPT.write(f'\n')
 
             # stats test (KW)
-            CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA1/{cumulative_t20_dataframe_name}_{item}_KW_TEST.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA1/{cumulative_t20_dataframe_name}_{item}_KW_TEST.png", bg = "white", width = 6.25, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
             CURRENT_SNP_R_SCRIPT.write(f'ggbetweenstats(\n')
             CURRENT_SNP_R_SCRIPT.write(f'   data=this_graph_data,\n')
             CURRENT_SNP_R_SCRIPT.write(f'   x = SUBSAMPLE_NUM,\n')
@@ -517,7 +517,7 @@ def IDEA_2_MAKE_R_AND_BASH_SCRIPT(
             CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
             CURRENT_SNP_R_SCRIPT.write(f'\n')
             # KW stats test
-            CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA2/{control_dataframe_name}_{pval_type}_KW_TEST.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA2/{control_dataframe_name}_{pval_type}_KW_TEST.png", bg = "white", width = 6.25, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
             CURRENT_SNP_R_SCRIPT.write(f'ggbetweenstats(\n')
             CURRENT_SNP_R_SCRIPT.write(f'   data=this_graph_data,\n')
             CURRENT_SNP_R_SCRIPT.write(f'   x = SUBSAMPLE_NUM,\n')
@@ -587,7 +587,7 @@ def IDEA_2_MAKE_R_AND_BASH_SCRIPT(
             CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
             # Stats test plot (Kruskal wallace)
             CURRENT_SNP_R_SCRIPT.write(f'\n')
-            CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA2/{control_dataframe_name}_{pval_type}_KW_TEST.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA2/{control_dataframe_name}_{pval_type}_KW_TEST.png", bg = "white", width = 6.25, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
             CURRENT_SNP_R_SCRIPT.write(f'ggbetweenstats(\n')
             CURRENT_SNP_R_SCRIPT.write(f'   data=this_graph_data,\n')
             CURRENT_SNP_R_SCRIPT.write(f'   x = SUBSAMPLE_NUM,\n')
