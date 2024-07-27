@@ -11,7 +11,7 @@ Mo98_gene_tracker_df = pandas.DataFrame(columns=['DATA_SOURCE'])
 Na23_gene_tracker_df = pandas.DataFrame(columns=['DATA_SOURCE'])
 
 
-for file in os.listdir(PATH_TO_MAIN+"output_files/GENES_DATA"):
+for file in os.listdir(PATH_TO_MAIN+"output_files/GENES_DATA/"):
     if file.endswith(".txt") and file.__contains__("FINAL") and file.__contains__("GIFT")==True:
         GIFT_gene_results_files.append(file)
         print(file,": ++++++++++++ ADDED ++++++++++++ !", flush = True)
@@ -20,7 +20,7 @@ for file in os.listdir(PATH_TO_MAIN+"output_files/GENES_DATA"):
 
 
 
-for file in os.listdir(PATH_TO_MAIN+"output_files/GENES_DATA"):
+for file in os.listdir(PATH_TO_MAIN+"output_files/GENES_DATA/"):
     if file.endswith(".txt") and file.__contains__("FINAL") and file.__contains__("GWAS")==True:
         GWAS_gene_results_files.append(file)
         print(file,": ++++++++++++ ADDED ++++++++++++ !", flush = True)

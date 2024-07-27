@@ -60,26 +60,47 @@ def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type):
         R_out.write(f'ylim <- abs(floor(log10(min(mydata)))) +1\n')
 
         # calculate threshold if it isnt abs theta (since abs theta has no threshold yet)
+        # R_out.write(f'\n')
+        # R_out.write(f'#Calculate the BHY threshold\n')
+        # R_out.write(f'm <- nrow(csv_data)\n')
+        # R_out.write(f'gwasResults <- csv_data[order(csv_data${pval_type}),]\n')
+        # R_out.write(f's <- 1.0\n')
+        # R_out.write(f'i <- 0\n')
+        # R_out.write('for (p in csv_data$'+str(pval_type)+') {\n')
+        # R_out.write(f'  p\n')
+        # R_out.write(f' i <- i+1\n')
+        # R_out.write('  if (i > 1) {\n')
+        # R_out.write(f'  s <- s + 1.0/(i-1)\n')
+        # R_out.write('  }\n')
+        # R_out.write(f'  thes_pval <- ((i + 1.0) / m) * 0.05 / s\n')
+        # R_out.write('  if (p > thes_pval) {break\n')
+        # R_out.write('   }\n')
+        # R_out.write('   }\n')
+        # R_out.write(f'thes_pval_original <- thes_pval\n')
+        # R_out.write(f'bhy_thres <- -log10(thes_pval)\n')
+
+        # import and calculate with threshold data
+        R_out.write(f'threshold_data_csv<-read.csv("{PATH_TO_MAIN}output_files/R_DATA/THRESHOLDS.csv", header= TRUE, sep=",")\n')
+        R_out.write(f'# subset for the current phenotype and pval type\n')
+        R_out.write(f'BF_THRESHOLD_DATA<-subset(threshold_data_csv,PHENOTYPE=="{phenotype}" & PVAL_TYPE=="{pval_type}" & SUBSAMPLE_NUM=={subsample_number} & THRESHOLD_TYPE=="BF")\n')
+        R_out.write(f'BY_THRESHOLD_DATA<-subset(threshold_data_csv,PHENOTYPE=="{phenotype}" & PVAL_TYPE=="{pval_type}" & SUBSAMPLE_NUM=={subsample_number} & THRESHOLD_TYPE=="BHY")\n')
+        R_out.write(f'#subset for each type of threshold\n')
+        R_out.write(f'BF_THRESHOLD<-BF_THRESHOLD_DATA$THRESHOLD_VALUE\n')
+        R_out.write(f'BY_THRESHOLD<-BY_THRESHOLD_DATA$THRESHOLD_VALUE\n')
+        R_out.write(f'print("BF_THRESHOLD value")\n')
+        R_out.write(f'print(BF_THRESHOLD)\n')
+        R_out.write(f'print("BY_THRESHOLD value")\n')
+        R_out.write(f'print(BY_THRESHOLD)\n')
         R_out.write(f'\n')
-        R_out.write(f'#Calculate the BHY threshold\n')
-        R_out.write(f'm <- nrow(csv_data)\n')
-        R_out.write(f'gwasResults <- csv_data[order(csv_data${pval_type}),]\n')
-        R_out.write(f's <- 1.0\n')
-        R_out.write(f'i <- 0\n')
-        R_out.write('for (p in csv_data$'+str(pval_type)+') {\n')
-        R_out.write(f'  p\n')
-        R_out.write(f' i <- i+1\n')
-        R_out.write('  if (i > 1) {\n')
-        R_out.write(f'  s <- s + 1.0/(i-1)\n')
-        R_out.write('  }\n')
-        R_out.write(f'  thes_pval <- ((i + 1.0) / m) * 0.05 / s\n')
-        R_out.write('  if (p > thes_pval) {break\n')
-        R_out.write('   }\n')
-        R_out.write('   }\n')
-        R_out.write(f'thes_pval_original <- thes_pval\n')
-        R_out.write(f'bhy_thres <- -log10(thes_pval)\n')
+
+
+        R_out.write('if (BY_THRESHOLD == 0){\n')
+        R_out.write(f'BY_THRESHOLD=max(-log10(csv_data${pval_type}))\n')
+        R_out.write('}\n')
+    
+         ## look into how many points are above the threshold
         R_out.write(f'#calculate amount of points above the BHY threshold as a percentage of all points\n')
-        R_out.write(f'percent_sig<-length(which(-log10(csv_data${pval_type})>bhy_thres))/length(csv_data${pval_type})\n')
+        R_out.write(f'percent_sig<-length(which(-log10(csv_data${pval_type})>BY_THRESHOLD))/length(csv_data${pval_type})\n')
         R_out.write(f'percent_sig<-percent_sig*100\n')
         R_out.write(f'percent_sig<-round(percent_sig,2)\n')
 
@@ -108,11 +129,19 @@ def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type):
         R_out.write(f'     labs(y= "-log10({pval_type})", x = "chromosome position")+\n')
    
         #only add in thresholds if the pval type isnt abs theta
+        # OLD CODE
+        # R_out.write(f'     # threshold line (bonferroni)\n')
+        # R_out.write(f'     geom_hline(yintercept=-log10(0.05/{subsample_number}), linetype="dashed", color = "red")+\n')
+        # R_out.write(f'     #threshold line (BHY)\n')
+        # R_out.write(f'     geom_hline(yintercept=bhy_thres, linetype="dashed", color = "blue")+\n')
+        # R_out.write(f'     annotate("text",x=10000000,y=bhy_thres+1,size=3,label=paste0("% above BHY threshold: ",percent_sig))+\n')
+
+         # OLD CODE
         R_out.write(f'     # threshold line (bonferroni)\n')
-        R_out.write(f'     geom_hline(yintercept=-log10(0.05/{subsample_number}), linetype="dashed", color = "red")+\n')
+        R_out.write(f'     geom_hline(yintercept=BF_THRESHOLD, linetype="dashed", color = "red")+\n')
         R_out.write(f'     #threshold line (BHY)\n')
-        R_out.write(f'     geom_hline(yintercept=bhy_thres, linetype="dashed", color = "blue")+\n')
-        R_out.write(f'     annotate("text",x=10000000,y=bhy_thres+1,size=3,label=paste0("% above BHY threshold: ",percent_sig))+\n')
+        R_out.write(f'     geom_hline(yintercept=BY_THRESHOLD, linetype="dashed", color = "blue")+\n')
+        R_out.write(f'     annotate("text",x=10000000,y=BY_THRESHOLD-1,size=3,label=paste0("% above BHY threshold: ",percent_sig))+\n')
 
     # add a theme
     R_out.write(f'     # Custom the theme:\n')

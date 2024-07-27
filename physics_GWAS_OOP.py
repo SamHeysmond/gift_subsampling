@@ -100,11 +100,12 @@ class field:
 		line_format=line_format.split(':')
 
 		# For each individual in the phenotype file, locate the genotype and give it a value between -1 and +1 (biallelic diploid data only).
+		# In this case the individuals are those left behand after subsampling
 		for individual in pheno_order:
 
 			individual=str(individual)
 
-			try: # Get the location in the vcf.
+			try: # Get the location index of the ID of the individual in the vcf. e.g. index 24
 				index=vcf_order.index(individual)
 			except ValueError: # if the individual is not in the vcf
 				continue
@@ -112,19 +113,24 @@ class field:
 			current_column=line[index] # Get the column that contains genotypes for this individual.
 			current_column=current_column.split(':') # Split into fields.
 			current_genotypes=current_column[line_format.index('GT')] # Find the genotypes for this individual.
-			current_genotypes=current_genotypes.replace('/','|') # Make sure you split phased and/or unphased data
+
+			#  This changes unphased symbol to phased symbol
+			current_genotypes=current_genotypes.replace('/','|') # Make sure you split phased and/or unphased data.
+			
 			current_genotypes=current_genotypes.split('|')
 			current_value=[]
 			total=0
 
 			# Make a list of all the genotype values.
 			# for example:
-			# 0/1, 1/1, 0/0 -> 0,1,1,1,0,0 -> sum = 3, total = 6 -> current_value = 0.5
+			# 0|1, 1|1, 0|0 -> 0,1,1,1,0,0 -> sum = 3, total = 6 -> current_value = 0.5
+			# example 2 at CHROM 1 POS 101 :
+			# 0|1, 1|1, 0|0, 0|1 -> 0,1,1,1,0,0,0,1 ->  sum =4  total = 8 -> current_value =0.5
 			# example 2:
-			# 0/1, 1/1, 0/0, 0/1 -> 0,1,1,1,0,0,0,1 ->  sum =4  total = 8 -> current_value =0.5
+			# 1|1, 1|1, 1|1, 0|1 -> 1,1,1,1,1,1,0,1 ->  sum =7  total = 8 -> current_value =0...?
 
-			# example 2:
-			# 1/1, 1/1, 1/1, 0/1 -> 1,1,1,1,1,1,0,1 ->  sum =7  total = 8 -> current_value =0...?
+			# example 3 looking at column 10020 on row (line) (most confident):
+			# 1|1 ->  sum =2  total = 2 -> current_value =
 
 			for things in current_genotypes:
 				if things == "0" or things == "1":
@@ -140,6 +146,8 @@ class field:
 
 				# case of dominant and recessive alleles example:
 				# AA = +1, Aa = 0, aa = -1
+				# not sure on how it lands at either 0, 0.5 or 1
+					# does it only look at one ccolumn at a time? i.e. only ever looks at 0|0 , 0|1 or 1|1
 				if current_value == 0:
 					genotype_values.append(-1)
 				if current_value == 0.5:
@@ -148,8 +156,11 @@ class field:
 					genotype_values.append(1)
 
 		self.ordered_states=genotype_values #P# Jon 2.2
-
+		
+		# obtain length of all the values (the -1's, 0's and 1's)
 		N = len(genotype_values)
+
+		# obtain counts for each of the types of values
 		N_plus = genotype_values.count(1)
 		N_minus = genotype_values.count(-1)
 		N_zero = genotype_values.count(0)
@@ -176,27 +187,33 @@ class field:
 				return True
 		return False # If you didn't manage to return True
 
-	def cum_sum(self): # Calculate the cumulative sum of the ordered genotype states
+	# Calculate the cumulative sum of the ordered genotype states
+	def cum_sum(self): 
 
 		return list(np.cumsum(self.ordered_states))
 
-	def straight_path(self): # Calculate the straight path i.e. a straigh line from the start to the end of the cumulative sum
+	# Calculate the straight path i.e. a straigh line from the start to the end of the cumulative sum
+	def straight_path(self): 
 		ordered_states = self.ordered_states
 		final_dest=sum(ordered_states)
 		per_step=final_dest/len(ordered_states)
 		straight_line=[]
 		for step, num in enumerate(ordered_states, 1):
+
+			#samq makes a straight line by going from point A to point B in equal steps?
 			straight_line.append(per_step*step)
 			
 		return straight_line #P# Jon 2.7
 
-	def rand_sum(self): # Calculate a random path
+	# Calculate a random path
+	def rand_sum(self): 
 
 		genotype_values=self.ordered_states
 		random.shuffle(genotype_values)
 		return np.cumsum(genotype_values)
 
-	def calc_theta(self, J_2_8=False): # Calculate theta for each position in the ordered states #? Could do to make this re-usable for values that are not the ordered state i.e. a given random path
+	# Calculate theta for each position in the ordered states #? Could do to make this re-usable for values that are not the ordered state i.e. a given random path
+	def calc_theta(self, J_2_8=False): 
 
 		# Create the stright line (i.e. from 0 to to sum of the values):
 		# straight line is the (total sum / steps) * the step
@@ -210,7 +227,7 @@ class field:
 		#for step, num in enumerate(cumulative_sum, 1):
 		#	straight_line.append(per_step*step)
 
-		# Creates the straight_line which is the same as the straigh path (see straight_path() function above)
+		# Creates the straight_line which is the same as the straight path (see straight_path() function above)
 		straight_line=self.straight_path()
 		cumulative_sum=self.cum_sum()
 
@@ -238,11 +255,13 @@ class field:
 		# Calculate theta
 		theta=[]
 		for count, val in enumerate(cumulative_sum):
+			# append the value of the difference from the straight line for each count value i.e. each position on the line of the cumulative sum
 			theta.append(val-straight_line[count])
 
 		# Calculate relative theta
 
-		# largest and smallest raw theta
+		# largest and smallest raw theta 
+		# samq where the line differes from the straight line the most and the least?)
 		largest_theta=max(theta)
 		smallest_theta=min(theta)
 
@@ -294,6 +313,7 @@ class field:
 		# To keep a theta list
 		theta = []
 		# For the first j elements in the ordered list
+		# samq ordered states that occur when the phenotype is ordered from smallest to biggest?
 		for j, state in enumerate(ordered_states, 1):
 
 			# Calculate theta at j, j - 1 to make it zero-based
@@ -307,14 +327,6 @@ class field:
 			if theta_j > bigest_theta: ### Jon's response:  (lines 244-246 - we can ignore - my ideas/calculations regarding the biggest value of theta have been superseded by the pSNPmin, pSNP2/pSNP3/pSNP4, / pSNP5 )
 				bigest_theta = theta_j
 				bigest_theta_j = int(j-1)
-			
-			# FOR TESTING (SAM EDIT)
-			#print("N = ", N)
-			#print("theta_j = ", theta_j)
-			#print("j = ", j)
-			#print("N_plus = ", N_plus)
-			#print("N_minus = ", N_minus)
-
 
 			# Calculate p at j
 			# But not for the last line due to theta_j and N-j both being zero!
@@ -545,7 +557,11 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 
 	# Generate ordered phenotypes and headder lists
+
+	#list of the sample names, ordered by phenotype smallest to largest
 	ordered_pheno=ordered_list(args.f, args.p)
+
+	#header of VCF including things like POS, ID and each sample e.g. 10013
 	headder=read_vcf_head(args.v)
 	
 	# open vcf file and output file
@@ -580,12 +596,14 @@ if __name__ == '__main__':
 	# calculate what I want
 	for line in vcf:
 		if '#' not in line:
-			#line is line of VCF? . 
+			#line is line of VCF -> takes all information from all samples in the vcf (itll only consider samples in ordered phenotypes of course)
 			# ordered_pheno is  orederd phenotypes and headder lists from the input phenotype and input phenotype file.
 			# header is the header of the vcf
 			x=field(line, ordered_pheno, headder) 
 			if int(x.line[1]) % 10000 == 0:
 				print(x.line[1])  # remove this print?
+
+			# ensure that theres at least 15 + and 15 - states
 			if x.sense_check():
 				largest_theta,smallest_theta,absolute_theta,theta_range,largest_relative_theta,smallest_relative_theta,absolute_relative_theta,range_relative_theta = x.calc_theta()
 				#output_file.write(f'{CHROM},{POS},{largest_theta},{smallest_theta},{absolute_theta},{theta_range},{largest_relative_theta},{smallest_relative_theta},{absolute_relative_theta},{range_relative_theta}\n')
@@ -595,13 +613,6 @@ if __name__ == '__main__':
 				output_file.write(f'{CHROM},{POS},{largest_theta},{smallest_theta},{absolute_theta},{theta_range},{largest_relative_theta},{smallest_relative_theta},{absolute_relative_theta},{range_relative_theta},{min_p},{mean_p},{log_mean_p},{bigest_theta_p},{pSNP4},{pSNP5}\n')
 				
 # ### start of sam edit (6) <<<<<<<<<<<<<<<<<<<<
-				# FOR TESTING
-				#print ("Current CHROM value: "+ str(CHROM))
-				#print ("Current POS value: "+ str(POS))
-				#print ("Current absolute_theta value: "+ str(absolute_theta))
-				#print ("Current pSNP4 value: "+ str(pSNP4))
-				#print ("Current pSNP5 value: "+ str(pSNP5))
-
 				# open up the csv to import into dataframes
 				dataFrame_absolute_theta = pandas.read_csv("output_files/"+args.id+"_T20_absolute_theta.csv")
 				dataFrame_pSNP4 = pandas.read_csv("output_files/"+args.id+"_T20_pSNP4.csv")

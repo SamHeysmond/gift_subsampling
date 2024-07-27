@@ -235,4 +235,4 @@ The timeline is split into 3 main stages:
 + cross_referencing_2.py
 
 ## 3.1.5  Expected outcome
-+ We gathered zoomed in manhattan plots containing information on the peak and key positive control genes in the area and the SNP positions around the peak relative to thresholds. We also obtained lists of gene IDs had harboured SNPs which crossed over with their locations in the genome. These gene IDs were cross referenced to gene names and we measured which genes were detected in each combination of phenotype, method and subsample number (e.g. Mo, GWAS, 400), giving us two tables to summarise.
++ We gathered zoomed in manhattan plots containing information on the peak and key positive control genes in the area and the SNP positions around the peak relative to thresholds. We also obtained lists of gene IDs had harboured SNPs which crossed over with their locations in the genome. These gene IDs were cross referenced to gene names and we measured which genes were detected in each combination of phenotype, method, and subsample number (e.g. Mo, GWAS, 400), giving us two tables to summarise. These tables were copy pasted into microsoft publisher for editing.
