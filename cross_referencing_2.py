@@ -1,4 +1,6 @@
-import pandas ,os 
+import pandas 
+import os 
+import fnmatch
 
 
 PATH_TO_MAIN = "/gpfs01/home/mbysh17/"
@@ -12,19 +14,21 @@ Na23_gene_tracker_df = pandas.DataFrame(columns=['DATA_SOURCE'])
 
 
 for file in os.listdir(PATH_TO_MAIN+"output_files/GENES_DATA/"):
-    if file.endswith(".txt") and file.__contains__("FINAL") and file.__contains__("GIFT")==True:
+    if fnmatch.fnmatch(file,"*.txt") and fnmatch.fnmatch(file,"FINAL*") and fnmatch.fnmatch(file,"*GIFT*"):
         GIFT_gene_results_files.append(file)
         print(file,": ++++++++++++ ADDED ++++++++++++ !", flush = True)
     else:
+        print(file,": MISSED!", flush = True)
         pass
 
 
 
 for file in os.listdir(PATH_TO_MAIN+"output_files/GENES_DATA/"):
-    if file.endswith(".txt") and file.__contains__("FINAL") and file.__contains__("GWAS")==True:
+    if fnmatch.fnmatch(file,"*.txt") and fnmatch.fnmatch(file,"FINAL*") and fnmatch.fnmatch(file,"*GWAS*"):
         GWAS_gene_results_files.append(file)
         print(file,": ++++++++++++ ADDED ++++++++++++ !", flush = True)
     else:
+        print(file,": MISSED!", flush = True)
         pass
 
 
@@ -35,7 +39,7 @@ Na23_genes_data =  pandas.read_csv(f'{PATH_TO_MAIN}core_files/Na_genes_data.csv'
 Na23_gene_list=Na23_genes_data["Gene_ID"].tolist()
 
 
-print(Mo98_genes_data.head())
+# print(Mo98_genes_data.head())
 
 for gene_ID in Mo98_gene_list:
 
@@ -50,7 +54,7 @@ for gene_ID in Na23_gene_list:
 
 
 
-print(Mo98_gene_tracker_df)
+# print(Mo98_gene_tracker_df)
 
 current_Mo98_index =0  
 current_Na23_index =0
@@ -63,11 +67,11 @@ GWAS_gene_results_files= sorted(GWAS_gene_results_files, reverse=True, key= lamb
 
 for gene_list in GIFT_gene_results_files:
 
-    print(f"Gene list: {gene_list}",flush=True)
+    # print(f"Gene list: {gene_list}",flush=True)
 
     gene_list_name = gene_list.split("_")
     
-    print(f"Gene list name: {gene_list_name}",flush=True)
+    # print(f"Gene list name: {gene_list_name}",flush=True)
 
     current_phenotype = gene_list_name[3]
     current_method = gene_list_name[4]
@@ -80,7 +84,7 @@ for gene_list in GIFT_gene_results_files:
 
     current_gene_list=current_gene_list["Genes"].tolist()    
 
-    print(current_gene_list[0:4])
+    # print(current_gene_list[0:4])
 
     if current_phenotype=="Mo98":
         # first append empty row
@@ -103,9 +107,9 @@ for gene_list in GIFT_gene_results_files:
         
         current_Mo98_index+=1
 
-        print("Head of Mo98 dataframe tracker")
+        # print("Head of Mo98 dataframe tracker")
 
-        print(Mo98_gene_tracker_df,flush=True)
+        # print(Mo98_gene_tracker_df,flush=True)
 
 
     elif current_phenotype == "Na23":
@@ -134,11 +138,11 @@ for gene_list in GIFT_gene_results_files:
 
 for gene_list in GWAS_gene_results_files:
 
-    print(f"Gene list: {gene_list}",flush=True)
+    # print(f"Gene list: {gene_list}",flush=True)
 
     gene_list_name = gene_list.split("_")
     
-    print(f"Gene list name: {gene_list_name}",flush=True)
+    # print(f"Gene list name: {gene_list_name}",flush=True)
 
     current_phenotype = gene_list_name[3]
     current_method = gene_list_name[4]
@@ -147,11 +151,14 @@ for gene_list in GWAS_gene_results_files:
     gene_list_name_modified = current_phenotype+"_"+current_method+"_"+current_subsample_num
 
     current_gene_list = pandas.DataFrame(columns=["Genes"])
-    current_gene_list["Genes"] = pandas.read_csv(f'{PATH_TO_MAIN}output_files/GENES_DATA/{gene_list}', header=None)
-
+    try:
+        current_gene_list["Genes"] = pandas.read_csv(f'{PATH_TO_MAIN}output_files/GENES_DATA/{gene_list}', header=None)
+    except:
+        current_gene_list["Genes"] = "NULL"
+        
     current_gene_list=current_gene_list["Genes"].tolist()    
 
-    print(current_gene_list[0:4])
+    # print(current_gene_list[0:4])
 
     if current_phenotype=="Mo98":
         # first append empty row
@@ -174,9 +181,9 @@ for gene_list in GWAS_gene_results_files:
         
         current_Mo98_index+=1
 
-        print("Head of Mo98 dataframe tracker")
+        # print("Head of Mo98 dataframe tracker")
 
-        print(Mo98_gene_tracker_df,flush=True)
+        # print(Mo98_gene_tracker_df,flush=True)
 
 
     elif current_phenotype == "Na23":

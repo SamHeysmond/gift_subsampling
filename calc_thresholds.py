@@ -10,87 +10,87 @@ pandas.options.display.max_columns=None
 PATH_TO_MAIN = "/gpfs01/home/mbysh17/"
 
 # Function to calculate threshold data
-def calc_thresholds(phenotype,subsample_number,pval_type,threshold_df):
+# def calc_thresholds(phenotype,subsample_number,pval_type,threshold_df):
 
-    # Read the appropriate CSV file
-    threshold_df= pandas.read_csv(f'{PATH_TO_MAIN}output_files/R_DATA/THRESHOLDS.csv')
+#     # Read the appropriate CSV file
+#     threshold_df= pandas.read_csv(f'{PATH_TO_MAIN}output_files/R_DATA/THRESHOLDS.csv')
    
-    if pval_type=="AVERAGE_ABS_THETA": 
-        pass
-        ### No need to calc threshold with theta (no current way to do this)
-    else:
-          # for GWAS data....
-        if pval_type=="AVERAGE_P":
+#     if pval_type=="AVERAGE_ABS_THETA": 
+#         pass
+#         ### No need to calc threshold with theta (no current way to do this)
+#     else:
+#           # for GWAS data....
+#         if pval_type=="AVERAGE_P":
 
-            # read the compiled GWAS data file from R_DATA folder
-            csv_df = pandas.read_csv(f"{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_GWAS_{subsample_number}_ALL.csv")
+#             # read the compiled GWAS data file from R_DATA folder
+#             csv_df = pandas.read_csv(f"{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_GWAS_{subsample_number}_ALL.csv")
 
 
-        # for GIFT data (PSNP4 and 5 specifically)
-        else:
+#         # for GIFT data (PSNP4 and 5 specifically)
+#         else:
 
-            # fetch the compiled data of the csv for the current phenotype and current method (GIFT)
-            csv_df = pandas.read_csv(f"{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_GIFT_{subsample_number}_ALL.csv")
+#             # fetch the compiled data of the csv for the current phenotype and current method (GIFT)
+#             csv_df = pandas.read_csv(f"{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_GIFT_{subsample_number}_ALL.csv")
 
-        ##########################################
-        #### Calculate the BHY threshold
+#         ##########################################
+#         #### Calculate the BHY threshold
         
-        m = len(csv_df)
-        m=float(m)
-        s=1.0
-        pvals_list = csv_df[f'{pval_type}']
+#         m = len(csv_df)
+#         m=float(m)
+#         s=1.0
+#         pvals_list = csv_df[f'{pval_type}']
 
-        # sort in order of ascension 
-        pvals_list=sorted(pvals_list)
+#         # sort in order of ascension 
+#         pvals_list=sorted(pvals_list)
 
-        # save on memory by clearing the csv dataframe 
-        del csv_df
+#         # save on memory by clearing the csv dataframe 
+#         del csv_df
 
-        for i,p in enumerate(pvals_list):
+#         for i,p in enumerate(pvals_list):
 
-            if i>2: # different to GIFT python code...
+#             if i>2: # different to GIFT python code...
 
-                s=s+1/(i-1)
+#                 s=s+1/(i-1)
 
-            # 0.05 = the FHD threshold
-            thes_pval = ((i + 1.0) / m) * 0.05 / s
+#             # 0.05 = the FHD threshold
+#             thes_pval = ((i + 1.0) / m) * 0.05 / s
 
-            if p> thes_pval:
+#             if p> thes_pval:
 
-                break
+#                 break
 
-        bhy_thres = thes_pval
+#         bhy_thres = thes_pval
 
-        transformed_bhy_thres = (-log10(thes_pval))
+#         transformed_bhy_thres = (-log10(thes_pval))
 
-        ############################################
-        #### calculate the bonferroni threshold
+#         ############################################
+#         #### calculate the bonferroni threshold
 
-        bonferroni_thres = -log10(0.05/int(subsample_number))
+#         bonferroni_thres = -log10(0.05/int(subsample_number))
 
-        # export the above values to the dataframe
+#         # export the above values to the dataframe
 
-        # first make new row for the data
-        new_row_BF = pandas.Series({'PHENOTYPE':phenotype,
-                    'SUBSAMPLE_NUM':subsample_number,
-                    'PVAL_TYPE':pval_type,
-                    'THRESHOLD_TYPE':'BF',
-                    'THRESHOLD_VALUE':bonferroni_thres
-                    })
+#         # first make new row for the data
+#         new_row_BF = pandas.Series({'PHENOTYPE':phenotype,
+#                     'SUBSAMPLE_NUM':subsample_number,
+#                     'PVAL_TYPE':pval_type,
+#                     'THRESHOLD_TYPE':'BF',
+#                     'THRESHOLD_VALUE':bonferroni_thres
+#                     })
         
-        new_row_BHY= pandas.Series({'PHENOTYPE':phenotype,
-                    'SUBSAMPLE_NUM':subsample_number,
-                    'PVAL_TYPE':pval_type,
-                    'THRESHOLD_TYPE':'BHY',
-                    'THRESHOLD_VALUE':transformed_bhy_thres
-                    })
+#         new_row_BHY= pandas.Series({'PHENOTYPE':phenotype,
+#                     'SUBSAMPLE_NUM':subsample_number,
+#                     'PVAL_TYPE':pval_type,
+#                     'THRESHOLD_TYPE':'BHY',
+#                     'THRESHOLD_VALUE':transformed_bhy_thres
+#                     })
         
-        # concatonate the threshold value information to the dataframe and export as CSV file
-        threshold_df=pandas.concat([threshold_df,new_row_BF.to_frame().T],ignore_index=True)
-        threshold_df=pandas.concat([threshold_df,new_row_BHY.to_frame().T],ignore_index=True)
-        threshold_df.to_csv(f'{PATH_TO_MAIN}output_files/R_DATA/THRESHOLDS.csv',header=True,index=False)
+#         # concatonate the threshold value information to the dataframe and export as CSV file
+#         threshold_df=pandas.concat([threshold_df,new_row_BF.to_frame().T],ignore_index=True)
+#         threshold_df=pandas.concat([threshold_df,new_row_BHY.to_frame().T],ignore_index=True)
+#         threshold_df.to_csv(f'{PATH_TO_MAIN}output_files/R_DATA/THRESHOLDS.csv',header=True,index=False)
 
-    # end of function
+#     # end of function
 
 
 # Function to calculate threshold data (updated for BY threshold)
@@ -136,7 +136,11 @@ def calc_thresholds(phenotype,subsample_number,pval_type,threshold_df):
             k_sum += 1/value
 
         # calculate different version of alpha for BY
-        alpha_prime = (alpha/k_sum)
+        # alpha_prime = (alpha/k_sum)
+
+        # calculate different version of alpha for BY (TESTING NEW)
+        alpha_prime = (alpha/(k_sum*(int(subsample_number))))
+
         #print(f"alpha: {alpha} /// k: {k} /// k_sum: {k_sum} /// alpha_prime: {alpha_prime}")
 
         # sort pvalues into ascending order
@@ -180,7 +184,12 @@ def calc_thresholds(phenotype,subsample_number,pval_type,threshold_df):
         ############################################
         #### calculate the bonferroni threshold
 
+        # if its GWAS do this
         bonferroni_thres = -log10(0.05/int(subsample_number))
+
+        # if its GIFT do this? because more testing occurs?
+        # bonferroni_thres = -log10(0.05/(int(subsample_number)*k))
+
 
         # export the above values to the dataframe
 

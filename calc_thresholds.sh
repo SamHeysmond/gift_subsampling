@@ -1,9 +1,9 @@
 #!/bin/bash
-#SBATCH --partition=shortq
+#SBATCH --partition=defq
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=30g
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=15g
 #SBATCH --time=01:00:00
 #SBATCH --job-name=calc_thres
 #SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out
