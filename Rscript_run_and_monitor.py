@@ -25,5 +25,8 @@ def run_and_monitor(sbatch_directory, max_jobs=80):
         # when there are 100 scripts running wait for 10 mins
         if int(running) >= max_jobs:
             time.sleep(5)
+# set the directory for it to run on
 run_and_monitor('/gpfs01/home/mbysh17/batch_files/parallel_stage2/')
-print("Rscript_run_and_monitor.py finished!")
+
+print("Rscript_run_and_monitor.py finished!", flush=True)
+# end of script

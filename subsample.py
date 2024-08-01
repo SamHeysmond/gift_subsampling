@@ -1,5 +1,3 @@
-## Script description
-# This script will subsample
 # Required files:
 # 1) input vcf of all genotypes (used in bcftools command towards the end)
 # 2) input phenotype file (.csv format)

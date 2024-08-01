@@ -1,7 +1,6 @@
 
-
+# directory to my home dir.
 PATH_TO_MAIN = "/gpfs01/home/mbysh17/"
-
 
 # loop for 
     # 1000 SUBSAMPLE

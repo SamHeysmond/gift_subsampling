@@ -38,6 +38,7 @@ mkdir /gpfs01/home/mbysh17/output_files/summary_plots/stage_3/
 # activate python environment
 conda activate python3_env
 
+# run python script to make the R zoom scripts
 python batch_files/Zoom_In.py
 
 conda deactivate
@@ -45,6 +46,7 @@ conda deactivate
 # activate R environment
 conda activate r_env
 
+# run each zoom plot R script that we want
 Rscript output_files/stage_3_scripts/Mo98_GWAS_AVERAGE_P_Zoom.R
 Rscript output_files/stage_3_scripts/Mo98_GIFT_AVERAGE_PSNP4_Zoom.R
 Rscript output_files/stage_3_scripts/Mo98_GIFT_AVERAGE_PSNP5_Zoom.R

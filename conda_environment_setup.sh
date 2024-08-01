@@ -49,7 +49,7 @@ pip install "modin[ray]"
 # pip install -U modin
 conda deactivate
 
-# Python 3 environment (check)
+# Python 3 environment 
 conda create -n python3_env -y
 conda activate python3_env
 conda install python=3.10 -y
@@ -63,7 +63,7 @@ conda install python=2.7 -y
 pip install PyGWAS
 conda deactivate
 
-# R environment (check)
+# R environment
 conda create -n r_env -y
 conda activate r_env
 conda install r-base -y
@@ -74,13 +74,6 @@ conda install r-dplyr -y
 conda install r-ggrepel -y
 conda deactivate
 
-# Check
-conda create -n gwas_env2 -y
-conda activate gwas_env2
-conda install python=2.7 -y
-pip install PyGWAS
-conda deactivate
-
 # Gatk Environment
 conda create -n gatk_env -y
 conda activate gatk_env
@@ -88,11 +81,11 @@ conda install -c bioconda gatk4 -y
 conda install python -y
 conda deactivate
 
-# check
+# for post-project testing vcf prune environment
 conda create -n bcf_env bcftools tabix -y
 conda deactivate
 
-# check
+# environment for subsampling
 conda create -n subsample_env -y
 conda activate subsample_env
 conda install bcftools -y

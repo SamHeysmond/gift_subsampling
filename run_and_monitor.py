@@ -1,7 +1,6 @@
 # gather required packages
 import os, subprocess, time
 
-
 def terminal_pipe(cmd): 
     return subprocess.Popen(f'{cmd}', shell=True, stdout=subprocess.PIPE).communicate()[0].decode("utf-8").strip(' \n')
 
