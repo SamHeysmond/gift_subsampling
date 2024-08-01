@@ -44,6 +44,7 @@ Rscript_output.write(f'# from GWAS data produced via pygwas (other script)\n')
 Rscript_output.write(f'# library installs\n')
 Rscript_output.write(f'library("tidyverse")\n')
 Rscript_output.write(f'library("ggrepel")\n')
+
 # mark following line for removal in future update
 Rscript_output.write(f'#JOB_LIST<- read.csv("/gpfs01/home/mbysh17/core_files/JOB_LIST.csv",header=TRUE)\n')
 Rscript_output.write(f'gwasResults<-read.csv("output_files/{args.p}_GWAS_{args.i}_{args.id}.csv",header=TRUE)\n')
@@ -56,6 +57,7 @@ Rscript_output.write(f'         # take the top 20 values\n')
 Rscript_output.write(f'         slice_head(n=20)\n')
 Rscript_output.write(f'# write the top 20 snps for this ID to a csv file\n')
 Rscript_output.write(f'write.csv(T20_SNPS,"output_files/{args.p}_GWAS_T20_SNPS_{args.i}_{args.id}.csv",row.names = FALSE)\n')
+
 # threshold calculation for pvals
 Rscript_output.write(f'# Calculate the BHY threshold\n')
 Rscript_output.write(f'm <- nrow(gwasResults)\n')
@@ -75,9 +77,11 @@ Rscript_output.write('}\n')
 Rscript_output.write(f'thes_pval_original <- thes_pval\n')
 Rscript_output.write(f'bhy_thres <- -log10(thes_pval)\n')
 Rscript_output.write(f'# calculate bonferroni_threshold\n')
+
 # Should the *1135 change depending on subsample number? if so -> e.g. 200 samples would be *200
-Rscript_output.write(f'bt <- 0.05 / (nrow(gwasResults))\n')
+Rscript_output.write(f'bt <- 0.05 / (nrow(gwasResults)*{args.i})\n')
 Rscript_output.write(f'bf_thres <- -log10(bt)\n')
+
 # annocation prep stuff
 Rscript_output.write(f'#make new columns where the default highlight and annotation is no\n')
 Rscript_output.write(f'gwasResults<-gwasResults %>%\n')
@@ -95,6 +99,7 @@ Rscript_output.write(f'         gwasResults$is_annotate[gwas_index]="yes"\n')
 Rscript_output.write('          } \n')
 Rscript_output.write('      }\n')
 Rscript_output.write('}\n')
+
 # cumulative calculations
 Rscript_output.write(f'my_data <- gwasResults %>%\n')
 Rscript_output.write(f'     # Compute chromosome size\n')

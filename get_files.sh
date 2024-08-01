@@ -14,7 +14,7 @@
 # change to my user home directory
 cd /gpfs01/home/mbysh17
 
-# copy all necessary files to my own directory
+# copy all necessary starter files to my own directory
 cp -r /gpfs01/home/sbzsmb/Students_2024/SNP_Matrix core_files/
 cp -r /gpfs01/home/sbzsmb/Students_2024/1001genomes_snp_biallelic_only_ACGTN.vcf core_files/
 cp -r /gpfs01/home/sbzsmb/Students_2024/master_list.csv core_files/

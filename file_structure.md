@@ -19,7 +19,7 @@ User Home
 |   |----filter_snps_GWAS.py
 |   |----filtering_GWAS.sh
 |   |----calc_thresholds.sh
-|   |----calt_thresholds.py
+|   |----calc_thresholds.py
 |   |----SNP_tracker_R_and_BASH_maker.py
 |   |----SNP_tracker_R_and_BASH_maker.sh
 |   |----Zoom_In.py
