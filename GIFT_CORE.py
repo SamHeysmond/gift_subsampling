@@ -79,18 +79,28 @@ def get_bhy_thres(pvals, fdr_thres=0.05):
             break
     return {'thes_pval':thes_pval, 'thres_i':i}
 
+
+
+
+### SAM EDIT ############################
+##### create a "genotype tracker" table that will track genotypes of all accessions at all positions for Giotas code
+
+
+
+
+
+#append the genotype values as a new column with the position in the vcf as the header (instead of snp3 etc)
+
 # Create a class 'field'
 # This class takes each VCF line and processes it (turns it into an ordered list of genotype values)
 # You can then perform different methods on each line
 class field:
 	def __init__(self, line, pheno_order, vcf_order):
-
 		self.line=line
 		self.pheno_order=pheno_order
 		self.vcf_order=vcf_order
 
 		# process the line
-
 		line=line.replace('\n', '')
 		line=line.split('\t')
 		genotype_values=[] # Empty list for the -1, 0 and 1 values
@@ -99,13 +109,25 @@ class field:
 		line_format=line[8]
 		line_format=line_format.split(':')
 
+### SAM EDIT ############################
+##### Store the chromosome and position together as a string variable "chr:pos" 
+# this variable will be the column header for the genotype tracker
+		current_chromosome = str(line[0])
+		current_position = str(line[1])
+		# e.g. 2:142 (chromosome 2: position 142)
+		position_variable = current_position+":"+current_position
+####################################################################################
+
 		# For each individual in the phenotype file, locate the genotype and give it a value between -1 and +1 (biallelic diploid data only).
 		# In this case the individuals are those left behand after subsampling
+		# this for loop is called on each position in the vcf (i think)
+		# pheno_order is a list of sample IDs
 		for individual in pheno_order:
 
 			individual=str(individual)
 
 			try: # Get the location index of the ID of the individual in the vcf. e.g. index 24
+				# starts with the smallest individual for that phenotype since going through pheno_order
 				index=vcf_order.index(individual)
 			except ValueError: # if the individual is not in the vcf
 				continue
@@ -121,15 +143,9 @@ class field:
 			current_value=[]
 			total=0
 
-			# Make a list of all the genotype values.
-			# for example:
-			# 0|1, 1|1, 0|0 -> 0,1,1,1,0,0 -> sum = 3, total = 6 -> current_value = 0.5
-			# example 2 at CHROM 1 POS 101 :
-			# 0|1, 1|1, 0|0, 0|1 -> 0,1,1,1,0,0,0,1 ->  sum =4  total = 8 -> current_value =0.5
-			# example 2:
-			# 1|1, 1|1, 1|1, 0|1 -> 1,1,1,1,1,1,0,1 ->  sum =7  total = 8 -> current_value =0...?
+			# Make a list of all the genotype values for that individual
 
-			# example 3 looking at column 10020 on row (line) (most confident):
+			# example looking at column 10020 on row (line) (most confident):
 			# 1|1 ->  sum =2  total = 2 -> current_value =
 
 			for things in current_genotypes:
@@ -155,6 +171,17 @@ class field:
 				if current_value == 1:
 					genotype_values.append(1)
 
+### SAM EDIT ############################
+##### Once done adding genotypes for a given SNP for each individual, output this to a table
+
+		#append the genotype values as a new column with the position in the vcf as the header (instead of snp3 etc)
+		genotype_tracker_df[str(position_variable)] = genotype_values
+		
+		#test print
+		print("genotype_tracker_df initialising: ",  flush=True)
+		print(genotype_tracker_df, flush=True)
+
+####################################################################################
 		self.ordered_states=genotype_values #P# Jon 2.2
 		
 		# obtain length of all the values (the -1's, 0's and 1's)
@@ -213,7 +240,8 @@ class field:
 		return np.cumsum(genotype_values)
 
 	# Calculate theta for each position in the ordered states #? Could do to make this re-usable for values that are not the ordered state i.e. a given random path
-	def calc_theta(self, J_2_8=False): 
+	# SAM EDIT: Changed from false to True!
+	def calc_theta(self, J_2_8=True): 
 
 		# Create the stright line (i.e. from 0 to to sum of the values):
 		# straight line is the (total sum / steps) * the step
@@ -250,8 +278,27 @@ class field:
 					W_minus_j += 1
 				theta_plus.append(W_plus_j - (((j+1)*N_plus)/N))
 				theta_minus.append(W_minus_j - (((j+1)*N_minus)/N))
+
+#################################################
+#### SAM EDIT FOR UPDATE TO PSNP8 ###############
+				#theta 0 (random case) (same as for thetaJ) 
+				#second half of 253 - 254
+				theta_0 = (((j+1)*N_plus)/N) - (((j+1)*N_minus)/N)
 				# theta_zero can be calculated from these two, see Jon's paper
 
+#################################################
+#### SAM EDIT FOR UPDATE TO PSNP8 ###############
+
+			# for Theta J
+			# w+ - w-
+			theta_j = theta_plus - theta_minus
+
+			# for delta theta
+				# difference between Theta J and Theta 0 (random case)
+			delta_theta = theta_j - theta_0
+			
+#################################################
+#################################################
 		# Calculate theta
 		theta=[]
 		for count, val in enumerate(cumulative_sum):
@@ -561,6 +608,24 @@ if __name__ == '__main__':
 	#list of the sample names, ordered by phenotype smallest to largest
 	ordered_pheno=ordered_list(args.f, args.p)
 
+
+### SAM EDIT ############################
+##### create the dataframe with the order of accessions in orderof phenotype
+
+
+	genotype_tracker_df = pandas.DataFrame(columns=['Accession_ID'])
+	# sets initial column equal to the accession IDs of individuals
+
+	genotype_tracker_df.iloc[:,'Accession_ID'] = ordered_pheno
+
+	#test print
+	print("genotype_tracker_df initialising: ",  flush=True)
+	print(genotype_tracker_df, flush=True)
+########################################################
+
+
+
+
 	#header of VCF including things like POS, ID and each sample e.g. 10013
 	headder=read_vcf_head(args.v)
 	
@@ -736,8 +801,15 @@ if __name__ == '__main__':
 				# ^^^^ this is not yet implemented, only T_20 tracking is implemented as of now
 
 # ### end of sam edit (6) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
 	output_file.close()
+
+### SAM EDIT ############################
+	# output the genotype tracker to a csv file
+	genotype_tracker_df.to_csv("ID_NUM_genotype_tracker.csv",header=True,index=False)
+
+########################################################
+
+
 	# Plot stuff
 	#headder items to plot: largest_theta,smallest_theta,absolute_theta,theta_range,largest_relative_theta,smallest_relative_theta,absolute_relative_theta,range_relative_theta
 	#R_plots(args.o, metric='largest_theta')

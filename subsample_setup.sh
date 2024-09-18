@@ -21,7 +21,7 @@ source ~/.bashrc
 conda activate subsample_env
 
 #obtain list of all sample IDs in the vcf file
-bcftools query -l core_files/1001genomes_snp_biallelic_only_ACGTN.vcf > core_files/all_vcf_samples.txt
+bcftools query -l core_files/new_LD_pruned.vcf > core_files/all_vcf_samples.txt
 
 #deactivate conda environment
 conda deactivate
@@ -51,12 +51,12 @@ rm core_files/subsampled_phenotype_*.csv
 rm core_files/subsampled_genotype_*.vcf
 
 # Make the subsample scripts ========================================
+
 # enter python environment
 conda activate python3_env
 
-# run the python script which will make all of the scripts needed
+# run the python script which will make all of the individual scripts needed
 python3 batch_files/subsample_script_setup.py
 
 echo "Subsample_setup.sh finished!"
-
 #end of script
