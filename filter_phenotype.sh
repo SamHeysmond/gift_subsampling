@@ -17,13 +17,13 @@
 
 source ~/.bashrc
 
-cd /gpfs01/home/mbysh17/ProjectDS_Revised
+cd /gpfs01/home/mbysh17/
 
 echo "Filtering phenotype file"
 
 conda activate python3_env
 
-python3 filter_phenotype.py
+python3 batch_files/filter_phenotype.py
 
 conda deactivate
 

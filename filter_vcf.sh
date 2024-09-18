@@ -17,7 +17,7 @@
 
 source ~/.bashrc
 
-cd /gpfs01/home/mbysh17/ProjectDS_Revised
+cd /gpfs01/home/mbysh17/core_files
 
 echo "Filtering VCF"
 
@@ -82,7 +82,7 @@ conda activate bcf_env
 #filtering for LD
 echo "Filtering for LD"
 #bcftools +prune -m 0.25 -w 1000 no_singletons.vcf -Ov -o LD_pruned.vcf
-bcftools +prune -m 0.25 -w 1000 new_no_singletons.vcf -Ov -o new_LD_pruned.vcf
+bcftools +prune -m 0.25 -w 1000 new_no_singletons.vcf -Ov -o FINAL.vcf
 
 #this LD pruned vcf can then be passed into the subsample script to..
 #.. pick out the subsample population we want.
