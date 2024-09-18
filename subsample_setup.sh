@@ -18,7 +18,7 @@ cd /gpfs01/home/mbysh17
 source ~/.bashrc
 
 #activate environment for subsampling
-conda activate subsample_env
+conda activate bcf_env
 
 #obtain list of all sample IDs in the vcf file
 bcftools query -l core_files/new_LD_pruned.vcf > core_files/all_vcf_samples.txt
@@ -30,6 +30,11 @@ conda deactivate
 # but remove the previous one if it exists
 rm -rf core_files/subsample_text_files
 mkdir core_files/subsample_text_files
+
+# clear and remake the genotype tracker folder
+# this stores the genotype of all SNPs for each sample in a given GIFT run
+rm -rf core_files/genotype_tracker
+mkdir core_files/genotype_tracker
 
 # make directory for parallel tasks to go in
 # but remove the previous one if it exists

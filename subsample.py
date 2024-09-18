@@ -100,7 +100,7 @@ for line in input_file_phenotype_data:
             print("NA detected, ommitting this line",flush=True)
 
         else: #add new row to the consensus dataframe
-            new_row=pandas.Series({"1001_Genomes_ID":line[0],str(args.t):line[phenotype_index]})
+            new_row=pandas.Series({"Accession_ID":line[0],str(args.t):line[phenotype_index]})
             consensus_dataframe=pandas.concat([consensus_dataframe, new_row.to_frame().T], ignore_index=True)
 
     # increment investigated row
@@ -117,7 +117,7 @@ for index, row in consensus_dataframe.iterrows():
 
     # check if each of the rows of the consensus dataframe are in the list of IDs from the vcf
     # if not -> remove the row from the dataframe 
-    if str(row["1001_Genomes_ID"]) in samples_list_vcf:
+    if str(row["Accession_ID"]) in samples_list_vcf:
         # do nothing since this ID is in both VCF and phenotype data files so can stay!
         pass 
 
@@ -138,14 +138,14 @@ current_row=0
 for index, row in subsampled_dataframe.iterrows():
 
     #write in each ID from the subsampled dataframe
-    subsampled_IDs.write(str(row["1001_Genomes_ID"])+'\n')
+    subsampled_IDs.write(str(row["Accession_ID"])+'\n')
 
     if current_row==0: # write in the headers
-        output_file_subsampled_phenotype.write(str("1001_Genomes_ID")+','+str(args.t)+'\n') 
+        output_file_subsampled_phenotype.write(str("Accession_ID")+','+str(args.t)+'\n') 
         
     else: 
         #write in each ID and phenotype information from the subsampled dataframe to a subsampled phenotype file
-        output_file_subsampled_phenotype.write(str(row["1001_Genomes_ID"])+','+str(row[str(args.t)])+'\n') 
+        output_file_subsampled_phenotype.write(str(row["Accession_ID"])+','+str(row[str(args.t)])+'\n') 
 
     current_row+=1
 

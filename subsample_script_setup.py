@@ -83,7 +83,7 @@ for phenotype in phenotypes_input:
 
             # main code to run the subsampling
             bash_script_output.write(f'# run the subsample script to get the appropriate number of subsamples\n')
-            bash_script_output.write('python3 batch_files/subsample.py -p core_files/master_list.csv -s core_files/all_vcf_samples.txt -n ${i} -t ${phenotype} -op core_files/subsampled_phenotype_${i}_${SLURM_JOB_ID}.csv -og core_files/subsampled_genotype_${i}_${SLURM_JOB_ID}.vcf -ri ${SLURM_JOB_ID}\n')
+            bash_script_output.write('python3 batch_files/subsample.py -p core_files/leaf_phenotype.csv -s core_files/all_vcf_samples.txt -n ${i} -t ${phenotype} -op core_files/subsampled_data/subsampled_phenotype_${i}_${SLURM_JOB_ID}.csv -og core_files/subsampled_data/subsampled_genotype_${i}_${SLURM_JOB_ID}.vcf -ri ${SLURM_JOB_ID}\n')
             
             bash_script_output.write(f'#deactivate conda environment\n')
             bash_script_output.write(f'conda deactivate\n')
@@ -93,44 +93,56 @@ for phenotype in phenotypes_input:
             bash_script_output.write('echo "Subsampling finished for job: ${SLURM_JOB_ID}, moving on to gift_vs_gwas stage."\n')
             # the following code will use the subsampled vcf and phenotype data to compare gift and gwas by running them both
 
+            #################################################
+            #### PERFORM GIFT#######
+
             #activate conda environment for the GIFT method
             bash_script_output.write(f'conda activate gift_env\n')
 
-            #run GIFT on the subsampled data
             # Use ignore command to prevent the warning from stacking up in the slurm output folder.
-            bash_script_output.write('python3 -W ignore core_files/physics_GWAS_OOP.py -v core_files/subsampled_genotype_${i}_${SLURM_JOB_ID}.vcf -f core_files/subsampled_phenotype_${i}_${SLURM_JOB_ID}.csv -p ${phenotype} -o output_files/${phenotype}_whole_genome_metrics_${i}_${SLURM_JOB_ID}.csv -id ${SLURM_JOB_ID} -s ${i}\n')
+            bash_script_output.write('python3 -W ignore batch_files/GIFT_CORE.py -v core_files/subsampled_data/subsampled_genotype_${i}_${SLURM_JOB_ID}.vcf -f core_files/subsampled_data/subsampled_phenotype_${i}_${SLURM_JOB_ID}.csv -p ${phenotype} -o output_files/${phenotype}_whole_genome_metrics_${i}_${SLURM_JOB_ID}.csv -id ${SLURM_JOB_ID} -s ${i}\n')
             
             # exit gift environment
             bash_script_output.write(f'conda deactivate\n')
             bash_script_output.write('echo "GIFT for: ${SLURM_JOB_ID} finished"\n')
 
+            ########################################################
+            ######################################################################
+
             # remove the subsampled vcf file to save on storage\n')
             bash_script_output.write('rm core_files/subsampled_genotype_${i}_${SLURM_JOB_ID}.vcf\n')
 
+            #################################################
+            #### PERFORM GWAS #######
             #activate gwas environment
-            bash_script_output.write(f'conda activate gwas_env\n')
+            #bash_script_output.write(f'conda activate gwas_env\n')
 
             #run gwas on subsampled data
-            bash_script_output.write('pygwas run -t none -a amm -g core_files/SNP_Matrix/full_imputed_SNP_MATRIX -k core_files/SNP_Matrix/full_imputed_SNP_MATRIX/kinship_ibs_binary_mac5.h5py -o output_files/${phenotype}_GWAS_${i}_${SLURM_JOB_ID}.csv core_files/subsampled_phenotype_${i}_${SLURM_JOB_ID}.csv\n')
+            #bash_script_output.write('pygwas run -t none -a amm -g core_files/SNP_Matrix/full_imputed_SNP_MATRIX -k core_files/SNP_Matrix/full_imputed_SNP_MATRIX/kinship_ibs_binary_mac5.h5py -o output_files/${phenotype}_GWAS_${i}_${SLURM_JOB_ID}.csv core_files/subsampled_phenotype_${i}_${SLURM_JOB_ID}.csv\n')
             
             # exit gwas environment
-            bash_script_output.write(f'conda deactivate\n')
+            #bash_script_output.write(f'conda deactivate\n')
 
-            # remove the subsampled phenotype file to save on storage
-            bash_script_output.write('rm core_files/subsampled_phenotype_${i}_${SLURM_JOB_ID}.csv\n')
-            bash_script_output.write('echo "GWAS for: ${SLURM_JOB_ID} finished"\n')
 
-            # calling for the python script to make the R script for GWAS manhattan plots
-            bash_script_output.write(f'conda activate python3_env\n')
-            bash_script_output.write('python3 batch_files/make_r_scripts.py -id ${SLURM_JOB_ID} -i ${i} -p ${phenotype} -o output_files/\n')
+            # # remove the subsampled phenotype file to save on storage
+            # bash_script_output.write('rm core_files/subsampled_phenotype_${i}_${SLURM_JOB_ID}.csv\n')
+            # bash_script_output.write('echo "GWAS for: ${SLURM_JOB_ID} finished"\n')
+            ########################################################
+            ######################################################################
+
+            ######## TEMP DISABLED WHILE WORKING ON GIFT FIRST ####################
+            ####################################################################
+            # # calling for the python script to make the R script for GWAS manhattan plots
+            # bash_script_output.write(f'conda activate python3_env\n')
+            # bash_script_output.write('python3 batch_files/make_r_scripts.py -id ${SLURM_JOB_ID} -i ${i} -p ${phenotype} -o output_files/\n')
             
-            # # updated to NOT run the R script to save space (image generation prevented)
-            # bash_script_output.write(f'conda deactivate\n')
-            # bash_script_output.write(f'conda activate r_env\n')
-            # #bash_script_output.write('Rscript output_files/${SLURM_JOB_ID}_${i}_${phenotype}.R\n')
+            # # # updated to NOT run the R script to save space (image generation prevented)
+            # # bash_script_output.write(f'conda deactivate\n')
+            # # bash_script_output.write(f'conda activate r_env\n')
+            # # #bash_script_output.write('Rscript output_files/${SLURM_JOB_ID}_${i}_${phenotype}.R\n')
 
-            bash_script_output.write(f'conda deactivate\n')
-            bash_script_output.write(f'#end of script')
+            # bash_script_output.write(f'conda deactivate\n')
+            # bash_script_output.write(f'#end of script')
             
             bash_script_output.close()
 print("====================\n")

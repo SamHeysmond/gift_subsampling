@@ -80,17 +80,6 @@ def get_bhy_thres(pvals, fdr_thres=0.05):
     return {'thes_pval':thes_pval, 'thres_i':i}
 
 
-
-
-### SAM EDIT ############################
-##### create a "genotype tracker" table that will track genotypes of all accessions at all positions for Giotas code
-
-
-
-
-
-#append the genotype values as a new column with the position in the vcf as the header (instead of snp3 etc)
-
 # Create a class 'field'
 # This class takes each VCF line and processes it (turns it into an ordered list of genotype values)
 # You can then perform different methods on each line
@@ -611,8 +600,6 @@ if __name__ == '__main__':
 
 ### SAM EDIT ############################
 ##### create the dataframe with the order of accessions in orderof phenotype
-
-
 	genotype_tracker_df = pandas.DataFrame(columns=['Accession_ID'])
 	# sets initial column equal to the accession IDs of individuals
 
@@ -623,39 +610,37 @@ if __name__ == '__main__':
 	print(genotype_tracker_df, flush=True)
 ########################################################
 
-
-
-
 	#header of VCF including things like POS, ID and each sample e.g. 10013
 	headder=read_vcf_head(args.v)
 	
 	# open vcf file and output file
 	vcf=open(args.v, 'r')
-	output_file=open(args.o, 'w+')
 
-	# Write the headder
-	#output_file.write('CHROM,POS,largest_theta,smallest_theta,absolute_theta,theta_range,largest_relative_theta,smallest_relative_theta,absolute_relative_theta,range_relative_theta\n')
-	#output_file.write('CHROM,POS,min_p,mean_p,log_mean_p,bigest_theta_p,pSNP4,pSNP5\n')
-	output_file.write('CHROM,POS,largest_theta,smallest_theta,absolute_theta,theta_range,largest_relative_theta,smallest_relative_theta,absolute_relative_theta,range_relative_theta,min_p,mean_p,log_mean_p,bigest_theta_p,pSNP4,pSNP5\n')
-
-# ### start of sam edit (5) <<<<<<<<<<<<<<<<<<<<
+	# tempararily disabled
+	# output_file=open(args.o, 'w+')
+	# # Write the headder
+	# #output_file.write('CHROM,POS,largest_theta,smallest_theta,absolute_theta,theta_range,largest_relative_theta,smallest_relative_theta,absolute_relative_theta,range_relative_theta\n')
+	# #output_file.write('CHROM,POS,min_p,mean_p,log_mean_p,bigest_theta_p,pSNP4,pSNP5\n')
+	# output_file.write('CHROM,POS,largest_theta,smallest_theta,absolute_theta,theta_range,largest_relative_theta,smallest_relative_theta,absolute_relative_theta,range_relative_theta,min_p,mean_p,log_mean_p,bigest_theta_p,pSNP4,pSNP5\n')
+ 
+# ### start of sam edit (5) <<<<<<<<<<<<<<<<<<<< (disabled)
 	# add in tracker csv file (Format: CHROM, POS, PVAL)
 	# these will store and track the top 20 SNPs for each output e.g. SNP4 ...
 
-	T20_absolute_theta_output=open("output_files/"+args.id+"_T20_absolute_theta.csv","w")
-	# write in header CHROM,POS,PVAL
-	T20_absolute_theta_output.write("CHROM,POS,PVAL"+"\n")
-	T20_absolute_theta_output.close()
+	# T20_absolute_theta_output=open("output_files/"+args.id+"_T20_absolute_theta.csv","w")
+	# # write in header CHROM,POS,PVAL
+	# T20_absolute_theta_output.write("CHROM,POS,PVAL"+"\n")
+	# T20_absolute_theta_output.close()
 
-	T20_pSNP4_output=open("output_files/"+args.id+"_T20_pSNP4.csv","w")
-	#write in header CHROM,POS,PVAL
-	T20_pSNP4_output.write("CHROM,POS,PVAL"+"\n")
-	T20_pSNP4_output.close()
+	# T20_pSNP4_output=open("output_files/"+args.id+"_T20_pSNP4.csv","w")
+	# #write in header CHROM,POS,PVAL
+	# T20_pSNP4_output.write("CHROM,POS,PVAL"+"\n")
+	# T20_pSNP4_output.close()
 
-	T20_pSNP5_output=open("output_files/"+args.id+"_T20_pSNP5.csv","w")
-	#write in header CHROM,POS,PVAL
-	T20_pSNP5_output.write("CHROM,POS,PVAL"+"\n")
-	T20_pSNP5_output.close()
+	# T20_pSNP5_output=open("output_files/"+args.id+"_T20_pSNP5.csv","w")
+	# #write in header CHROM,POS,PVAL
+	# T20_pSNP5_output.write("CHROM,POS,PVAL"+"\n")
+	# T20_pSNP5_output.close()
 # ### end of sam edit (5) <<<<<<<<<<<<<<<<<<<<
 
 	# calculate what I want
@@ -669,7 +654,8 @@ if __name__ == '__main__':
 				print(x.line[1])  # remove this print?
 
 			# ensure that theres at least 15 + and 15 - states
-			if x.sense_check():
+			# disabled this if statement for now using 1==2
+			if x.sense_check() and 1==2:
 				largest_theta,smallest_theta,absolute_theta,theta_range,largest_relative_theta,smallest_relative_theta,absolute_relative_theta,range_relative_theta = x.calc_theta()
 				#output_file.write(f'{CHROM},{POS},{largest_theta},{smallest_theta},{absolute_theta},{theta_range},{largest_relative_theta},{smallest_relative_theta},{absolute_relative_theta},{range_relative_theta}\n')
 				CHROM,POS = x.line[0], x.line[1]
@@ -800,12 +786,12 @@ if __name__ == '__main__':
 					# check if position is in POI_list : if so, write the full output line to a file : "POI_SNPs.csv"
 				# ^^^^ this is not yet implemented, only T_20 tracking is implemented as of now
 
-# ### end of sam edit (6) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-	output_file.close()
+# ### end of sam edit (6) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> (disabled)
+	#output_file.close()
 
 ### SAM EDIT ############################
 	# output the genotype tracker to a csv file
-	genotype_tracker_df.to_csv("ID_NUM_genotype_tracker.csv",header=True,index=False)
+	genotype_tracker_df.to_csv("core_files/genotype_tracker/"+args.id+"_genotypes.csv",header=True,index=False)
 
 ########################################################
 
@@ -814,7 +800,10 @@ if __name__ == '__main__':
 	#headder items to plot: largest_theta,smallest_theta,absolute_theta,theta_range,largest_relative_theta,smallest_relative_theta,absolute_relative_theta,range_relative_theta
 	#R_plots(args.o, metric='largest_theta')
 	#R_plots(args.o, metric='smallest_theta')
-	R_plots(args.o, metric='absolute_theta')
+	
+	#temp disabled
+	#R_plots(args.o, metric='absolute_theta')
+	
 	#R_plots(args.o, metric='theta_range')
 	#R_plots(args.o, metric='max_theta_plus')
 	#R_plots(args.o, metric='max_theta_minus')
@@ -826,6 +815,8 @@ if __name__ == '__main__':
 	#R_plots(args.o, metric='mean_p')
 	#R_plots(args.o, metric='log_mean_p')
 	#R_plots(args.o, metric='bigest_theta_p')
-	R_plots(args.o, metric='pSNP4')
-	R_plots(args.o, metric='pSNP5')
+
+	#temp disabled
+	# R_plots(args.o, metric='pSNP4')
+	# R_plots(args.o, metric='pSNP5')
 # end of file
