@@ -11,6 +11,10 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=mbysh17@nottingham.ac.uk
 
+##################################################
+#REVISED_CODE ####################################
+##################################################
+
 #change to home directory
 cd /gpfs01/home/mbysh17
 
@@ -21,7 +25,7 @@ source ~/.bashrc
 conda activate bcf_env
 
 #obtain list of all sample IDs in the vcf file
-bcftools query -l core_files/new_LD_pruned.vcf > core_files/all_vcf_samples.txt
+bcftools query -l core_files/FINAL.vcf> core_files/all_vcf_samples.txt
 
 #deactivate conda environment
 conda deactivate
@@ -30,6 +34,11 @@ conda deactivate
 # but remove the previous one if it exists
 rm -rf core_files/subsample_text_files
 mkdir core_files/subsample_text_files
+
+# make directory for the subsample data (genotype and phenotype)
+# but remove the previous one if it exists
+rm -rf core_files/subsampled_data
+mkdir core_files/subsampled_data
 
 # clear and remake the genotype tracker folder
 # this stores the genotype of all SNPs for each sample in a given GIFT run

@@ -10,14 +10,19 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=mbysh17@nottingham.ac.uk
 
+##################################################
+#REVISED_CODE ####################################
+##################################################
+
 # source the conda environment
 source ~/.bashrc
+cd /gpfs01/home/mbysh17/
 
 # activate the python environment
 conda activate python3_env
 
 # Run the python script to run the batch files in parallel
-python3 run_and_monitor.py
+python3 batch_files/run_and_monitor.py
 
 # exit conda environment
 conda deactivate

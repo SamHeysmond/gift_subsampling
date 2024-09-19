@@ -10,8 +10,14 @@
 #SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.err
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=mbysh17@nottingham.ac.uk
+
+##################################################
+#REVISED_CODE ####################################
+##################################################
+
+
 source ~/.bashrc
-cd /gpfs01/home/mbysh17/ProjectDS_Revised/
+cd /gpfs01/home/mbysh17/core_files/
 
 conda activate axel_env
 
