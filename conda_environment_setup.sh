@@ -20,10 +20,10 @@ cd /gpfs01/home/mbysh17
 source ~/.bashrc
 
 # set up channels
-conda config --add channels r
-conda config --add channels bioconda
-conda config --add channels conda-forge
-conda config --add channels fvogt257
+# conda config --add channels r
+# conda config --add channels bioconda
+# conda config --add channels conda-forge
+# conda config --add channels fvogt257
 
 # # Environment for running gift (keep)
 # conda create -n gift_env -y
@@ -64,17 +64,17 @@ conda config --add channels fvogt257
 # conda deactivate
 
 # # R environment
-conda create -n r_env -y
+#conda create -n r_env -y
 conda activate r_env
-conda install r-base -y
-conda install bioconductor-biocinstaller -y
-conda install r-qqman
-conda install r-tidyverse -y
-conda install r-dplyr -y
-conda install r-ggrepel -y
-conda install r-zoo -y
-
-# conda deactivate
+# conda install r-base -y
+# conda install bioconductor-biocinstaller -y
+# conda install r-qqman
+# conda install r-tidyverse -y
+# conda install r-dplyr -y
+# conda install r-ggrepel -y
+# conda install r-zoo -y
+conda install r-qpcr -y
+conda deactivate
 
 # # Gatk Environment
 # conda create -n gatk_env -y

@@ -1,17 +1,23 @@
 # modified to accept arguments
-args<-commandArgs(TRUE)
+args<-commandArgs(trailingOnly=TRUE)
 
-
+print(args)
 
 # read the data
 # Pheno <- read.csv("Pheno.csv")
 # Geno <- read.csv("Geno.csv")
 
 # read the data (modified)
-Pheno <- args[1] # phenotype file 
+Pheno <- read.csv(args[1]) # phenotype file 
 # e.g.core_files/subsampled_data/subsampled_phenotype_200_1366612.csv
 
-Geno <- args[2] # genotype file 
+Geno <- read.csv(args[2]) # genotype file 
+
+#remove accession ID column
+Geno <-Geno[-1]
+
+print(Geno)
+
 # e.g. core_files/genotype_tracker/1366612_genotypes.csv
 # Function to calculate the number of each microstate for all SNPs
 # Input variables:
@@ -245,7 +251,17 @@ pSNP8 <- Fun_pSNP8(sortData$Geno, Nmpz, ThPaths)
 
 positions_list <-colnames(Geno)
 
-result_df = data.frame(positions=c(positions_list),
+positions_list_without_X<- gsub("X","",positions_list)
+
+split_positions<-strsplit(positions_list_without_X, "\\.")
+
+chromosomes<-sapply(split_positions,function(x) as.numeric(x[1]))
+
+SNP_positions<-sapply(split_positions,function(x) as.numeric(x[2]))
+
+result_df = data.frame(CHROM=c(chromosomes),
+                       POS=c(SNP_positions),
                        transformed_PSNP8=c(-log10(pSNP8))
                        )
-write.csv(result_df,file=args[3],row.names=FALSE)
+
+write.csv(result_df,file=args[3],row.names=FALSE,quote=FALSE)

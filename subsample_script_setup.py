@@ -119,7 +119,7 @@ for phenotype in phenotypes_input:
             # enter the R environment to continue the GIFT calculations
             bash_script_output.write(f'\n')
             bash_script_output.write(f'conda activate r_env\n')
-            bash_script_output.write('Rscript batch_files/gift_testing_giota.R core_files/subsampled_data/subsampled_phenotype_${i}_${SLURM_JOB_ID}.csv core_files/genotype_tracker/${SLURM_JOB_ID}_genotypes.csv output_files/${SLURM_JOB_ID}_${i}_GIFT_RESULTS.csv\n')
+            bash_script_output.write('Rscript batch_files/gift_testing_giota.R --args core_files/subsampled_data/subsampled_phenotype_${i}_${SLURM_JOB_ID}.csv core_files/genotype_tracker/${SLURM_JOB_ID}_genotypes.csv output_files/${SLURM_JOB_ID}_${i}_GIFT_RESULTS.csv\n')
             bash_script_output.write(f'\n')
 
 
