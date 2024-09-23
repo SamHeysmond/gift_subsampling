@@ -21,10 +21,20 @@ cd /gpfs01/home/mbysh17/core_files/
 
 conda activate axel_env
 
-echo "Downloading vcf"
-#wget https://1001genomes.org/data/GMI-MPI/releases/v3.1/1001genomes_snp-short-indel_with_tair10_only_ACGTN.vcf.gz 
-#axel -n 16 https://1001genomes.org/data/GMI-MPI/releases/v3.1/1001genomes_snp-short-indel_with_tair10_only_ACGTN.vcf.gz --output=1001genomes_snp-short-indel_with_tair10_only_ACGTN.vcf.gz
-axel -n 16 https://1001genomes.org/data/GMI-MPI/releases/v3.1/1001genomes_snp-short-indel_only_ACGTN.vcf.gz --output=raw.vcf.gz
+# echo "Downloading vcf"
+# #wget https://1001genomes.org/data/GMI-MPI/releases/v3.1/1001genomes_snp-short-indel_with_tair10_only_ACGTN.vcf.gz 
+# #axel -n 16 https://1001genomes.org/data/GMI-MPI/releases/v3.1/1001genomes_snp-short-indel_with_tair10_only_ACGTN.vcf.gz --output=1001genomes_snp-short-indel_with_tair10_only_ACGTN.vcf.gz
+# axel -n 16 https://1001genomes.org/data/GMI-MPI/releases/v3.1/1001genomes_snp-short-indel_only_ACGTN.vcf.gz --output=raw.vcf.gz
+
+echo "downloading beagle"
+axel -n 16 https://faculty.washington.edu/browning/beagle/beagle.06Aug24.a91.jar --output=beagle.06Aug24.a91.jar
+
+echo "downloading fasta reference file"
+axel -n 16 https://www.arabidopsis.org/download/file?path=Genes/TAIR10_genome_release/TAIR10_chromosome_files/TAIR10_chr_all.fas.gz --output=TAIR10_chr_all.fas.gz
+
+echo "decompressing fasta reference file"
+bgzip -d TAIR10_chr_all.fas.gz
+
 
 #echo "Downloading phenotype file"
 # download phenotype file

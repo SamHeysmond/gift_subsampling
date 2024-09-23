@@ -82,9 +82,30 @@ conda activate bcf_env
 #filtering for LD
 echo "Filtering for LD"
 #bcftools +prune -m 0.25 -w 1000 no_singletons.vcf -Ov -o LD_pruned.vcf
-bcftools +prune -m 0.25 -w 1000 new_no_singletons.vcf -Ov -o FINAL.vcf
+bcftools +prune -m 0.25 -w 1000 new_no_singletons.vcf -Ov -o LD_PRUNED.vcf
 
-#this LD pruned vcf can then be passed into the subsample script to..
+conda deactivate
+
+#imput missing SNP data with beagle
+conda activate java_env
+
+java -jar beagle.06Aug24.a91.jar gt=LD_PRUNED.vcf out=IMPUTED
+
+#unzip since it compresses it
+bgzip -d IMPUTED.vcf.gz
+
+conda deactivate
+
+# re-headder the vcf to regain lost info from beagle
+conda activate bcf_env
+
+# create fasta index file
+samtools faidx TAIR10_chr_all.fas
+
+# reheadder the vcf
+bcftools reheader --fai TAIR10_chr_all.fas.fai -o FINAL.vcf IMPUTED.vcf
+
+#this LD pruned and imputed vcf can then be passed into the subsample script to..
 #.. pick out the subsample population we want.
 
 echo "Script finished!"

@@ -113,8 +113,16 @@ for phenotype in phenotypes_input:
             bash_script_output.write('python3 -W ignore batch_files/GIFT_CORE.py -v core_files/subsampled_data/subsampled_genotype_${i}_${SLURM_JOB_ID}.vcf -f core_files/subsampled_data/subsampled_phenotype_${i}_${SLURM_JOB_ID}.csv -p ${phenotype} -o output_files/${phenotype}_whole_genome_metrics_${i}_${SLURM_JOB_ID}.csv -id ${SLURM_JOB_ID} -s ${i}\n')
             bash_script_output.write(f'\n')
 
-            # exit gift environment
+            # exit gift environment for python script
             bash_script_output.write(f'conda deactivate\n')
+
+            # enter the R environment to continue the GIFT calculations
+            bash_script_output.write(f'\n')
+            bash_script_output.write(f'conda activate r_env\n')
+            bash_script_output.write('Rscript batch_files/gift_testing_giota.R core_files/subsampled_data/subsampled_phenotype_${i}_${SLURM_JOB_ID}.csv core_files/genotype_tracker/${SLURM_JOB_ID}_genotypes.csv output_files/${SLURM_JOB_ID}_${i}_GIFT_RESULTS.csv\n')
+            bash_script_output.write(f'\n')
+
+
             bash_script_output.write('echo "GIFT for: ${SLURM_JOB_ID} finished"\n')
             bash_script_output.write(f'\n')
 

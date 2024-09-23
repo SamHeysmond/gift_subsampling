@@ -129,36 +129,73 @@ subsampled_dataframe = consensus_dataframe.sample(n=int(args.n))
 consensus_dataframe = consensus_dataframe.reset_index()  # make sure indexes pair with number of rows
 
 # open file for writing all the IDs that were subsampled for this particular run
-subsampled_IDs=open('core_files/subsample_text_files/subsamples_'+str(args.n)+'_'+str(args.ri)+'.txt','w')
+# TEMP CLOSED
+#subsampled_IDs=open('core_files/subsample_text_files/subsamples_'+str(args.n)+'_'+str(args.ri)+'.txt','w')
+subsampled_IDs_path = 'core_files/subsample_text_files/subsamples_'+str(args.n)+'_'+str(args.ri)+'.txt'
 
 # open the output phenotype file
 output_file_subsampled_phenotype = open(args.op,"w")
 
-current_row=0
-for index, row in subsampled_dataframe.iterrows():
+# current_row=0
+# for index, row in subsampled_dataframe.iterrows():
 
-    #write in each ID from the subsampled dataframe
-    subsampled_IDs.write(str(row["Accession_ID"])+'\n')
+#     #write in each ID from the subsampled dataframe
+#     subsampled_IDs.write(str(row["Accession_ID"])+'\n')
 
-    if current_row==0: # write in the headers
-        output_file_subsampled_phenotype.write(str("Accession_ID")+','+str(args.t)+'\n') 
+#     if current_row==0: # write in the headers
+#         output_file_subsampled_phenotype.write(str("Accession_ID")+','+str(args.t)+'\n') 
         
-    else: 
-        #write in each ID and phenotype information from the subsampled dataframe to a subsampled phenotype file
-        output_file_subsampled_phenotype.write(str(row["Accession_ID"])+','+str(row[str(args.t)])+'\n') 
+#     else: 
+#         #write in each ID and phenotype information from the subsampled dataframe to a subsampled phenotype file
+#         output_file_subsampled_phenotype.write(str(row["Accession_ID"])+','+str(row[str(args.t)])+'\n') 
 
-    current_row+=1
+#     current_row+=1
 
+# write in the headers
+output_file_subsampled_phenotype.write(str("Accession_ID")+','+str(args.t)+'\n') 
+
+print("subsampled_dataframe: ",flush=True)
+print(subsampled_dataframe)
+
+subsampled_dataframe.reset_index(drop=True, inplace=True)
+
+print("subsampled_dataframe data types before: ",flush=True)
+print(subsampled_dataframe.dtypes,flush=True)
+
+subsampled_dataframe = subsampled_dataframe.drop(columns='index')
+subsampled_dataframe[[f'{args.t}']] = subsampled_dataframe[[f'{args.t}']].apply(pandas.to_numeric)
+subsampled_dataframe = subsampled_dataframe.sort_values(by=args.t,ascending=True)
+
+print("subsampled_dataframe after sorting: ",flush=True)
+print(subsampled_dataframe)
+
+print("subsampled_dataframe data types after: ",flush=True)
+print(subsampled_dataframe.dtypes,flush=True)
+
+
+# now replace this with a simple .to csv command?
+subsampled_dataframe.to_csv(args.op,header=True,index=False)
+subsampled_dataframe.to_csv(subsampled_IDs_path,columns=['Accession_ID'],index=False, header=False)
+
+# TEMP CLOSED
+# for index, row in subsampled_dataframe.iterrows():
+
+#     #write in each ID from the subsampled dataframe
+#     subsampled_IDs.write(str(row["Accession_ID"])+'\n')
+
+#     #write in each ID and phenotype information from the subsampled dataframe to a subsampled phenotype file
+#     output_file_subsampled_phenotype.write(str(row["Accession_ID"])+','+str(row[str(args.t)])+'\n') 
+    
 # close files vvv
 
 # Output subsample ID text list (output:2) finished being made!
-subsampled_IDs.close()
+# subsampled_IDs.close()
 
-# Output phenotype csv (output:3) finished being made!
-output_file_subsampled_phenotype.close()
+# # Output phenotype csv (output:3) finished being made!
+# output_file_subsampled_phenotype.close()
 
 #now use bcftools to subsample from the vcf to make a subsampled VCF of only what is in the picked bin
-os.system('bcftools view --samples-file core_files/subsample_text_files/subsamples_'+str(args.n)+'_'+str(args.ri)+'.txt core_files/1001genomes_snp_biallelic_only_ACGTN.vcf > '+args.og)
+os.system('bcftools view --samples-file core_files/subsample_text_files/subsamples_'+str(args.n)+'_'+str(args.ri)+'.txt core_files/FINAL.vcf > '+args.og)
 # output subsampled vcf (output:1) finished being made! 
 
 # testing print

@@ -32,7 +32,8 @@ def ordered_list(phenotypes_file, phenotype):
 	# Make a list of the sample names, ordered by value
 	pheno_order=pheno_array.iloc[:,0].tolist()
 	#? Need to filter out identical values here so I don't have to do it manually
-
+	print("pheno_order:",flush=True)
+	print(pheno_order,flush=True)
 	return pheno_order #P# Jon 2.1
 
 # Takes a vcf file and generates a list of the headder items for later use.
@@ -41,7 +42,9 @@ def read_vcf_head(vcf_file):
 	file=open(vcf_file, 'r')
 	for line in file:
 		if '#CHROM' in line:
-			vcf_order=line.split('\t')
+			newline = line.replace('\n','')
+			vcf_order=newline.split('\t')
+			#vcf_order=line.split('\t')
 			return vcf_order
 	file.close()
 
@@ -104,13 +107,13 @@ class field:
 		current_chromosome = str(line[0])
 		current_position = str(line[1])
 		# e.g. 2:142 (chromosome 2: position 142)
-		position_variable = current_position+":"+current_position
+		position_variable = current_chromosome+":"+current_position
 ####################################################################################
 
 		# For each individual in the phenotype file, locate the genotype and give it a value between -1 and +1 (biallelic diploid data only).
 		# In this case the individuals are those left behand after subsampling
-		# this for loop is called on each position in the vcf (i think)
-		# pheno_order is a list of sample IDs
+		# this entire for loop is called on each position in the vcf (i think)
+		# pheno_order is a list of sample IDs ordered smallest to largest in phenotype
 		for individual in pheno_order:
 
 			individual=str(individual)
@@ -119,6 +122,7 @@ class field:
 				# starts with the smallest individual for that phenotype since going through pheno_order
 				index=vcf_order.index(individual)
 			except ValueError: # if the individual is not in the vcf
+				print(f"individual {individual} was NOT in the VCF ",flush=True)
 				continue
 
 			current_column=line[index] # Get the column that contains genotypes for this individual.
@@ -141,6 +145,8 @@ class field:
 				if things == "0" or things == "1":
 					current_value.append(int(things))
 					total+=1
+				else:
+					print(f"Things was missing in genotypes {current_genotypes}",flush=True)
 
 			if current_value != []: # If there is any genotype data (sum of an empty list is 0)
 				current_value=sum(current_value)
@@ -151,24 +157,35 @@ class field:
 
 				# case of dominant and recessive alleles example:
 				# AA = +1, Aa = 0, aa = -1
+					# should only ever be +1 or -1 when dealing with biallelic sites?
 				# not sure on how it lands at either 0, 0.5 or 1
-					# does it only look at one ccolumn at a time? i.e. only ever looks at 0|0 , 0|1 or 1|1
+					# does it only look at one column at a time? i.e. only ever looks at 0|0 , 0|1 or 1|1
 				if current_value == 0:
 					genotype_values.append(-1)
 				if current_value == 0.5:
 					genotype_values.append(0)
 				if current_value == 1:
 					genotype_values.append(1)
+			else:
+				print(f"Value was MISSING for individual: {individual}",flush=True)
 
+				# TEMP FOR TESTING
+				print(f"Temp value given:0 {individual}",flush=True)
+				genotype_values.append(0)
+				
 ### SAM EDIT ############################
 ##### Once done adding genotypes for a given SNP for each individual, output this to a table
 
+		# test print
+		#print(f"Genotype values: {genotype_values}",flush=True)
+		#print(f"Genotype values length: {len(genotype_values)}",flush=True)
+
 		#append the genotype values as a new column with the position in the vcf as the header (instead of snp3 etc)
-		genotype_tracker_df[str(position_variable)] = genotype_values
+		genotype_tracker_df[f'{position_variable}'] = genotype_values
 		
 		#test print
-		print("genotype_tracker_df initialising: ",  flush=True)
-		print(genotype_tracker_df, flush=True)
+		#print("genotype_tracker_df updated: ",  flush=True)
+		#print(genotype_tracker_df, flush=True)
 
 ####################################################################################
 		self.ordered_states=genotype_values #P# Jon 2.2
@@ -603,7 +620,8 @@ if __name__ == '__main__':
 	genotype_tracker_df = pandas.DataFrame(columns=['Accession_ID'])
 	# sets initial column equal to the accession IDs of individuals
 
-	genotype_tracker_df.iloc[:,'Accession_ID'] = ordered_pheno
+	#genotype_tracker_df.iloc[:,'Accession_ID'] = ordered_pheno
+	genotype_tracker_df['Accession_ID'] = ordered_pheno
 
 	#test print
 	print("genotype_tracker_df initialising: ",  flush=True)
@@ -612,6 +630,7 @@ if __name__ == '__main__':
 
 	#header of VCF including things like POS, ID and each sample e.g. 10013
 	headder=read_vcf_head(args.v)
+	print(f"header order: {headder}",flush=True)
 	
 	# open vcf file and output file
 	vcf=open(args.v, 'r')

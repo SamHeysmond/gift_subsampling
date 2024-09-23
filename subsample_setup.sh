@@ -2,9 +2,9 @@
 #SBATCH --partition=defq
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=3
+#SBATCH --cpus-per-task=2
 #SBATCH --mem=4g
-#SBATCH --time=01:00:00
+#SBATCH --time=00:30:00
 #SBATCH --job-name=subsample_setup
 #SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out
 #SBATCH --error=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.err
