@@ -104,7 +104,7 @@ for csv_file in csv_files_Arabidopsis_Thaliana:
 
         BHY_thresh_data=threshold_data[(threshold_data['PHENOTYPE']==current_phenotype) & 
                                 (threshold_data['SUBSAMPLE_NUM']==current_subsample_num) & 
-                                (threshold_data['PVAL_TYPE']=="AVERAGE_PSNP5") &
+                                (threshold_data['PVAL_TYPE']=="AVERAGE_PSNP8") &
                                 (threshold_data['THRESHOLD_TYPE']=="BHY")
                                 ]
         print("Threshold data after filter",flush=True)
@@ -120,14 +120,14 @@ for csv_file in csv_files_Arabidopsis_Thaliana:
         print(BHY_thresh_value,flush=True)
 
 
-        plant_data["AVERAGE_PSNP5"] = plant_data["AVERAGE_PSNP5"].apply(log_function)
+        plant_data["AVERAGE_PSNP8"] = plant_data["AVERAGE_PSNP8"].apply(log_function)
 
 
-        plant_data=plant_data.loc[plant_data['AVERAGE_PSNP5']>=BHY_thresh_value]
+        plant_data=plant_data.loc[plant_data['AVERAGE_PSNP8']>=BHY_thresh_value]
 
 
         # sort in descending order (so biggest are first after log transformation)
-        plant_data=plant_data.sort_values(by="AVERAGE_PSNP5",ascending=False)
+        plant_data=plant_data.sort_values(by="AVERAGE_PSNP8",ascending=False)
 
    
     # rename headers if necessary

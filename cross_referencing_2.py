@@ -16,6 +16,9 @@ Na23_gene_tracker_df = pandas.DataFrame(columns=['DATA_SOURCE'])
 
 
 # search and append all the GIFT data on average values
+print("#############################################.", flush = True)
+print("searching for GIFT data......", flush = True)
+print("#############################################.", flush = True)
 for file in os.listdir(PATH_TO_MAIN+"output_files/GENES_DATA/"):
     if fnmatch.fnmatch(file,"*.txt") and fnmatch.fnmatch(file,"FINAL*") and fnmatch.fnmatch(file,"*GIFT*"):
         GIFT_gene_results_files.append(file)
@@ -25,6 +28,9 @@ for file in os.listdir(PATH_TO_MAIN+"output_files/GENES_DATA/"):
         pass
 
 # search and append all the GWAS data on average values
+print("#############################################.", flush = True)
+print("searching for GWAS data......", flush = True)
+print("#############################################.", flush = True)
 for file in os.listdir(PATH_TO_MAIN+"output_files/GENES_DATA/"):
     if fnmatch.fnmatch(file,"*.txt") and fnmatch.fnmatch(file,"FINAL*") and fnmatch.fnmatch(file,"*GWAS*"):
         GWAS_gene_results_files.append(file)
@@ -63,6 +69,11 @@ GWAS_gene_results_files= sorted(GWAS_gene_results_files, reverse=True, key= lamb
 
 
 for gene_list in GIFT_gene_results_files:
+    print("#############################################.", flush = True)
+    print("Working on gene list:", flush=True)
+    print(gene_list)
+    print("#############################################.", flush = True)
+
 
     gene_list_name = gene_list.split("_")
 
@@ -75,7 +86,11 @@ for gene_list in GIFT_gene_results_files:
 
     # fetch the data that the gene list points to
     current_gene_list = pandas.DataFrame(columns=["Genes"])
-    current_gene_list["Genes"] = pandas.read_csv(f'{PATH_TO_MAIN}output_files/GENES_DATA/{gene_list}', header=None)
+    try:
+        current_gene_list["Genes"] = pandas.read_csv(f'{PATH_TO_MAIN}output_files/GENES_DATA/{gene_list}', header=None)
+    except:
+        print("No genes in the crossover. Pasting a false gene by default", flush=True)
+        current_gene_list["Genes"] = "NULL"
 
     current_gene_list=current_gene_list["Genes"].tolist()    
 
@@ -139,6 +154,7 @@ for gene_list in GWAS_gene_results_files:
     try:
         current_gene_list["Genes"] = pandas.read_csv(f'{PATH_TO_MAIN}output_files/GENES_DATA/{gene_list}', header=None)
     except:
+        print("No genes in the crossover. Pasting a false gene by default", flush=True)
         current_gene_list["Genes"] = "NULL"
         
     current_gene_list=current_gene_list["Genes"].tolist()    

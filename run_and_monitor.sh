@@ -4,7 +4,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --mem=1g
-#SBATCH --time=7-00:00:00
+#SBATCH --time=2-00:00:00
 #SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out
 #SBATCH --error=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.err
 #SBATCH --mail-type=ALL
@@ -13,6 +13,8 @@
 ##################################################
 #REVISED_CODE ####################################
 ##################################################
+
+# time was originall 7-00:00:00
 
 # source the conda environment
 source ~/.bashrc

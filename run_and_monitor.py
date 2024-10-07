@@ -15,11 +15,14 @@ def run_and_monitor(sbatch_directory, max_jobs=80):
     while len(batch_jobs) > 0:
         running=terminal_pipe(f'squeue -u {user} -h | wc -l')
         if int(running) < max_jobs:
-            # run another script
-            os.system(f'sbatch {sbatch_directory}{batch_jobs[0]}')
+            
+            # sam edit- move the running (soon to be completed) batch job to main folder
+            os.system(f'mv {sbatch_directory}{batch_jobs[0]} /gpfs01/home/mbysh17/batch_files/processing_parallel/')
 
-            # sam edit- move the running (soon to be completed) batch job to different folder
-            os.system(f'mv {sbatch_directory}{batch_jobs[0]} /gpfs01/home/mbysh17/batch_files/completed_parallel/')
+            os.system(f'echo "Moved file {batch_jobs[0]} to processing file"')
+
+            # run another script
+            os.system(f'sbatch /gpfs01/home/mbysh17/batch_files/processing_parallel/{batch_jobs[0]}')
 
             # remove script from batch jobs list
             batch_jobs.remove(batch_jobs[0])
@@ -31,3 +34,5 @@ def run_and_monitor(sbatch_directory, max_jobs=80):
 # run the function on the directory containing the many batch files
 # in this case thats the "bathc_files/parallel" folder
 run_and_monitor('/gpfs01/home/mbysh17/batch_files/parallel/')
+
+# end of script

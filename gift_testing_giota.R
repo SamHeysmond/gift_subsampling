@@ -16,7 +16,7 @@ Geno <- read.csv(args[2]) # genotype file
 #remove accession ID column
 Geno <-Geno[-1]
 
-print(Geno)
+# print(Geno)
 
 # e.g. core_files/genotype_tracker/1366612_genotypes.csv
 # Function to calculate the number of each microstate for all SNPs
@@ -232,7 +232,7 @@ Fun_pSNP8 <- function(Geno, Nmpz, ThPaths){
 # Call Fun_SNP8
 pSNP8 <- Fun_pSNP8(sortData$Geno, Nmpz, ThPaths)
 # print the resutls
--log10(pSNP8)
+# -log10(pSNP8)
 ##   [1] 1.4345565 2.3454476 1.5697092 2.5239315 3.1935865 1.6160982 2.5742162
 ##   [8] 3.1256929 2.9821764 1.9326580 1.6793189 3.0262339 2.4061109 1.6486148
 ##  [15] 1.5497902 3.0382329 1.7020914 3.2935544 1.3761550 1.3354568 2.4547571
@@ -259,9 +259,13 @@ chromosomes<-sapply(split_positions,function(x) as.numeric(x[1]))
 
 SNP_positions<-sapply(split_positions,function(x) as.numeric(x[2]))
 
+# result_df = data.frame(CHROM=c(chromosomes),
+#                        POS=c(SNP_positions),
+#                        transformed_PSNP8=c(-log10(pSNP8))
+#                        )
+
 result_df = data.frame(CHROM=c(chromosomes),
                        POS=c(SNP_positions),
-                       transformed_PSNP8=c(-log10(pSNP8))
-                       )
+                       PSNP8=c(pSNP8))
 
 write.csv(result_df,file=args[3],row.names=FALSE,quote=FALSE)

@@ -207,6 +207,7 @@ class field:
 		#? can maybe remove everything but ordered states when finished for efficency
 
 	# Filter here (doesnt this count for 30 not 15 since its 15 min on - and on + states?)
+	# changed this to be more lenient
 	def sense_check(self, min_SNPs=15): 
 		ordered_states = self.ordered_states
 		if ordered_states: # Check that there is something in ordered_states

@@ -4,8 +4,13 @@ import concurrent.futures
 import modin.pandas as pandas
 import ray
 
-ray.init(_plasma_directory="/tmp", object_store_memory=700000000000) # setting to disable out of core in Ray and obj store mem increase
-# obj store memory currently at 700GB = (700000000000)
+
+# ray.init(_plasma_directory="/tmp", object_store_memory=700000000000) # setting to disable out of core in Ray and obj store mem increase
+    # new set to 100GB since data is much smaller
+ray.init(_plasma_directory="/tmp", object_store_memory=80000000000) # setting to disable out of core in Ray and obj store mem increase
+
+# obj store memory currently at 80GB 
+
 
 
 # so i can see all the columns when testing with print
@@ -22,28 +27,39 @@ PATH_TO_MAIN = "/gpfs01/home/mbysh17/"
 # CHROM,POS,largest_theta,smallest_theta,absolute_theta,theta_range,largest_relative_theta,smallest_relative_theta,absolute_relative_theta,range_relative_theta,min_p,mean_p,log_mean_p,bigest_theta_p,pSNP4,pSNP5
 # 1,73,6.285714285714285,-4.224489795918359,6.285714285714285,10.510204081632644,0.3845193508114856,-0.25842696629213435,0.3845193508114856,0.6429463171036199,4.185363300872138e-05,nan,nan,0.00015134587316541535,0.15259768149369662,0.6580333017260325
 
+# CHROM,POS,PSNP8
+# 1,73,5.2312312
+
+
 # reminder of csv format (GWAS) NAME leaf_ionome_Mo98_GWAS_600_732692.csv
 # chromosomes,positions,pvals,mafs,macs,genotype_var_perc
 # 1,55,0.621946624343,0.0016694490818,1,0.000407516956329
 
+# CHROM,POS,pvals
+# 1,73,5.2312312
+
 ########################################################################
 ######### FUNCTIONS
 
-# IDEA 3 function 1 (3.1)
+# IDEA 3 function 1 (3.1) MODIFIED
 def IDEA_3_process_all_snps_file(df_to_process,GIFT_or_GWAS,TOTAL_GIFT_OR_GWAS,subsample_num):
 
     # different methods of concatonating needed for GWAS and GIFT so split here
     if GIFT_or_GWAS == "GWAS":
 
         # determine names of the columns that will be in these files/dataframes
-        CHR="chromosomes"
-        POS="positions"
+        # CHR="chromosomes"
+        # POS="positions"
+            # new
+        CHR="CHROM"
+        POS="POS"
 
         df_to_process.rename(columns={CHR:'CHR',POS:'POS','pvals':'TOTAL_P'},inplace=True)
 
         # adding in new columns for calculation with some default values
         df_to_process["TIMES_APPEARED"] = 1
-        df_to_process["TOTAL_GWAS"]=TOTAL_GIFT_OR_GWAS # should be 100 at EACH subsample level e.g. at 800 sample -> 100 total GWAS
+        df_to_process["TOTAL_GWAS"]=TOTAL_GIFT_OR_GWAS # should be 100 at EACH subsample level (except for 999 which is max) 
+            # e.g. at 800 sample -> 100 total GWAS should be present
         df_to_process.insert(2,"SUBSAMPLE_NUM",subsample_num)
 
         # concatonate all the same SNPs from each subsample category, calculating two sums and a maximum value.
@@ -58,7 +74,9 @@ def IDEA_3_process_all_snps_file(df_to_process,GIFT_or_GWAS,TOTAL_GIFT_OR_GWAS,s
         CHR ="CHROM"
         POS="POS"
 
-        df_to_process.rename(columns={CHR:'CHR',POS:'POS','pSNP4':'TOTAL_PSNP4','pSNP5':'TOTAL_PSNP5','absolute_theta':'TOTAL_ABS_THETA'}, inplace=True)
+        #df_to_process.rename(columns={CHR:'CHR',POS:'POS','pSNP4':'TOTAL_PSNP4','pSNP5':'TOTAL_PSNP5','absolute_theta':'TOTAL_ABS_THETA'}, inplace=True)
+            # new
+        df_to_process.rename(columns={CHR:'CHR',POS:'POS','PSNP8':'TOTAL_PSNP8'}, inplace=True)
         
         # adding in two new columns at specific index values with default values
         df_to_process["TIMES_APPEARED"] = 1
@@ -66,26 +84,35 @@ def IDEA_3_process_all_snps_file(df_to_process,GIFT_or_GWAS,TOTAL_GIFT_OR_GWAS,s
         df_to_process.insert(2,"SUBSAMPLE_NUM",subsample_num)
         
         # concatonate all the same SNPs from each subsample category, calculating sums and maximum values for each pvalue type used.
-        df_to_process = df_to_process.groupby(['CHR','POS','SUBSAMPLE_NUM'],as_index=False).agg({'TOTAL_PSNP4':'sum','TOTAL_PSNP5':'sum','TOTAL_ABS_THETA':'sum','TIMES_APPEARED':'sum','TOTAL_GIFT':'max'})
+            # CHECK 1: Is 'max' the right calculation to do?
+
+        # df_to_process = df_to_process.groupby(['CHR','POS','SUBSAMPLE_NUM'],as_index=False).agg({'TOTAL_PSNP4':'sum','TOTAL_PSNP5':'sum','TOTAL_ABS_THETA':'sum','TIMES_APPEARED':'sum','TOTAL_GIFT':'max'})
+            # new
+        df_to_process = df_to_process.groupby(['CHR','POS','SUBSAMPLE_NUM'],as_index=False).agg({'TOTAL_PSNP8':'sum','TIMES_APPEARED':'sum','TOTAL_GIFT':'max'})
             
         # calculate averages of pvalues for each SNP in each pvalue type
-        df_to_process["AVERAGE_PSNP4"] = df_to_process["TOTAL_PSNP4"] / df_to_process["TIMES_APPEARED"]
-        df_to_process["AVERAGE_PSNP5"] = df_to_process["TOTAL_PSNP5"] / df_to_process["TIMES_APPEARED"]
-        df_to_process["AVERAGE_ABS_THETA"] =df_to_process["TOTAL_ABS_THETA"] / df_to_process["TIMES_APPEARED"]
+        # df_to_process["AVERAGE_PSNP4"] = df_to_process["TOTAL_PSNP4"] / df_to_process["TIMES_APPEARED"]
+        # df_to_process["AVERAGE_PSNP5"] = df_to_process["TOTAL_PSNP5"] / df_to_process["TIMES_APPEARED"]
+        # df_to_process["AVERAGE_ABS_THETA"] =df_to_process["TOTAL_ABS_THETA"] / df_to_process["TIMES_APPEARED"]
+            # new
+        df_to_process["AVERAGE_PSNP8"] = df_to_process["TOTAL_PSNP8"] / df_to_process["TIMES_APPEARED"]
 
     return df_to_process
 
-# IDEA 1 function 1  (1.1)
-def GET_T20_LOCATIONS_AT_1000(dataframe_name,pval_type,phenotype):
+# IDEA 1 function 1  (1.1) MODIFIED
+def GET_T20_LOCATIONS_AT_999(dataframe_name,pval_type,phenotype):
 
     # read from csv
     temp_all_snps_dataframe = pandas.read_csv(PATH_TO_MAIN+"output_files/R_DATA/"+dataframe_name)
 
-    if pval_type=="AVERAGE_ABS_THETA": # sort to get highest at top
-         temp_all_snps_dataframe.sort_values(by=pval_type, axis=0, ascending=False,inplace=True, na_position='first')
+    # if pval_type=="AVERAGE_ABS_THETA": # sort to get highest at top
+    #      temp_all_snps_dataframe.sort_values(by=pval_type, axis=0, ascending=False,inplace=True, na_position='first')
     
-    else:  # otherwise sort to lowest (for pval like numbers e.g. GWAS P and PSNP4)
-        temp_all_snps_dataframe.sort_values(by=pval_type, axis=0, ascending=True,inplace=True, na_position='first')
+    # else:  # otherwise sort to lowest (for pval like numbers e.g. GWAS P and PSNP4)
+    #     temp_all_snps_dataframe.sort_values(by=pval_type, axis=0, ascending=True,inplace=True, na_position='first')
+    
+        # new (removed if statement for the below line)
+    temp_all_snps_dataframe.sort_values(by=pval_type, axis=0, ascending=True,inplace=True, na_position='first')
 
     # 2) take top 20 of these averaged GWAS values
     # example format:
@@ -110,12 +137,10 @@ def GET_T20_LOCATIONS_AT_1000(dataframe_name,pval_type,phenotype):
     # return the name of the dataframe (as a path)
     return current_pval_T20_df_path
 
-# IDEA 1 function 2 (1.3.1)
+# IDEA 1 function 2 (1.3.1) MODIFIED
 def IDEA_1_ACCUMULATE_T20_SNP_DATA(current_dataframe_main,
                                     GWAS_P_locations_dataframe_path,
-                                    PSNP4_locations_dataframe_path,
-                                    PSNP5_locations_dataframe_path,
-                                    ABS_THETA_locations_dataframe_path,
+                                    PSNP8_locations_dataframe_path,
                                     cumulative_t20_dataframe_path,
                                     GWAS_or_GIFT,
                                     subsample_level
@@ -129,7 +154,7 @@ def IDEA_1_ACCUMULATE_T20_SNP_DATA(current_dataframe_main,
         cumulative_t20_dataframe=pandas.DataFrame(columns=[
                                                     'CHR', 
                                                     'POS',
-                                                    'PVAL_TYPE',  # for each subsamp number 200-1000
+                                                    'PVAL_TYPE',  # for each subsamp number 200-999
                                                     'SUBSAMPLE_NUM',
                                                     'VALUE' #there was an extra comma here- oops
                                                     ])
@@ -139,12 +164,16 @@ def IDEA_1_ACCUMULATE_T20_SNP_DATA(current_dataframe_main,
     if GWAS_or_GIFT=="GWAS":
 
         # read in current dataframe (but only certain columns)
-        current_dataframe=current_dataframe_main[['chromosomes','positions','pvals']].copy()
+        # current_dataframe=current_dataframe_main[['chromosomes','positions','pvals']].copy()
+        # new
+        current_dataframe=current_dataframe_main[['CHROM','POS','pvals']].copy()
 
         # read in the location dataframe
         locations_dataframe=pandas.read_csv(GWAS_P_locations_dataframe_path)
 
-        current_dataframe.rename(columns={'chromosomes':'CHR','positions':'POS','pvals':'VALUE'}, inplace=True)
+        # current_dataframe.rename(columns={'chromosomes':'CHR','positions':'POS','pvals':'VALUE'}, inplace=True)
+        # new
+        current_dataframe.rename(columns={'CHROM':'CHR','pvals':'VALUE'}, inplace=True)
 
         # Should now have columns
         #   CHR, POS, VALUE
@@ -167,48 +196,60 @@ def IDEA_1_ACCUMULATE_T20_SNP_DATA(current_dataframe_main,
     elif GWAS_or_GIFT=="GIFT":
         
         # preset variables for the loop for each pvalue type to process
-        GIFT_locations_dataframes=[PSNP4_locations_dataframe_path,PSNP5_locations_dataframe_path,ABS_THETA_locations_dataframe_path]
-        GIFT_column_to_change=['pSNP4','pSNP5','absolute_theta']
-        GIFT_column_to_keep=['PSNP4','PSNP5',"ABS_THETA"]
+        #GIFT_locations_dataframes=[PSNP8_locations_dataframe_path,PSNP5_locations_dataframe_path,ABS_THETA_locations_dataframe_path]
+        # GIFT_column_to_change=['pSNP4','pSNP5','absolute_theta']
+        # GIFT_column_to_keep=['PSNP4','PSNP5',"ABS_THETA"]
+            # new (removed)
+
         my_index = 0
 
-        for my_index in range(0,3): # 0 , 1 , 2  STOP
+        # for my_index in range(0,3): # 0 , 1 , 2  STOP
 
-            # take a copy of the curent dataframe instead (only keeping the correct pval type each iteration)
-            current_dataframe=current_dataframe_main[['CHROM','POS',GIFT_column_to_change[my_index]]].copy()
-            
-            # fetch appropriate locations dataframe
-            locations_dataframe = pandas.read_csv(GIFT_locations_dataframes[my_index])
+        # take a copy of the curent dataframe instead (only keeping the correct pval type each iteration)
+        #current_dataframe=current_dataframe_main[['CHROM','POS',GIFT_column_to_change[my_index]]].copy()
+            # new
+        current_dataframe=current_dataframe_main[['CHROM','POS','PSNP8']].copy()
+        
+        # fetch appropriate locations dataframe
+        # locations_dataframe = pandas.read_csv(GIFT_locations_dataframes[my_index])
+            # new
+        locations_dataframe = pandas.read_csv(PSNP8_locations_dataframe_path)
 
-            # rename chromosome column in the current dataframe (copied from main)
-            current_dataframe.rename(columns={'CHROM':'CHR',GIFT_column_to_change[my_index]:"VALUE"}, inplace=True)
+        # rename chromosome column in the current dataframe (copied from main)
+        # current_dataframe.rename(columns={'CHROM':'CHR',GIFT_column_to_change[my_index]:"VALUE"}, inplace=True)
+            # new
+        current_dataframe.rename(columns={'CHROM':'CHR','PSNP8':"VALUE"}, inplace=True)
 
-            # MERGE where the main dataframe contains locations of the locations dataframe (based on CHR and POS)
-            df_out =(locations_dataframe.reset_index(drop=True)[["CHR", "POS"]].merge(current_dataframe.reset_index(drop=True), on=["CHR", "POS"], how="inner",left_index=False, right_index=False))
+        # MERGE where the main dataframe contains locations of the locations dataframe (based on CHR and POS)
+        df_out =(locations_dataframe.reset_index(drop=True)[["CHR", "POS"]].merge(current_dataframe.reset_index(drop=True), on=["CHR", "POS"], how="inner",left_index=False, right_index=False))
 
-            # Should have following columns: (example: pSNP4)
-            # CHR, POS, VALUE
-            # 1,   24,   0.00213
-            # ..,   .. ,  ......
+        # Should have following columns: (example: pSNP4)
+        # CHR, POS, VALUE
+        # 1,   24,   0.00213
+        # ..,   .. ,  ......
 
-            # insert the columns for current PVAL type and subsample number
-            #   insert the pval type e.g. PSNP4 (all the way down this dataframe)
-            df_out.insert(2,"PVAL_TYPE",GIFT_column_to_keep[my_index])
+        # insert the columns for current PVAL type and subsample number
+        #   insert the pval type e.g. PSNP4 (all the way down this dataframe)
+        # df_out.insert(2,"PVAL_TYPE",GIFT_column_to_keep[my_index])
+            # new
+        df_out.insert(2,"PVAL_TYPE","PSNP8")
 
-            #   insert the subsample level (all the way down this dataframe)
-            df_out.insert(3,"SUBSAMPLE_NUM",subsample_level)
+        #   insert the subsample level (all the way down this dataframe)
+        df_out.insert(3,"SUBSAMPLE_NUM",subsample_level)
 
-            print(f"GIFT merged with PVAL_TYPE and SUBSAMPLE_NUM columns",flush=True)
-            # Should have following columns: (example: pSNP4)
-            # CHR, POS, PVAL_TYPE, SUBSAMPLE_NUM,VALUE
-            # 1,   24,   PSNP4,      200     ,   0.00213
-            # ..,   .. ,  ......
+        print(f"GIFT merged with PVAL_TYPE and SUBSAMPLE_NUM columns",flush=True)
+        # Should have following columns: (example: pSNP4)
+        # CHR, POS, PVAL_TYPE, SUBSAMPLE_NUM,VALUE
+        # 1,   24,   PSNP4,      200     ,   0.00213
+        # ..,   .. ,  ......
 
-            # concat the current pval data to main dataframe e.g. PSNP4 stuff
-            cumulative_t20_dataframe=pandas.concat([cumulative_t20_dataframe,df_out])
-    
-            # clear variables to save on memory
-            del df_out
+        # concat the current pval data to main dataframe e.g. PSNP4 stuff
+        cumulative_t20_dataframe=pandas.concat([cumulative_t20_dataframe,df_out])
+
+        # clear variables to save on memory
+        del df_out
+        # end of for loop
+
 
     #write the cumulative_t20 dataframe to csv
     cumulative_t20_dataframe.to_csv(cumulative_t20_dataframe_path,header=True,index=False)
@@ -216,7 +257,7 @@ def IDEA_1_ACCUMULATE_T20_SNP_DATA(current_dataframe_main,
     # save on memory by deleting the dataframe variable
     del cumulative_t20_dataframe
 
-# IDEA 2 function 1 (2.1.1)
+# IDEA 2 function 1 (2.1.1) MODIFIED
 def IDEA_2_CONTROL_CHECK(current_df,
             positive_control_df_name,
             negative_control_df_name,
@@ -252,8 +293,10 @@ def IDEA_2_CONTROL_CHECK(current_df,
 
     # Sets the variables based on the expected column headers when looking at GWAS or GIFT csv files/dataframes
     if GIFT_or_GWAS == "GWAS":
-        CHR = "chromosomes"
-        POS = "positions"
+        # CHR = "chromosomes"
+        # POS = "positions"
+        CHR = "CHROM"
+        POS = "POS"
 
     elif GIFT_or_GWAS == "GIFT": 
         CHR="CHROM"
@@ -290,8 +333,10 @@ def IDEA_2_CONTROL_CHECK(current_df,
     elif GIFT_or_GWAS == "GIFT": 
 
         #change column names
-        temp_positive_control_df.rename(columns={CHR:'CHR',POS:'POS','absolute_theta':'ABS_THETA','pSNP4':'PSNP4','pSNP5':'PSNP5'}, inplace=True)
-        temp_negative_control_df.rename(columns={CHR:'CHR',POS:'POS','absolute_theta':'ABS_THETA','pSNP4':'PSNP4','pSNP5':'PSNP5'}, inplace=True)
+        # temp_positive_control_df.rename(columns={CHR:'CHR',POS:'POS','absolute_theta':'ABS_THETA','pSNP4':'PSNP4','pSNP5':'PSNP5'}, inplace=True)
+        # temp_negative_control_df.rename(columns={CHR:'CHR',POS:'POS','absolute_theta':'ABS_THETA','pSNP4':'PSNP4','pSNP5':'PSNP5'}, inplace=True)
+        temp_positive_control_df.rename(columns={CHR:'CHR',POS:'POS'}, inplace=True)
+        temp_negative_control_df.rename(columns={CHR:'CHR',POS:'POS'}, inplace=True)
 
         # melt down the dataframe for pos and neg
         # should combine the column titles ABS_THETA, PSNP4 etc... into a column with their respective values under new column "VALUE"
@@ -372,25 +417,25 @@ Mo98_GIFT_200_files =[]
 Mo98_GIFT_400_files =[]
 Mo98_GIFT_600_files =[]
 Mo98_GIFT_800_files =[]
-Mo98_GIFT_1000_files =[]
+Mo98_GIFT_999_files =[]
 
 Mo98_GWAS_200_files =[]
 Mo98_GWAS_400_files =[]
 Mo98_GWAS_600_files =[]
 Mo98_GWAS_800_files =[]
-Mo98_GWAS_1000_files =[]
+Mo98_GWAS_999_files =[]
 
 Na23_GIFT_200_files =[]
 Na23_GIFT_400_files =[]
 Na23_GIFT_600_files =[]
 Na23_GIFT_800_files =[]
-Na23_GIFT_1000_files =[]
+Na23_GIFT_999_files =[]
 
 Na23_GWAS_200_files =[]
 Na23_GWAS_400_files =[]
 Na23_GWAS_600_files =[]
 Na23_GWAS_800_files =[]
-Na23_GWAS_1000_files =[]
+Na23_GWAS_999_files =[]
 
 # Gather up appropriate csv files
 for file in os.listdir(PATH_TO_MAIN+"output_files"):
@@ -433,8 +478,11 @@ for csv_file in csv_files:
         elif csv_file_name[6]=="800":
             Mo98_GIFT_800_files.append(csv_file)
 
-        elif csv_file_name[6]=="1000":
-            Mo98_GIFT_1000_files.append(csv_file)
+        # elif csv_file_name[6]=="1000":
+        #     Mo98_GIFT_999_files.append(csv_file)
+
+        elif csv_file_name[6]=="999":
+            Mo98_GIFT_999_files.append(csv_file)
 
 
     # Mo98 GWAS lists
@@ -451,8 +499,11 @@ for csv_file in csv_files:
         elif csv_file_name[4]=="800":# GWAS code vvv  
             Mo98_GWAS_800_files.append(csv_file) 
 
-        elif csv_file_name[4]=="1000":# GWAS code vvv  
-            Mo98_GWAS_1000_files.append(csv_file)
+        # elif csv_file_name[4]=="1000":# GWAS code vvv  
+        #     Mo98_GWAS_999_files.append(csv_file)
+
+        elif csv_file_name[4]=="999":# GWAS code vvv  
+            Mo98_GWAS_999_files.append(csv_file)
 
     # Na23 GIFT lists
     elif csv_file_name[2] == "Na23" and csv_file_name[3]=='whole': 
@@ -468,8 +519,11 @@ for csv_file in csv_files:
         elif csv_file_name[6]=="800":
             Na23_GIFT_800_files.append(csv_file)
 
-        elif csv_file_name[6]=="1000":
-            Na23_GIFT_1000_files.append(csv_file)
+        # elif csv_file_name[6]=="1000":
+        #     Na23_GIFT_999_files.append(csv_file)
+        
+        elif csv_file_name[6]=="999":
+            Na23_GIFT_999_files.append(csv_file)
 
     # Na23 GWAS lists
     elif csv_file_name[2]=="Na23" and csv_file_name[3]=='GWAS':
@@ -485,8 +539,11 @@ for csv_file in csv_files:
         elif csv_file_name[4]=="800":# GWAS code vvv  
             Na23_GWAS_800_files.append(csv_file) 
 
-        elif csv_file_name[4]=="1000":# GWAS code vvv  
-            Na23_GWAS_1000_files.append(csv_file)  
+        # elif csv_file_name[4]=="1000":# GWAS code vvv  
+        #     Na23_GWAS_999_files.append(csv_file)  
+
+        elif csv_file_name[4]=="999":# GWAS code vvv  
+            Na23_GWAS_999_files.append(csv_file)  
 
 # PROGRESS METER
 print("////////////////////////////////////////////////",flush=True)
@@ -503,22 +560,22 @@ list_of_list_of_files=[Mo98_GIFT_200_files,
                        Mo98_GIFT_400_files,
                        Mo98_GIFT_600_files,
                        Mo98_GIFT_800_files,
-                       Mo98_GIFT_1000_files,
+                       Mo98_GIFT_999_files,
                        Mo98_GWAS_200_files,
                        Mo98_GWAS_400_files,
                        Mo98_GWAS_600_files,
                        Mo98_GWAS_800_files,
-                       Mo98_GWAS_1000_files,
+                       Mo98_GWAS_999_files,
                        Na23_GIFT_200_files,
                        Na23_GIFT_400_files,
                        Na23_GIFT_600_files,
                        Na23_GIFT_800_files,
-                       Na23_GIFT_1000_files,
+                       Na23_GIFT_999_files,
                        Na23_GWAS_200_files,
                        Na23_GWAS_400_files,
                        Na23_GWAS_600_files,
                        Na23_GWAS_800_files,
-                       Na23_GWAS_1000_files]
+                       Na23_GWAS_999_files]
 
 
 # Reminder of CSV format (GIFT) NAME leaf_ionome_Mo98_whole_genome_metrics_600_732692.csv
@@ -532,9 +589,13 @@ list_of_list_of_files=[Mo98_GIFT_200_files,
 # loop through each of the lists in the list OF lists, 
 # processing each list with IDEA2 and IDEA3 functions
 for list_of_files in list_of_list_of_files:
+    print("Current list of files", flush=True)
+    print(list_of_files)
 
     # read first item to determine what it is
-    first_item_name=list_of_files[1].split("_")
+    #first_item_name=list_of_files[1].split("_")
+    # new (i was asking for position 1 which is wrong -> starts at 0)
+    first_item_name=list_of_files[0].split("_")
 
     # determining if the list is filled with GWAS or GIFT data first
     if first_item_name[3]=="whole":
@@ -554,7 +615,9 @@ for list_of_files in list_of_list_of_files:
     if GIFT_or_GWAS=="GIFT":
 
         # concatonate all the files in the given list
-        this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["CHROM","POS","absolute_theta","pSNP4","pSNP5"]) for csv_file in list_of_files],ignore_index=True)
+        # this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["CHROM","POS","absolute_theta","pSNP4","pSNP5"]) for csv_file in list_of_files],ignore_index=True)
+            # new
+        this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["CHROM","POS","PSNP8"]) for csv_file in list_of_files],ignore_index=True)
 
         # once concatonated, check for pos + neg control values in this function
         IDEA_2_CONTROL_CHECK(this_df,
@@ -570,7 +633,9 @@ for list_of_files in list_of_list_of_files:
 
     elif GIFT_or_GWAS=="GWAS":
 
-        this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["chromosomes","positions","pvals"]) for csv_file in list_of_files],ignore_index=True)
+        #this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["chromosomes","positions","pvals"]) for csv_file in list_of_files],ignore_index=True)
+        # new
+        this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["CHROM","POS","pvals"]) for csv_file in list_of_files],ignore_index=True)
 
         # IDEA 2 function
         IDEA_2_CONTROL_CHECK(this_df,
@@ -596,7 +661,9 @@ print("IDEA 3 FINISHED",flush=True)
 
 phenotype_list=["Mo98","Na23"] # can later update this to read from the phenotype text file
 
-average_pvals_list=["AVERAGE_P","AVERAGE_PSNP4","AVERAGE_PSNP5","AVERAGE_ABS_THETA"]
+#average_pvals_list=["AVERAGE_P","AVERAGE_PSNP4","AVERAGE_PSNP5","AVERAGE_ABS_THETA"]
+    # new
+average_pvals_list=["AVERAGE_P","AVERAGE_PSNP8"]
 
 # loops through phenotype and pval type combinations to process each 1000 subsample file for IDEA1
 for phenotype in phenotype_list:
@@ -607,39 +674,68 @@ for phenotype in phenotype_list:
 
             if pval_type == "AVERAGE_P":
 
-                # get T20 SNPs locations for GWAS_P for 1000 subsample -> RETURNS THE NAME
-                Mo98_GWAS_P_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_1000("Mo98_GWAS_1000_ALL.csv",pval_type,phenotype) 
+                # get T20 SNPs locations for GWAS_P for 1000 (actually 999) subsample -> RETURNS THE NAME
+                #Mo98_GWAS_P_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Mo98_GWAS_1000_ALL.csv",pval_type,phenotype) 
+                    # new
+                Mo98_GWAS_P_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Mo98_GWAS_999_ALL.csv",pval_type,phenotype) 
 
-            elif pval_type == "AVERAGE_PSNP4":
+            elif pval_type == "AVERAGE_PSNP8":
 
-                Mo98_PSNP4_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_1000("Mo98_GIFT_1000_ALL.csv",pval_type,phenotype) 
+                #Mo98_PSNP4_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Mo98_GIFT_1000_ALL.csv",pval_type,phenotype) 
+                # new
+                Mo98_PSNP8_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Mo98_GIFT_999_ALL.csv",pval_type,phenotype) 
 
-            elif pval_type == "AVERAGE_PSNP5":
+            # elif pval_type == "AVERAGE_PSNP4":
 
-                Mo98_PSNP5_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_1000("Mo98_GIFT_1000_ALL.csv",pval_type,phenotype) 
+            #     #Mo98_PSNP4_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Mo98_GIFT_1000_ALL.csv",pval_type,phenotype) 
+            #     # new
+            #     Mo98_PSNP4_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Mo98_GIFT_999_ALL.csv",pval_type,phenotype) 
 
-            elif pval_type == "AVERAGE_ABS_THETA":
+            # elif pval_type == "AVERAGE_PSNP5":
 
-                Mo98_ABS_THETA_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_1000("Mo98_GIFT_1000_ALL.csv",pval_type,phenotype) 
+            #     # Mo98_PSNP5_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Mo98_GIFT_1000_ALL.csv",pval_type,phenotype) 
+            #     # new
+            #     Mo98_PSNP5_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Mo98_GIFT_999_ALL.csv",pval_type,phenotype) 
+            # elif pval_type == "AVERAGE_ABS_THETA":
+
+            #     #Mo98_ABS_THETA_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Mo98_GIFT_1000_ALL.csv",pval_type,phenotype) 
+            #     # new
+            #     Mo98_ABS_THETA_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Mo98_GIFT_999_ALL.csv",pval_type,phenotype)
 
         elif phenotype == "Na23":
             
             if pval_type == "AVERAGE_P":
 
                 # get T20 SNPs locations for GWAS_P for 1000 subsample
-                Na23_GWAS_P_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_1000("Na23_GWAS_1000_ALL.csv",pval_type,phenotype) 
+                # Na23_GWAS_P_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Na23_GWAS_1000_ALL.csv",pval_type,phenotype) 
+                # new
+                Na23_GWAS_P_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Na23_GWAS_999_ALL.csv",pval_type,phenotype)
 
-            elif pval_type == "AVERAGE_PSNP4":
 
-                Na23_PSNP4_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_1000("Na23_GIFT_1000_ALL.csv",pval_type,phenotype) 
+            elif pval_type == "AVERAGE_PSNP8":
 
-            elif pval_type == "AVERAGE_PSNP5":
+                # Na23_PSNP4_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Na23_GIFT_1000_ALL.csv",pval_type,phenotype)
+                # new
+                Na23_PSNP8_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Na23_GIFT_999_ALL.csv",pval_type,phenotype)  
 
-                Na23_PSNP5_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_1000("Na23_GIFT_1000_ALL.csv",pval_type,phenotype) 
+            # elif pval_type == "AVERAGE_PSNP4":
 
-            elif pval_type == "AVERAGE_ABS_THETA":
+            #     # Na23_PSNP4_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Na23_GIFT_1000_ALL.csv",pval_type,phenotype)
+            #     # new
+            #     Na23_PSNP4_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Na23_GIFT_1000_ALL.csv",pval_type,phenotype)  
                 
-                Na23_ABS_THETA_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_1000("Na23_GIFT_1000_ALL.csv",pval_type,phenotype) 
+
+            # elif pval_type == "AVERAGE_PSNP5":
+
+            #     # Na23_PSNP5_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Na23_GIFT_1000_ALL.csv",pval_type,phenotype) 
+            #     # new
+            #     Na23_PSNP5_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Na23_GIFT_1000_ALL.csv",pval_type,phenotype) 
+
+            # elif pval_type == "AVERAGE_ABS_THETA":
+                
+            #     # Na23_ABS_THETA_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Na23_GIFT_1000_ALL.csv",pval_type,phenotype) 
+            #     # new
+            #     Na23_ABS_THETA_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Na23_GIFT_1000_ALL.csv",pval_type,phenotype) 
 
 
 # set up cumulative T20 dataframe paths for each phenotype
@@ -657,7 +753,8 @@ csv_file_index=0
 
 for list_of_files in list_of_list_of_files:
     # read first item to determine what it is
-    first_item_name=list_of_files[1].split("_")
+    # first_item_name=list_of_files[1].split("_")
+    first_item_name=list_of_files[0].split("_")
     if first_item_name[3]=="whole":
         GIFT_or_GWAS="GIFT"
         subsample_number = first_item_name[6]
@@ -676,34 +773,54 @@ for list_of_files in list_of_list_of_files:
     # concat files based on gift or gwas
     if GIFT_or_GWAS=="GIFT":
 
-        this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["CHROM","POS","absolute_theta","pSNP4","pSNP5"]) for csv_file in list_of_files],ignore_index=True)
+        #this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["CHROM","POS","absolute_theta","pSNP4","pSNP5"]) for csv_file in list_of_files],ignore_index=True)
+        # new
+        this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["CHROM","POS","PSNP8"]) for csv_file in list_of_files],ignore_index=True)
 
     elif GIFT_or_GWAS=="GWAS":
 
-        this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["chromosomes","positions","pvals"]) for csv_file in list_of_files],ignore_index=True)
+        # this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["chromosomes","positions","pvals"]) for csv_file in list_of_files],ignore_index=True)
+        # new
+        this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["CHROM","POS","pvals"]) for csv_file in list_of_files],ignore_index=True)
 
     # accumulate snps based on phenotype and gift or gwas
     if this_phenotype=="Mo98":
+        # IDEA_1_ACCUMULATE_T20_SNP_DATA(this_df,
+        #                                 Mo98_GWAS_P_T20_SNP_locations_path,
+        #                                 Mo98_PSNP4_T20_SNP_locations_path,
+        #                                 Mo98_PSNP5_T20_SNP_locations_path,
+        #                                 Mo98_ABS_THETA_T20_SNP_locations_path,
+        #                                 Mo98_cumulative_t20_dataframe_path, 
+        #                                 GIFT_or_GWAS,
+        #                                 subsample_number
+        #                                 )
+
         IDEA_1_ACCUMULATE_T20_SNP_DATA(this_df,
                                         Mo98_GWAS_P_T20_SNP_locations_path,
-                                        Mo98_PSNP4_T20_SNP_locations_path,
-                                        Mo98_PSNP5_T20_SNP_locations_path,
-                                        Mo98_ABS_THETA_T20_SNP_locations_path,
+                                        Mo98_PSNP8_T20_SNP_locations_path,
                                         Mo98_cumulative_t20_dataframe_path, 
                                         GIFT_or_GWAS,
                                         subsample_number
                                         )
             
     elif this_phenotype=="Na23":
+    #     IDEA_1_ACCUMULATE_T20_SNP_DATA(this_df,
+    #                                     Na23_GWAS_P_T20_SNP_locations_path,
+    #                                     Na23_PSNP4_T20_SNP_locations_path,
+    #                                     Na23_PSNP5_T20_SNP_locations_path,
+    #                                     Na23_ABS_THETA_T20_SNP_locations_path,
+    #                                     Na23_cumulative_t20_dataframe_path, 
+    #                                     GIFT_or_GWAS,
+    #                                     subsample_number
+    #                                 )
+
         IDEA_1_ACCUMULATE_T20_SNP_DATA(this_df,
-                                        Na23_GWAS_P_T20_SNP_locations_path,
-                                        Na23_PSNP4_T20_SNP_locations_path,
-                                        Na23_PSNP5_T20_SNP_locations_path,
-                                        Na23_ABS_THETA_T20_SNP_locations_path,
-                                        Na23_cumulative_t20_dataframe_path, 
-                                        GIFT_or_GWAS,
-                                        subsample_number
-                                    )
+                                Na23_GWAS_P_T20_SNP_locations_path,
+                                Na23_PSNP8_T20_SNP_locations_path,
+                                Na23_cumulative_t20_dataframe_path, 
+                                GIFT_or_GWAS,
+                                subsample_number
+                            )
 
     # delete df to save mem
     del this_df

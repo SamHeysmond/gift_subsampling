@@ -1,10 +1,10 @@
 #!/bin/bash
-#SBATCH --partition=defq
+#SBATCH --partition=shortq
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=2
-#SBATCH --mem=4g
-#SBATCH --time=00:30:00
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=3g
+#SBATCH --time=00:10:00
 #SBATCH --job-name=subsample_setup
 #SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out
 #SBATCH --error=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.err
@@ -25,7 +25,7 @@ source ~/.bashrc
 conda activate bcf_env
 
 #obtain list of all sample IDs in the vcf file
-bcftools query -l core_files/FINAL.vcf> core_files/all_vcf_samples.txt
+bcftools query -l core_files/FINAL.vcf > core_files/all_vcf_samples.txt
 
 #deactivate conda environment
 conda deactivate
@@ -51,6 +51,9 @@ rm -rf batch_files/parallel
 mkdir batch_files/parallel
 
 # clear and remake the running/completed folder for jobs
+rm -rf batch_files/processing_parallel
+mkdir batch_files/processing_parallel
+
 rm -rf batch_files/completed_parallel
 mkdir batch_files/completed_parallel
 
@@ -59,10 +62,6 @@ mkdir batch_files/completed_parallel
 rm core_files/JOB_LIST.csv
 # write in the header for the csv
 echo "JOB_ID,SUBSAMPLE_N,PHENOTYPE" > core_files/JOB_LIST.csv
-
-# remove leftover csv and vcf files in core files if any exist from previous runs
-rm core_files/subsampled_phenotype_*.csv
-rm core_files/subsampled_genotype_*.vcf
 
 # Make the subsample scripts ========================================
 

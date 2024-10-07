@@ -42,7 +42,7 @@ parser.add_argument('-op',
                     type=str, 
                     metavar='output phenotype', 
                     required=True, 
-                    help='Output csv of subsampled individuals phenotype (only 1 phenotype)'
+                    help='Output csv of subsampled individuals phenotype (only 1 phenotype). Format: Accession_ID,Na23/Mo98'
                     )
 parser.add_argument('-og', 
                     type=str, 
@@ -60,143 +60,107 @@ parser.add_argument('-ri',
 # stores input data and parses them
 args= parser.parse_args() 
 
-#create empty samples list for storing the VCF sample IDs
-samples_list_vcf =[]
-
-# Main steps:
-# 1) read all sample ID's from samples.txt file (sourced from main vcf) into a list
-
 #set input file
-input_file_samples_vcf=open(args.s,'r')
+sample_list_from_vcf = pandas.read_csv(args.s, sep=',', usecols=[0], names=['Accession_ID'], header=None)
 
-#read each line and append to the list
-for line in input_file_samples_vcf:
-
-    # clean up the line by removing newline tags
-    cleanline = line.replace('\n','')
-
-    samples_list_vcf.append(str(cleanline))
+print("sample_list_from_vcf : ",flush=True)
+print(sample_list_from_vcf,flush=True)
 
 # open phenotype data file
 input_file_phenotype_data = open(args.p,'r')
+sample_list_from_phenotype_file = pandas.read_csv(args.p, sep=',', usecols=['Accession_ID',args.t])
+print("sample_list_from_phenotype_file : ",flush=True)
+print(sample_list_from_phenotype_file,flush=True)
 
-# 2) gather all phenotype information for the appropriate phenotype into a dataframe
-row=0
-for line in input_file_phenotype_data:
-    line = line.replace('\n','')
-    line=line.split(',')
-    if row == 0:
+# merge data where Accession_ID is in both the vcf and phenotype files
+consensus_ID_dataframe = (sample_list_from_vcf.reset_index(drop=True)[["Accession_ID"]].merge(sample_list_from_phenotype_file.reset_index(drop=True), on=['Accession_ID'], how='inner',left_index=False,right_index=False))
 
-        # find index of the header for the trait/phenotype we are looking into
-        phenotype_index = line.index(args.t)
+### TESTING
+    # outer will bring in everything- if it overlaps itll be "both", otherwise itll be "left only" or "right only"
+    # we want to keep the "left only" data
+merged_df=pandas.merge(sample_list_from_phenotype_file,sample_list_from_vcf,how="outer",on=['Accession_ID'],indicator=True)
 
-        #create dataframe with the correct two headers (ID,phenotype/trait data)
-        consensus_dataframe = pandas.DataFrame(columns=[line[0], line[phenotype_index]])
+print("- - - - - - - - - - - - - - - - - - ",flush= True)
+print("Merged dataframe initially:",flush= True)
+print(merged_df,flush= True)
+print("- - - - - - - - - - - - - - - - - - ",flush= True)
 
-    else: # otherwise look to add data to the dataframe from the pehnotype csv
+    # Delete rows where data is in both 
+merged_df = merged_df.drop(merged_df[merged_df['_merge'] == 'left_only'].index)
 
-        # if it has NA in the specific phenotype column
-        if "NA" in str(line[phenotype_index]).upper():
-            print("NA detected, ommitting this line",flush=True)
+print("- - - - - - - - - - - - - - - - - - ",flush= True)
+print("Merged dataframe after removing left only",flush= True)
+print(merged_df,flush= True)
+print("- - - - - - - - - - - - - - - - - - ",flush= True)
 
-        else: #add new row to the consensus dataframe
-            new_row=pandas.Series({"Accession_ID":line[0],str(args.t):line[phenotype_index]})
-            consensus_dataframe=pandas.concat([consensus_dataframe, new_row.to_frame().T], ignore_index=True)
+    # Delete rows where data is right only
+merged_df = merged_df.drop(merged_df[merged_df['_merge'] == 'right_only'].index)
 
-    # increment investigated row
-    row +=1
+print("- - - - - - - - - - - - - - - - - - ",flush= True)
+print("Merged dataframe after removing right only",flush= True)
+print(merged_df,flush= True)
+print("- - - - - - - - - - - - - - - - - - ",flush= True)
 
-# close phenotype file
-input_file_phenotype_data.close()
+    # remove merge column; no longer needed
+final_df=merged_df.drop(columns=['_merge'])
+final_df=final_df.dropna()
 
-# 3) make a consensus list of all samples that exist in both the vcf list and the excel list
-# using the excel list (phenotype) as a basis (in the form of a pandas dataframe)
-consensus_dataframe = consensus_dataframe.reset_index()  # make sure indexes pair with number of rows
+print("- - - - - - - - - - - - - - - - - - ",flush= True)
+print("Merged dataframe after removing merge column",flush= True)
+print(merged_df,flush= True)
+print("- - - - - - - - - - - - - - - - - - ",flush= True)
 
-for index, row in consensus_dataframe.iterrows():
+####
 
-    # check if each of the rows of the consensus dataframe are in the list of IDs from the vcf
-    # if not -> remove the row from the dataframe 
-    if str(row["Accession_ID"]) in samples_list_vcf:
-        # do nothing since this ID is in both VCF and phenotype data files so can stay!
-        pass 
 
-    else: #remove the row
-        consensus_dataframe = consensus_dataframe.drop([index])
+
+print("consensus_ID_dataframe_with_phenotypes : ",flush=True)
+print(consensus_ID_dataframe,flush=True)
+
+print(f"Length of consensus dataframe (should be 1000 or 1003 ish): {len(consensus_ID_dataframe)}", flush=True)
 
 # now randomly select a list of ID's for the subsample number e.g. 200 or 400 etc
-subsampled_dataframe = consensus_dataframe.sample(n=int(args.n))
-consensus_dataframe = consensus_dataframe.reset_index()  # make sure indexes pair with number of rows
+# subsampled_dataframe = consensus_dataframe.sample(n=int(args.n))
+# consensus_dataframe = consensus_dataframe.reset_index()  # make sure indexes pair with number of rows
+subsampled_dataframe = consensus_ID_dataframe.sample(n=int(args.n))
 
-# open file for writing all the IDs that were subsampled for this particular run
-# TEMP CLOSED
-#subsampled_IDs=open('core_files/subsample_text_files/subsamples_'+str(args.n)+'_'+str(args.ri)+'.txt','w')
-subsampled_IDs_path = 'core_files/subsample_text_files/subsamples_'+str(args.n)+'_'+str(args.ri)+'.txt'
-
-# open the output phenotype file
-output_file_subsampled_phenotype = open(args.op,"w")
-
-# current_row=0
-# for index, row in subsampled_dataframe.iterrows():
-
-#     #write in each ID from the subsampled dataframe
-#     subsampled_IDs.write(str(row["Accession_ID"])+'\n')
-
-#     if current_row==0: # write in the headers
-#         output_file_subsampled_phenotype.write(str("Accession_ID")+','+str(args.t)+'\n') 
-        
-#     else: 
-#         #write in each ID and phenotype information from the subsampled dataframe to a subsampled phenotype file
-#         output_file_subsampled_phenotype.write(str(row["Accession_ID"])+','+str(row[str(args.t)])+'\n') 
-
-#     current_row+=1
-
-# write in the headers
-output_file_subsampled_phenotype.write(str("Accession_ID")+','+str(args.t)+'\n') 
-
-print("subsampled_dataframe: ",flush=True)
-print(subsampled_dataframe)
+print("Subsampled_dataframe before reset index: ",flush=True)
+print(subsampled_dataframe,flush=True)
 
 subsampled_dataframe.reset_index(drop=True, inplace=True)
+print("Subsampled_dataframe after reset index: ",flush=True)
+print(subsampled_dataframe,flush=True)
 
-print("subsampled_dataframe data types before: ",flush=True)
+# open file for writing all the IDs that were subsampled for this particular run
+subsampled_IDs_path = 'core_files/subsample_text_files/subsamples_'+str(args.n)+'_'+str(args.ri)+'.txt'
+
+print("subsampled_dataframe data types before sorting: ",flush=True)
 print(subsampled_dataframe.dtypes,flush=True)
 
-subsampled_dataframe = subsampled_dataframe.drop(columns='index')
+# subsampled_dataframe = subsampled_dataframe.drop(columns='index')
 subsampled_dataframe[[f'{args.t}']] = subsampled_dataframe[[f'{args.t}']].apply(pandas.to_numeric)
 subsampled_dataframe = subsampled_dataframe.sort_values(by=args.t,ascending=True)
 
 print("subsampled_dataframe after sorting: ",flush=True)
-print(subsampled_dataframe)
+print(subsampled_dataframe,flush=True)
 
-print("subsampled_dataframe data types after: ",flush=True)
+print("subsampled_dataframe data types after sorting: ",flush=True)
 print(subsampled_dataframe.dtypes,flush=True)
 
 
-# now replace this with a simple .to csv command?
-subsampled_dataframe.to_csv(args.op,header=True,index=False)
+# OUTPUT 1 
+    # ordered subsample list of just the IDs 
 subsampled_dataframe.to_csv(subsampled_IDs_path,columns=['Accession_ID'],index=False, header=False)
 
-# TEMP CLOSED
-# for index, row in subsampled_dataframe.iterrows():
-
-#     #write in each ID from the subsampled dataframe
-#     subsampled_IDs.write(str(row["Accession_ID"])+'\n')
-
-#     #write in each ID and phenotype information from the subsampled dataframe to a subsampled phenotype file
-#     output_file_subsampled_phenotype.write(str(row["Accession_ID"])+','+str(row[str(args.t)])+'\n') 
-    
-# close files vvv
-
-# Output subsample ID text list (output:2) finished being made!
-# subsampled_IDs.close()
-
-# # Output phenotype csv (output:3) finished being made!
-# output_file_subsampled_phenotype.close()
-
+# OUTPUT 2
+    # subsampled vcf
 #now use bcftools to subsample from the vcf to make a subsampled VCF of only what is in the picked bin
 os.system('bcftools view --samples-file core_files/subsample_text_files/subsamples_'+str(args.n)+'_'+str(args.ri)+'.txt core_files/FINAL.vcf > '+args.og)
-# output subsampled vcf (output:1) finished being made! 
+    # output subsampled vcf (output:1) 
+
+# OUTPUT 3
+    # subsample of the accessions and phenotype data together
+subsampled_dataframe.to_csv(args.op,header=True,index=False)
 
 # testing print
 print("End of subsample script reached",flush=True)

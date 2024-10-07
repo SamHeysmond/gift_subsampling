@@ -48,14 +48,12 @@ conda activate r_env
 
 # run each zoom plot R script that we want
 Rscript output_files/stage_3_scripts/Mo98_GWAS_AVERAGE_P_Zoom.R
-Rscript output_files/stage_3_scripts/Mo98_GIFT_AVERAGE_PSNP4_Zoom.R
-Rscript output_files/stage_3_scripts/Mo98_GIFT_AVERAGE_PSNP5_Zoom.R
-Rscript output_files/stage_3_scripts/Mo98_GIFT_AVERAGE_ABS_THETA_Zoom.R
+Rscript output_files/stage_3_scripts/Mo98_GIFT_AVERAGE_PSNP8_Zoom.R
+
 
 Rscript output_files/stage_3_scripts/Na23_GWAS_AVERAGE_P_Zoom.R
-Rscript output_files/stage_3_scripts/Na23_GIFT_AVERAGE_PSNP4_Zoom.R
-Rscript output_files/stage_3_scripts/Na23_GIFT_AVERAGE_PSNP5_Zoom.R
-Rscript output_files/stage_3_scripts/Na23_GIFT_AVERAGE_ABS_THETA_Zoom.R
+Rscript output_files/stage_3_scripts/Na23_GIFT_AVERAGE_PSNP8_Zoom.R
+
 
 conda deactivate
 
@@ -81,7 +79,9 @@ conda deactivate
 sbatch batch_files/cross_reference_script.sh
 
 # give the above script time to run
-sleep 4m
+    # need a more sensible method to ensure the python file runs afterwards
+# sleep 4m
+sleep 3m
 
 conda activate python3_env
 
