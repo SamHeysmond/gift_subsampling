@@ -20,7 +20,9 @@ source ~/.bashrc
 conda activate gift_env
 
 # run thresholds calculator script
-python batch_files/calc_thresholds.py
+# python batch_files/calc_thresholds.py
+python batch_files/calc_thresholds.py -subsampleFile core_files/subsample_numbers_list.txt
+
 
 # exit conda environment
 conda deactivate 

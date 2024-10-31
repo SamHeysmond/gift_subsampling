@@ -2,9 +2,9 @@
 #SBATCH --partition=shortq
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=16g
-#SBATCH --time=2:00:00
+#SBATCH --cpus-per-task=3
+#SBATCH --mem=8g
+#SBATCH --time=01:00:00
 #SBATCH --job-name=SNP_TRACKER_R_AND_BASH_MAKER
 #SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out
 #SBATCH --error=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.err
@@ -39,7 +39,7 @@ mkdir output_files/summary_plots/IDEA3/
 conda activate gift_env
 
 # this script makes the batch file and R scripts for figures of stage 2 of analysis
-python3 batch_files/SNP_tracker_R_and_BASH_maker.py
+python3 batch_files/SNP_tracker_R_and_BASH_maker.py -subsampleFile core_files/subsample_numbers_list.txt
 
 # run the modified "SNP" run and modifier to execute the R scripts in parallel
 python3 -u batch_files/Rscript_run_and_monitor.py

@@ -36,10 +36,22 @@ for phenotype in phenotype_list:
         # import threshold information from threshold file
         R_out.write(f'threshold_data_csv<-read.csv("{PATH_TO_MAIN}output_files/R_DATA/THRESHOLDS.csv",header=TRUE,sep=",")\n')
         R_out.write(f'threshold_data<-subset(threshold_data_csv,PHENOTYPE==\"{phenotype}\" & PVAL_TYPE==\"{pval_type}\" & SUBSAMPLE_NUM==\"999\")\n')
-        R_out.write(f'\n')
-        R_out.write(f'BF_threshold_data<-subset(threshold_data,THRESHOLD_TYPE=="BF" )\n')
-        R_out.write(f'BHY_threshold_data<-subset(threshold_data,THRESHOLD_TYPE=="BHY" )\n')
-        R_out.write(f'\n')
+
+        if method_type=="GIFT":
+
+            R_out.write(f'\n')
+            # change BF_threshold_data -> NN_THRESHOLD_DATA
+            # change BHY threshold_data -> NF_THRESHOLD_DATA
+            R_out.write(f'NN_THRESHOLD_DATA<-subset(threshold_data,THRESHOLD_TYPE=="NNNH" )\n')
+            R_out.write(f'NF_THRESHOLD_DATA<-subset(threshold_data,THRESHOLD_TYPE=="NFNH" )\n')
+            R_out.write(f'\n')
+        elif method_type =="GWAS":
+            # change BF_threshold_data -> NN_THRESHOLD_DATA
+            # change BHY threshold_data -> NF_THRESHOLD_DATA
+            R_out.write(f'NN_THRESHOLD_DATA<-subset(threshold_data,THRESHOLD_TYPE=="NNBF" )\n')
+            R_out.write(f'NF_THRESHOLD_DATA<-subset(threshold_data,THRESHOLD_TYPE=="NFBF" )\n')
+            R_out.write(f'\n')
+
         R_out.write(f'#filter results to the range desired\n')
 
         # Positive control gene boundary for Mo98 phenotype
@@ -150,10 +162,10 @@ for phenotype in phenotype_list:
         #     R_out.write(f'  y=max_snp_val${pval_type} -5),colour="red", angle=90)\n')
         # else:
         R_out.write(f'  y=-log10(max_snp_val${pval_type})-5),colour="red", angle=90)+\n') 
-        R_out.write(f' geom_hline(aes(yintercept=BF_threshold_data$THRESHOLD_VALUE, linetype="BF"),\n')
+        R_out.write(f' geom_hline(aes(yintercept=NN_THRESHOLD_DATA$THRESHOLD_VALUE, linetype="95%"),\n')
         R_out.write(f'       col = "red")+\n')
         R_out.write(f'\n')
-        R_out.write(f' geom_hline(aes(yintercept=BHY_threshold_data$THRESHOLD_VALUE, linetype="BHY"),\n')
+        R_out.write(f' geom_hline(aes(yintercept=NF_THRESHOLD_DATA$THRESHOLD_VALUE, linetype="99%"),\n')
         R_out.write(f'      col = "blue")+\n')
         R_out.write(f'\n')
         R_out.write(f'scale_linetype_manual(name = "Thresholds", values = c(2, 2), \n')

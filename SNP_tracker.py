@@ -3,15 +3,15 @@ import argparse, os, math
 import concurrent.futures
 import modin.pandas as pandas
 import ray
+import statsmodels.stats.multitest
 
+os.environ["MODIN_CPUS"] = "8"
 
 # ray.init(_plasma_directory="/tmp", object_store_memory=700000000000) # setting to disable out of core in Ray and obj store mem increase
     # new set to 100GB since data is much smaller
-ray.init(_plasma_directory="/tmp", object_store_memory=80000000000) # setting to disable out of core in Ray and obj store mem increase
+ray.init(_plasma_directory="/tmp", object_store_memory=80000000000,num_cpus=8) # setting to disable out of core in Ray and obj store mem increase
 
 # obj store memory currently at 80GB 
-
-
 
 # so i can see all the columns when testing with print
 pandas.set_option('display.max_columns',None)
@@ -271,25 +271,25 @@ def IDEA_2_CONTROL_CHECK(current_df,
         #Mo98 boundaries
         #MOT1 gene location boundaries (might need to add 1000 to each od LD)
         positive_control_chromosome = 2
-        positive_control_LB = 10933005
-        positive_control_UB = 10934604
+        positive_control_LB = 10933005 - 1000
+        positive_control_UB = 10934604 + 1000
 
         # rad50 gene location boundaries
         negative_control_chromosome = 2
-        negative_control_LB =13600431
-        negative_control_UB =13609104
+        negative_control_LB =13600431 - 1000
+        negative_control_UB =13609104 + 1000
 
     elif this_phenotype=="Na23":
         # Na23 boundaries
         # HKT1 gene location boundaries 
         positive_control_chromosome = 4
-        positive_control_LB = 6391854
-        positive_control_UB = 6395922
+        positive_control_LB = 6391854 - 1000
+        positive_control_UB = 6395922 + 1000
 
         # MLH1 
         negative_control_chromosome = 4
-        negative_control_LB =5816942
-        negative_control_UB =5821066
+        negative_control_LB =5816942 - 1000
+        negative_control_UB =5821066 + 1000
 
     # Sets the variables based on the expected column headers when looking at GWAS or GIFT csv files/dataframes
     if GIFT_or_GWAS == "GWAS":
@@ -589,8 +589,8 @@ list_of_list_of_files=[Mo98_GIFT_200_files,
 # loop through each of the lists in the list OF lists, 
 # processing each list with IDEA2 and IDEA3 functions
 for list_of_files in list_of_list_of_files:
-    print("Current list of files", flush=True)
-    print(list_of_files)
+    print("loaded list of files", flush=True)
+    # print(list_of_files)
 
     # read first item to determine what it is
     #first_item_name=list_of_files[1].split("_")
@@ -649,7 +649,32 @@ for list_of_files in list_of_list_of_files:
         this_df=IDEA_3_process_all_snps_file(this_df, GIFT_or_GWAS,len(list_of_files),subsample_number)
 
     # save to csv
+    # this_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/"+first_item_name[2]+"_"+GIFT_or_GWAS+"_"+subsample_number+"_ALL.csv",header=True,index=False)
+
+    # save as uncorrected
+    this_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/"+first_item_name[2]+"_"+GIFT_or_GWAS+"_"+subsample_number+"_UNCORRECTED.csv",header=True,index=False)
+
+    # WIP correction
+        # ["AVERAGE_PSNP8"] or ["AVERAGE_P"]
+    if GIFT_or_GWAS == "GWAS":
+        col_name="AVERAGE_P"
+
+    elif GIFT_or_GWAS == "GIFT":
+        col_name="AVERAGE_PSNP8"
+
+     # correct the pvalues in the right column
+    input_list_pvals=list(this_df[f'{col_name}'])
+
+    # apply BH correction
+    rejected,corrected_pvals= statsmodels.stats.multitest.fdrcorrection(input_list_pvals,
+                                                                            alpha=0.05
+                                                                            )
+    
+    this_df[f'{col_name}'] = corrected_pvals
+
+    # then upload as corrected (ending in _All.csv)
     this_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/"+first_item_name[2]+"_"+GIFT_or_GWAS+"_"+subsample_number+"_ALL.csv",header=True,index=False)
+
 
     # delete df to save mem
     del this_df
@@ -674,68 +699,26 @@ for phenotype in phenotype_list:
 
             if pval_type == "AVERAGE_P":
 
-                # get T20 SNPs locations for GWAS_P for 1000 (actually 999) subsample -> RETURNS THE NAME
-                #Mo98_GWAS_P_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Mo98_GWAS_1000_ALL.csv",pval_type,phenotype) 
-                    # new
-                Mo98_GWAS_P_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Mo98_GWAS_999_ALL.csv",pval_type,phenotype) 
+                # Mo98_GWAS_P_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Mo98_GWAS_999_ALL.csv",pval_type,phenotype) 
+                Mo98_GWAS_P_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Mo98_GWAS_999_ALL.csv",pval_type,phenotype)
 
             elif pval_type == "AVERAGE_PSNP8":
 
-                #Mo98_PSNP4_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Mo98_GIFT_1000_ALL.csv",pval_type,phenotype) 
-                # new
+                # Mo98_PSNP8_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Mo98_GIFT_999_ALL.csv",pval_type,phenotype) 
                 Mo98_PSNP8_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Mo98_GIFT_999_ALL.csv",pval_type,phenotype) 
-
-            # elif pval_type == "AVERAGE_PSNP4":
-
-            #     #Mo98_PSNP4_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Mo98_GIFT_1000_ALL.csv",pval_type,phenotype) 
-            #     # new
-            #     Mo98_PSNP4_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Mo98_GIFT_999_ALL.csv",pval_type,phenotype) 
-
-            # elif pval_type == "AVERAGE_PSNP5":
-
-            #     # Mo98_PSNP5_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Mo98_GIFT_1000_ALL.csv",pval_type,phenotype) 
-            #     # new
-            #     Mo98_PSNP5_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Mo98_GIFT_999_ALL.csv",pval_type,phenotype) 
-            # elif pval_type == "AVERAGE_ABS_THETA":
-
-            #     #Mo98_ABS_THETA_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Mo98_GIFT_1000_ALL.csv",pval_type,phenotype) 
-            #     # new
-            #     Mo98_ABS_THETA_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Mo98_GIFT_999_ALL.csv",pval_type,phenotype)
 
         elif phenotype == "Na23":
             
             if pval_type == "AVERAGE_P":
 
-                # get T20 SNPs locations for GWAS_P for 1000 subsample
-                # Na23_GWAS_P_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Na23_GWAS_1000_ALL.csv",pval_type,phenotype) 
-                # new
+                # Na23_GWAS_P_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Na23_GWAS_999_ALL.csv",pval_type,phenotype)
                 Na23_GWAS_P_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Na23_GWAS_999_ALL.csv",pval_type,phenotype)
 
 
             elif pval_type == "AVERAGE_PSNP8":
 
-                # Na23_PSNP4_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Na23_GIFT_1000_ALL.csv",pval_type,phenotype)
-                # new
-                Na23_PSNP8_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Na23_GIFT_999_ALL.csv",pval_type,phenotype)  
-
-            # elif pval_type == "AVERAGE_PSNP4":
-
-            #     # Na23_PSNP4_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Na23_GIFT_1000_ALL.csv",pval_type,phenotype)
-            #     # new
-            #     Na23_PSNP4_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Na23_GIFT_1000_ALL.csv",pval_type,phenotype)  
-                
-
-            # elif pval_type == "AVERAGE_PSNP5":
-
-            #     # Na23_PSNP5_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Na23_GIFT_1000_ALL.csv",pval_type,phenotype) 
-            #     # new
-            #     Na23_PSNP5_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Na23_GIFT_1000_ALL.csv",pval_type,phenotype) 
-
-            # elif pval_type == "AVERAGE_ABS_THETA":
-                
-            #     # Na23_ABS_THETA_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Na23_GIFT_1000_ALL.csv",pval_type,phenotype) 
-            #     # new
-            #     Na23_ABS_THETA_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Na23_GIFT_1000_ALL.csv",pval_type,phenotype) 
+                # Na23_PSNP8_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Na23_GIFT_999_ALL.csv",pval_type,phenotype)  
+                Na23_PSNP8_T20_SNP_locations_path = GET_T20_LOCATIONS_AT_999("Na23_GIFT_999_ALL.csv",pval_type,phenotype) 
 
 
 # set up cumulative T20 dataframe paths for each phenotype

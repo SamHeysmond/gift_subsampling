@@ -1,12 +1,31 @@
 # to do notes
     # make some global variables for repeated variables inside functions?
 
-
-
 #packages
+import argparse
+
 PATH_TO_MAIN = "/gpfs01/home/mbysh17/"
 
-# IDEA 3 (MODIFIED)
+
+def fetch_subsample_numbers_list(subsample_numbers_list_file):
+
+    subsample_num_list=[]
+
+    temp_file=open(f"{subsample_numbers_list_file}","r")
+
+    for line in temp_file:
+
+        subsample_number=line.replace('\n','')
+
+        subsample_num_list.append(subsample_number)
+    
+    print("Subsample number list fetched: ",flush=True)
+    print(subsample_num_list,flush=True)
+
+    return subsample_num_list
+
+
+# IDEA 3 RSCRIPT UPDATED (THRESHOLDS - testing)
 def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type):
     print("Entered FUNCTION: IDEA_3_R_AND_BATCH",flush=True)
     #########################################
@@ -21,16 +40,14 @@ def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type):
     R_out.write(f'print("Start of IDEA 3 R")\n')
     R_out.write(f'\n')
 
+    #########################################
+    ### need to repeat the below steps to do a before (uncorrected) and after (_all.csv) so that i can compare the graphs and use the _all for further analysis only ##################
+    #############################
+
     # for GWAS data....
     if pval_type=="AVERAGE_P":
 
         # fetch the data of the csv for the current phenotype and current method (GWAS)
-        #R_out.write(f'{pval_type}_SUBSAMPLE_{subsample_number}_SNPS_DATA<-read.csv("{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_GWAS_{subsample_number}_ALL.csv",header=TRUE)\n')
-        # named the variable for all the csv info "csv_data" to shorten code  
-
-        #R_out.write(f'csv_data<-read.csv("{PATH_TO_MAIN}output_files/R_DATA_FILTERED/{phenotype}_GWAS_{subsample_number}_ALL.csv",header=TRUE)\n')
-
-        # changed to just look into the R_DATA folder where filtered GWAS data are now sent to
         R_out.write(f'csv_data<-read.csv("{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_GWAS_{subsample_number}_ALL.csv",header=TRUE)\n')
 
     # for GIFT data
@@ -58,72 +75,50 @@ def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type):
 
     # set y limit for the graph (not sure if this changes anything here though)
     # y limit depends on the pval type in question
-    # if pval_type=="AVERAGE_ABS_THETA": # testing without log10
-    #     R_out.write(f'ylim <- abs(floor(min(mydata))) +1\n')
-    # else:
-
     R_out.write(f'ylim <- abs(floor(log10(min(mydata)))) +1\n')
-
-    # calculate threshold if it isnt abs theta (since abs theta has no threshold yet)
-    # R_out.write(f'\n')
-    # R_out.write(f'#Calculate the BHY threshold\n')
-    # R_out.write(f'm <- nrow(csv_data)\n')
-    # R_out.write(f'gwasResults <- csv_data[order(csv_data${pval_type}),]\n')
-    # R_out.write(f's <- 1.0\n')
-    # R_out.write(f'i <- 0\n')
-    # R_out.write('for (p in csv_data$'+str(pval_type)+') {\n')
-    # R_out.write(f'  p\n')
-    # R_out.write(f' i <- i+1\n')
-    # R_out.write('  if (i > 1) {\n')
-    # R_out.write(f'  s <- s + 1.0/(i-1)\n')
-    # R_out.write('  }\n')
-    # R_out.write(f'  thes_pval <- ((i + 1.0) / m) * 0.05 / s\n')
-    # R_out.write('  if (p > thes_pval) {break\n')
-    # R_out.write('   }\n')
-    # R_out.write('   }\n')
-    # R_out.write(f'thes_pval_original <- thes_pval\n')
-    # R_out.write(f'bhy_thres <- -log10(thes_pval)\n')
 
     # import and calculate with threshold data
     R_out.write(f'threshold_data_csv<-read.csv("{PATH_TO_MAIN}output_files/R_DATA/THRESHOLDS.csv", header= TRUE, sep=",")\n')
     R_out.write(f'# subset for the current phenotype and pval type\n')
-    R_out.write(f'BF_THRESHOLD_DATA<-subset(threshold_data_csv,PHENOTYPE=="{phenotype}" & PVAL_TYPE=="{pval_type}" & SUBSAMPLE_NUM=={subsample_number} & THRESHOLD_TYPE=="BF")\n')
-    R_out.write(f'BY_THRESHOLD_DATA<-subset(threshold_data_csv,PHENOTYPE=="{phenotype}" & PVAL_TYPE=="{pval_type}" & SUBSAMPLE_NUM=={subsample_number} & THRESHOLD_TYPE=="BHY")\n')
+
+    if pval_type=="AVERAGE_P":
+            # GWAS THRESHOLDS IMPORTED
+        R_out.write(f'NN_THRESHOLD_DATA<-subset(threshold_data_csv,PHENOTYPE=="{phenotype}" & PVAL_TYPE=="{pval_type}" & SUBSAMPLE_NUM=={subsample_number} & THRESHOLD_TYPE=="NNBF")\n')
+        R_out.write(f'NF_THRESHOLD_DATA<-subset(threshold_data_csv,PHENOTYPE=="{phenotype}" & PVAL_TYPE=="{pval_type}" & SUBSAMPLE_NUM=={subsample_number} & THRESHOLD_TYPE=="NFBF")\n')
+
+    else:
+            # GIFT THRESHOLDS IMPORTED
+        R_out.write(f'NN_THRESHOLD_DATA<-subset(threshold_data_csv,PHENOTYPE=="{phenotype}" & PVAL_TYPE=="{pval_type}" & SUBSAMPLE_NUM=={subsample_number} & THRESHOLD_TYPE=="NNNH")\n')
+        R_out.write(f'NF_THRESHOLD_DATA<-subset(threshold_data_csv,PHENOTYPE=="{phenotype}" & PVAL_TYPE=="{pval_type}" & SUBSAMPLE_NUM=={subsample_number} & THRESHOLD_TYPE=="NFNH")\n')
+
     R_out.write(f'#subset for each type of threshold\n')
-    R_out.write(f'BF_THRESHOLD<-BF_THRESHOLD_DATA$THRESHOLD_VALUE\n')
-    R_out.write(f'BY_THRESHOLD<-BY_THRESHOLD_DATA$THRESHOLD_VALUE\n')
-    R_out.write(f'print("BF_THRESHOLD value")\n')
-    R_out.write(f'print(BF_THRESHOLD)\n')
-    R_out.write(f'print("BY_THRESHOLD value")\n')
-    R_out.write(f'print(BY_THRESHOLD)\n')
+    R_out.write(f'NN_THRESHOLD<-NN_THRESHOLD_DATA$THRESHOLD_VALUE\n')
+    R_out.write(f'NF_THRESHOLD<-NF_THRESHOLD_DATA$THRESHOLD_VALUE\n')
+    R_out.write(f'print("NN_THRESHOLD value")\n')
+    R_out.write(f'print(NN_THRESHOLD)\n')
+    R_out.write(f'print("NF_THRESHOLD value")\n')
+    R_out.write(f'print(NF_THRESHOLD)\n')
     R_out.write(f'\n')
 
 
-    R_out.write('if (BY_THRESHOLD == 0){\n')
-    R_out.write(f'BY_THRESHOLD=max(-log10(csv_data${pval_type}))\n')
-    R_out.write('}\n')
+    # R_out.write('if (BY_THRESHOLD == 0){\n')
+    # R_out.write(f'BY_THRESHOLD=max(-log10(csv_data${pval_type}))\n')
+    # R_out.write('}\n')
 
         ## look into how many points are above the threshold
-    R_out.write(f'#calculate amount of points above the BY threshold as a percentage of all points\n')
-    R_out.write(f'percent_sig<-length(which(-log10(csv_data${pval_type})>BY_THRESHOLD))/length(csv_data${pval_type})\n')
+    R_out.write(f'#calculate amount of points above the 95th threshold as a percentage of all points\n')
+    R_out.write(f'percent_sig<-length(which(-log10(csv_data${pval_type})>NF_THRESHOLD))/length(csv_data${pval_type})\n')
     R_out.write(f'percent_sig<-percent_sig*100\n')
-    # R_out.write(f'percent_sig<-round(percent_sig,2)\n')
         # new (changed rounding to 4 sf or dp? not sure which)
     R_out.write(f'percent_sig<-round(percent_sig,4)\n')
-
-    ########################################### END OF IF ELSE (REMOVED)
 
     R_out.write(f'#open png\n')
     # Send output to IDEA 3 summary plot folder
     R_out.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA3/{phenotype}_{subsample_number}_{pval_type}_MANHATTAN.png", bg = "white", width = 7.5, height = 2.5, units = "in", res = 1200, pointsize = 3)\n')
 
     # make the plot
-    # this is where the plot depends on the pval type. 
-    # for absolute theta, there is no -log10 since it isnt quite a "pvalue"
-    if pval_type=="AVERAGE_ABS_THETA":
-        R_out.write(f'ggplot(mydata, aes(x=BPcum, y=({pval_type}), color=as_factor(CHR))) +\n')
-    else:
-        R_out.write(f'ggplot(mydata, aes(x=BPcum, y=(-log10({pval_type})), color = as_factor(CHR))) +\n')
+        # this is where the plot depends on the pval type. 
+    R_out.write(f'ggplot(mydata, aes(x=BPcum, y=(-log10({pval_type})), color = as_factor(CHR))) +\n')
     R_out.write(f'     # Show all points\n')
     R_out.write(f'     geom_point(alpha=0.5) +\n')
     R_out.write(f'     # custom X axis:\n')
@@ -133,28 +128,17 @@ def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type):
     # label axis
     R_out.write(f'     # my axis labels\n')
 
-    # if pval_type=="AVERAGE_ABS_THETA":
-    #     R_out.write(f'     labs(y= "({pval_type})", x = "chromosome position")+\n')
-    # else:
-
     R_out.write(f'     labs(y= "-log10({pval_type})", x = "chromosome position")+\n')
 
     #only add in thresholds if the pval type isnt abs theta
-    # OLD CODE
-    # R_out.write(f'     # threshold line (bonferroni)\n')
-    # R_out.write(f'     geom_hline(yintercept=-log10(0.05/{subsample_number}), linetype="dashed", color = "red")+\n')
-    # R_out.write(f'     #threshold line (BHY)\n')
-    # R_out.write(f'     geom_hline(yintercept=bhy_thres, linetype="dashed", color = "blue")+\n')
-    # R_out.write(f'     annotate("text",x=10000000,y=bhy_thres+1,size=3,label=paste0("% above BHY threshold: ",percent_sig))+\n')
 
-        # OLD CODE
-    R_out.write(f'     # threshold line (bonferroni)\n')
-    R_out.write(f'     geom_hline(yintercept=BF_THRESHOLD, linetype="dashed", color = "red")+\n')
-    R_out.write(f'     #threshold line (BHY)\n')
-    R_out.write(f'     geom_hline(yintercept=BY_THRESHOLD, linetype="dashed", color = "blue")+\n')
-    R_out.write(f'     annotate("text",x=10000000,y=BY_THRESHOLD-1,size=3,label=paste0("% above BHY threshold: ",percent_sig))+\n')
+    R_out.write(f'     # threshold line (95th)\n')
+    R_out.write(f'     geom_hline(yintercept=NF_THRESHOLD, linetype="dashed", color = "red")+\n')
+    R_out.write(f'     #threshold line (99th)\n')
+    R_out.write(f'     geom_hline(yintercept=NN_THRESHOLD, linetype="dashed", color = "blue")+\n')
+        # find way to automate the x position
+    R_out.write(f'     annotate("text",x=20000000,y=NF_THRESHOLD-1,size=2.5,label=paste0("% above 95th%: ",percent_sig))+\n')
 
-    ############ END OF IF-ELSE (REMOVED)
 
     # add a theme
     R_out.write(f'     # Custom the theme:\n')
@@ -210,7 +194,7 @@ def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type):
     R_batch.close()
     # end of function
 
-# IDEA 1.4.1 (MODIFIED)
+# IDEA 1.4.1 (MODIFIED) (thresholds - testing)
 def IDEA_1_MAKE_R_SCRIPT(
         phenotype,
         cumulative_t20_dataframe_name,
@@ -233,13 +217,8 @@ def IDEA_1_MAKE_R_SCRIPT(
     CURRENT_SNP_R_SCRIPT.write(f'print("start of IDEA1 R script")\n')
     CURRENT_SNP_R_SCRIPT.write(f'T20_TRACKED_DATA<- read.csv("{PATH_TO_MAIN}output_files/R_DATA/{cumulative_t20_dataframe_name}.csv", header= TRUE, sep=",")\n')
     CURRENT_SNP_R_SCRIPT.write(f'\n')
-    # CURRENT_SNP_R_SCRIPT.write(f'PVAL_TYPES_LIST = c("GWAS_P","PSNP4","PSNP5","ABS_THETA")\n')
-        # new
     CURRENT_SNP_R_SCRIPT.write(f'PVAL_TYPES_LIST = c("GWAS_P","PSNP8")\n')
-
-    # CURRENT_SNP_R_SCRIPT.write(f'SUBSAMPLE_NUM_LIST = c(200,400,600,800,1000)\n')
-        # new
-    CURRENT_SNP_R_SCRIPT.write(f'SUBSAMPLE_NUM_LIST = c(200,400,600,800,999)\n')
+    CURRENT_SNP_R_SCRIPT.write(f'SUBSAMPLE_NUM_LIST = c({my_subsample_number_list})\n')
     CURRENT_SNP_R_SCRIPT.write(f'\n')
     CURRENT_SNP_R_SCRIPT.write(f'my_cols=c("CHR","POS","PVAL_TYPE","SUBSAMPLE_NUM","VALUE")\n')
     CURRENT_SNP_R_SCRIPT.write(f'# Make empty dataframe to append to later\n')
@@ -304,71 +283,73 @@ def IDEA_1_MAKE_R_SCRIPT(
         ylim=75
 
     for item in my_pval_list:
-        # if item == "ABS_THETA":
-        #     CURRENT_SNP_R_SCRIPT.write(f'#open png\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA1/{cumulative_t20_dataframe_name}_{item}.png", bg = "white", width = 5.75, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'this_graph_data<-subset(final_df,PVAL_TYPE=="{item}")\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'myplot<-ggplot(this_graph_data, aes(x=SUBSAMPLE_NUM, y=VALUE, fill=SUBSAMPLE_NUM))+\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'   guides(fill = guide_legend(override.aes = list(size = 7)))+\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'   geom_boxplot(outlier.shape = NA) +\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'   geom_point(size=0.5,color="black",alpha = 1,position = position_jitterdodge(jitter.width = 0.1),show.legend=FALSE)+\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'   scale_y_continuous(limits=c(0,250))+\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'   scale_fill_manual(name = "Subsample numbers",\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'       values = c("200" = "#e04e43", "400" = "#e0892b", "600" = "#d1d145", "800" = "#5fb547", "1000" = "#51dee0")) +\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'    guides(fill = guide_legend(order = 1))+\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'   theme(legend.position = "right",\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'       legend.text = element_text(size = 13),\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'       legend.title = element_text(size = 13),\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'       legend.key.size = unit(0.8,"cm"))\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'print(myplot)\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
 
-        #     # stats test (KW)
-        #     CURRENT_SNP_R_SCRIPT.write(f'png("{PATH_TO_MAIN}output_files/summary_plots/IDEA1/{cumulative_t20_dataframe_name}_{item}_KW_TEST.png", bg = "white", width = 6.25, height = 8.25, units = "in", res = 1200, pointsize = 4)\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'ggbetweenstats(\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'   data=this_graph_data,\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'   x = SUBSAMPLE_NUM,\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'   y=VALUE,\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'   type = "nonparametric",\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'   p.adjust.method = "bonferroni",\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'   pairwise.display = "all")\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'dev.off()\n')
-        #     CURRENT_SNP_R_SCRIPT.write(f'\n')
-
-        # else:
-            # END OF IF-ELSE (DEPRICATED)
 
         # import and calculate with threshold data
         CURRENT_SNP_R_SCRIPT.write(f'# subset for the current phenotype and pval type\n')
         CURRENT_SNP_R_SCRIPT.write(f'threshold_data<-subset(threshold_data_csv,PHENOTYPE=="{phenotype}" & PVAL_TYPE=="{av_list[pval_index]}")\n')
+       
         CURRENT_SNP_R_SCRIPT.write(f'#subset for each type of threshold\n')
-        CURRENT_SNP_R_SCRIPT.write(f'#Bonferroni (BF)\n')
-        CURRENT_SNP_R_SCRIPT.write(f'BF_threshold_data<-subset(threshold_data,THRESHOLD_TYPE=="BF" )\n')
-        CURRENT_SNP_R_SCRIPT.write(f'BF_threshold_data$SUBSAMPLE_NUM<-factor(BF_threshold_data$SUBSAMPLE_NUM)\n')
-        CURRENT_SNP_R_SCRIPT.write(f'\n')
-        CURRENT_SNP_R_SCRIPT.write(f'#(BHY)\n')
-        CURRENT_SNP_R_SCRIPT.write(f'BHY_threshold_data<-subset(threshold_data,THRESHOLD_TYPE=="BHY" )\n')
-        CURRENT_SNP_R_SCRIPT.write(f'BHY_threshold_data$SUBSAMPLE_NUM<-factor(BHY_threshold_data$SUBSAMPLE_NUM)\n')
-        CURRENT_SNP_R_SCRIPT.write(f'\n')
-        CURRENT_SNP_R_SCRIPT.write(f'# dataframe for BF threshold info\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'#Bonferroni (BF)\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'BF_threshold_data<-subset(threshold_data,THRESHOLD_TYPE=="BF" )\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'BF_threshold_data$SUBSAMPLE_NUM<-factor(BF_threshold_data$SUBSAMPLE_NUM)\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'#(BHY)\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'BHY_threshold_data<-subset(threshold_data,THRESHOLD_TYPE=="BHY" )\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'BHY_threshold_data$SUBSAMPLE_NUM<-factor(BHY_threshold_data$SUBSAMPLE_NUM)\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'\n')
+            # im going to use...
+            # GWAS
+                # 95% AND 99% BF 
+            # GIFT
+                # 95% and 99% NH (null hypothesis)
+
+# replace all instances of "BF_threshold_data" for (NF)95%_threshold_data (NF_threshold_data)
+# replace all instances of "BHY_threshold_data" for (NN)95% _threshold_data (NN_threshold_data)
+        if item=="GWAS_P":
+            CURRENT_SNP_R_SCRIPT.write(f'#95th percentile data (bonferroni)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'NF_threshold_data<-subset(threshold_data,THRESHOLD_TYPE=="NFBF" )\n')
+            CURRENT_SNP_R_SCRIPT.write(f'NF_threshold_data$SUBSAMPLE_NUM<-factor(NF_threshold_data$SUBSAMPLE_NUM)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+            CURRENT_SNP_R_SCRIPT.write(f'#99th percentile data (bonferroni)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'NN_threshold_data<-subset(threshold_data,THRESHOLD_TYPE=="NNBF" )\n')
+            CURRENT_SNP_R_SCRIPT.write(f'NN_threshold_data$SUBSAMPLE_NUM<-factor(NN_threshold_data$SUBSAMPLE_NUM)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+
+        elif item =="PSNP8":
+            CURRENT_SNP_R_SCRIPT.write(f'#95th percentile data (Null hypothesis data)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'NF_threshold_data<-subset(threshold_data,THRESHOLD_TYPE=="NFNH" )\n')
+            CURRENT_SNP_R_SCRIPT.write(f'NF_threshold_data$SUBSAMPLE_NUM<-factor(NF_threshold_data$SUBSAMPLE_NUM)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+            CURRENT_SNP_R_SCRIPT.write(f'#99th percentile data (Null hypothesis data)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'NN_threshold_data<-subset(threshold_data,THRESHOLD_TYPE=="NNNH" )\n')
+            CURRENT_SNP_R_SCRIPT.write(f'NN_threshold_data$SUBSAMPLE_NUM<-factor(NN_threshold_data$SUBSAMPLE_NUM)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+
+
+
+        CURRENT_SNP_R_SCRIPT.write(f'# dataframe for 95% threshold info\n')
         CURRENT_SNP_R_SCRIPT.write(f'threshold_lines1 <- data.frame(\n')
-        CURRENT_SNP_R_SCRIPT.write(f'   SUBSAMPLE_NUM = BF_threshold_data$SUBSAMPLE_NUM,\n')
-        CURRENT_SNP_R_SCRIPT.write(f'   x = as.numeric(BF_threshold_data$SUBSAMPLE_NUM) - 0.25,\n')
-        CURRENT_SNP_R_SCRIPT.write(f'   xend = as.numeric(BF_threshold_data$SUBSAMPLE_NUM) + 0.25,\n')
-        CURRENT_SNP_R_SCRIPT.write(f'   y = BF_threshold_data$THRESHOLD_VALUE,\n')
-        CURRENT_SNP_R_SCRIPT.write(f'   yend = BF_threshold_data$THRESHOLD_VALUE,\n')
-        CURRENT_SNP_R_SCRIPT.write(f'   threshold_type = "BF Threshold")\n')
+        CURRENT_SNP_R_SCRIPT.write(f'   SUBSAMPLE_NUM = NF_threshold_data$SUBSAMPLE_NUM,\n')
+        CURRENT_SNP_R_SCRIPT.write(f'   x = as.numeric(NF_threshold_data$SUBSAMPLE_NUM) - 0.25,\n')
+        CURRENT_SNP_R_SCRIPT.write(f'   xend = as.numeric(NF_threshold_data$SUBSAMPLE_NUM) + 0.25,\n')
+        CURRENT_SNP_R_SCRIPT.write(f'   y = NF_threshold_data$THRESHOLD_VALUE,\n')
+        CURRENT_SNP_R_SCRIPT.write(f'   yend = NF_threshold_data$THRESHOLD_VALUE,\n')
+        CURRENT_SNP_R_SCRIPT.write(f'   threshold_type = "95% Threshold")\n')
         CURRENT_SNP_R_SCRIPT.write(f'\n')
-        CURRENT_SNP_R_SCRIPT.write(f'# dataframe for the BHY threshold\n')
+        CURRENT_SNP_R_SCRIPT.write(f'# dataframe for the 99% threshold\n')
         CURRENT_SNP_R_SCRIPT.write(f'threshold_lines2 <- data.frame(\n')
-        CURRENT_SNP_R_SCRIPT.write(f'   SUBSAMPLE_NUM = BHY_threshold_data$SUBSAMPLE_NUM,\n')
-        CURRENT_SNP_R_SCRIPT.write(f'   x = as.numeric(BHY_threshold_data$SUBSAMPLE_NUM) - 0.25,\n')
-        CURRENT_SNP_R_SCRIPT.write(f'   xend = as.numeric(BHY_threshold_data$SUBSAMPLE_NUM) + 0.25,\n')
-        CURRENT_SNP_R_SCRIPT.write(f'   y = BHY_threshold_data$THRESHOLD_VALUE,\n')
-        CURRENT_SNP_R_SCRIPT.write(f'   yend = BHY_threshold_data$THRESHOLD_VALUE,\n')
-        CURRENT_SNP_R_SCRIPT.write(f'   threshold_type = "BHY Threshold")\n')
+        CURRENT_SNP_R_SCRIPT.write(f'   SUBSAMPLE_NUM = NN_threshold_data$SUBSAMPLE_NUM,\n')
+        CURRENT_SNP_R_SCRIPT.write(f'   x = as.numeric(NN_threshold_data$SUBSAMPLE_NUM) - 0.25,\n')
+        CURRENT_SNP_R_SCRIPT.write(f'   xend = as.numeric(NN_threshold_data$SUBSAMPLE_NUM) + 0.25,\n')
+        CURRENT_SNP_R_SCRIPT.write(f'   y = NN_threshold_data$THRESHOLD_VALUE,\n')
+        CURRENT_SNP_R_SCRIPT.write(f'   yend = NN_threshold_data$THRESHOLD_VALUE,\n')
+        CURRENT_SNP_R_SCRIPT.write(f'   threshold_type = "99% Threshold")\n')
         CURRENT_SNP_R_SCRIPT.write(f'\n')
+
+
+
+
         CURRENT_SNP_R_SCRIPT.write(f'# combine the threshold dataframes\n')
         CURRENT_SNP_R_SCRIPT.write(f'threshold_lines <- rbind(threshold_lines1, threshold_lines2)\n')
         CURRENT_SNP_R_SCRIPT.write(f'\n')
@@ -388,7 +369,7 @@ def IDEA_1_MAKE_R_SCRIPT(
         CURRENT_SNP_R_SCRIPT.write(f'       aes(x = x, xend = xend, y = y, yend = yend, color = threshold_type), \n')
         CURRENT_SNP_R_SCRIPT.write(f'       linetype = "dashed", show.legend = TRUE) +\n')
         CURRENT_SNP_R_SCRIPT.write(f'   scale_color_manual(name = "Thresholds",\n')
-        CURRENT_SNP_R_SCRIPT.write(f'       values = c("BF Threshold" = "red", "BHY Threshold" = "blue")) +\n')
+        CURRENT_SNP_R_SCRIPT.write(f'       values = c("95% Threshold" = "red", "99% Threshold" = "blue")) +\n')
         CURRENT_SNP_R_SCRIPT.write(f'   scale_fill_manual(name = "Subsample numbers",\n')
         CURRENT_SNP_R_SCRIPT.write(f'       values = c("200" = "#e04e43", "400" = "#e0892b", "600" = "#d1d145", "800" = "#5fb547", "999" = "#51dee0")) +\n')
         CURRENT_SNP_R_SCRIPT.write(f'   guides(fill = guide_legend(order = 1), color = guide_legend(order = 2)) +\n')
@@ -631,33 +612,82 @@ def IDEA_2_MAKE_R_AND_BASH_SCRIPT(
         # import threshold data
         CURRENT_SNP_R_SCRIPT.write(f'# subset for the current phenotype and pval type\n')
         CURRENT_SNP_R_SCRIPT.write(f'threshold_data<-subset(threshold_data_csv,PHENOTYPE=="{phenotype}" & PVAL_TYPE=="{av_list[pval_index]}")\n')
-        CURRENT_SNP_R_SCRIPT.write(f'#subset for each type of threshold\n')
-        CURRENT_SNP_R_SCRIPT.write(f'#Bonferroni (BF)\n')
-        CURRENT_SNP_R_SCRIPT.write(f'BF_threshold_data<-subset(threshold_data,THRESHOLD_TYPE=="BF" )\n')
-        CURRENT_SNP_R_SCRIPT.write(f'BF_threshold_data$SUBSAMPLE_NUM<-factor(BF_threshold_data$SUBSAMPLE_NUM)\n')
-        CURRENT_SNP_R_SCRIPT.write(f'\n')
-        CURRENT_SNP_R_SCRIPT.write(f'#(BHY)\n')
-        CURRENT_SNP_R_SCRIPT.write(f'BHY_threshold_data<-subset(threshold_data,THRESHOLD_TYPE=="BHY" )\n')
-        CURRENT_SNP_R_SCRIPT.write(f'BHY_threshold_data$SUBSAMPLE_NUM<-factor(BHY_threshold_data$SUBSAMPLE_NUM)\n')
-        CURRENT_SNP_R_SCRIPT.write(f'\n')
-        CURRENT_SNP_R_SCRIPT.write(f'# dataframe for BF threshold info\n')
+
+        # CURRENT_SNP_R_SCRIPT.write(f'#subset for each type of threshold\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'#Bonferroni (BF)\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'BF_threshold_data<-subset(threshold_data,THRESHOLD_TYPE=="BF" )\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'BF_threshold_data$SUBSAMPLE_NUM<-factor(BF_threshold_data$SUBSAMPLE_NUM)\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'#(BHY)\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'BHY_threshold_data<-subset(threshold_data,THRESHOLD_TYPE=="BHY" )\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'BHY_threshold_data$SUBSAMPLE_NUM<-factor(BHY_threshold_data$SUBSAMPLE_NUM)\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'# dataframe for BF threshold info\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'threshold_lines1 <- data.frame(\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'   SUBSAMPLE_NUM = BF_threshold_data$SUBSAMPLE_NUM,\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'   x = as.numeric(BF_threshold_data$SUBSAMPLE_NUM) - 0.25,\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'   xend = as.numeric(BF_threshold_data$SUBSAMPLE_NUM) + 0.25,\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'   y = BF_threshold_data$THRESHOLD_VALUE,\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'   yend = BF_threshold_data$THRESHOLD_VALUE,\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'   threshold_type = "BF Threshold")\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'# dataframe for the BHY threshold\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'threshold_lines2 <- data.frame(\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'   SUBSAMPLE_NUM = BHY_threshold_data$SUBSAMPLE_NUM,\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'   x = as.numeric(BHY_threshold_data$SUBSAMPLE_NUM) - 0.25,\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'   xend = as.numeric(BHY_threshold_data$SUBSAMPLE_NUM) + 0.25,\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'   y = BHY_threshold_data$THRESHOLD_VALUE,\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'   yend = BHY_threshold_data$THRESHOLD_VALUE,\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'   threshold_type = "BHY Threshold")\n')
+        # CURRENT_SNP_R_SCRIPT.write(f'\n')
+
+        #
+        # replace all instances of "BF_threshold_data" for (NF)95%_threshold_data (NF_threshold_data)
+        # replace all instances of "BHY_threshold_data" for (NN)95% _threshold_data (NN_threshold_data)
+        if pval_type == "GWAS_P":
+            CURRENT_SNP_R_SCRIPT.write(f'#95% Bonferroni \n')
+            CURRENT_SNP_R_SCRIPT.write(f'NF_threshold_data<-subset(threshold_data,THRESHOLD_TYPE=="NFBF" )\n')
+            CURRENT_SNP_R_SCRIPT.write(f'NF_threshold_data$SUBSAMPLE_NUM<-factor(NF_threshold_data$SUBSAMPLE_NUM)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+            CURRENT_SNP_R_SCRIPT.write(f'# 99% bonferroni \n')
+            CURRENT_SNP_R_SCRIPT.write(f'NN_threshold_data<-subset(threshold_data,THRESHOLD_TYPE=="NNBF" )\n')
+            CURRENT_SNP_R_SCRIPT.write(f'NN_threshold_data$SUBSAMPLE_NUM<-factor(NN_threshold_data$SUBSAMPLE_NUM)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+
+        elif pval_type == "PSNP8":
+            CURRENT_SNP_R_SCRIPT.write(f'#95% null hypothesis\n')
+            CURRENT_SNP_R_SCRIPT.write(f'NF_threshold_data<-subset(threshold_data,THRESHOLD_TYPE=="NFNH" )\n')
+            CURRENT_SNP_R_SCRIPT.write(f'NF_threshold_data$SUBSAMPLE_NUM<-factor(NF_threshold_data$SUBSAMPLE_NUM)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+            CURRENT_SNP_R_SCRIPT.write(f'#99% null hypothesis\n')
+            CURRENT_SNP_R_SCRIPT.write(f'NN_threshold_data<-subset(threshold_data,THRESHOLD_TYPE=="NNNH" )\n')
+            CURRENT_SNP_R_SCRIPT.write(f'NN_threshold_data$SUBSAMPLE_NUM<-factor(NN_threshold_data$SUBSAMPLE_NUM)\n')
+            CURRENT_SNP_R_SCRIPT.write(f'\n')
+
+
+        CURRENT_SNP_R_SCRIPT.write(f'# dataframe for NF threshold info\n')
         CURRENT_SNP_R_SCRIPT.write(f'threshold_lines1 <- data.frame(\n')
-        CURRENT_SNP_R_SCRIPT.write(f'   SUBSAMPLE_NUM = BF_threshold_data$SUBSAMPLE_NUM,\n')
-        CURRENT_SNP_R_SCRIPT.write(f'   x = as.numeric(BF_threshold_data$SUBSAMPLE_NUM) - 0.25,\n')
-        CURRENT_SNP_R_SCRIPT.write(f'   xend = as.numeric(BF_threshold_data$SUBSAMPLE_NUM) + 0.25,\n')
-        CURRENT_SNP_R_SCRIPT.write(f'   y = BF_threshold_data$THRESHOLD_VALUE,\n')
-        CURRENT_SNP_R_SCRIPT.write(f'   yend = BF_threshold_data$THRESHOLD_VALUE,\n')
-        CURRENT_SNP_R_SCRIPT.write(f'   threshold_type = "BF Threshold")\n')
+        CURRENT_SNP_R_SCRIPT.write(f'   SUBSAMPLE_NUM = NF_threshold_data$SUBSAMPLE_NUM,\n')
+        CURRENT_SNP_R_SCRIPT.write(f'   x = as.numeric(NF_threshold_data$SUBSAMPLE_NUM) - 0.25,\n')
+        CURRENT_SNP_R_SCRIPT.write(f'   xend = as.numeric(NF_threshold_data$SUBSAMPLE_NUM) + 0.25,\n')
+        CURRENT_SNP_R_SCRIPT.write(f'   y = NF_threshold_data$THRESHOLD_VALUE,\n')
+        CURRENT_SNP_R_SCRIPT.write(f'   yend = NF_threshold_data$THRESHOLD_VALUE,\n')
+        CURRENT_SNP_R_SCRIPT.write(f'   threshold_type = "95% Threshold")\n')
         CURRENT_SNP_R_SCRIPT.write(f'\n')
         CURRENT_SNP_R_SCRIPT.write(f'# dataframe for the BHY threshold\n')
         CURRENT_SNP_R_SCRIPT.write(f'threshold_lines2 <- data.frame(\n')
-        CURRENT_SNP_R_SCRIPT.write(f'   SUBSAMPLE_NUM = BHY_threshold_data$SUBSAMPLE_NUM,\n')
-        CURRENT_SNP_R_SCRIPT.write(f'   x = as.numeric(BHY_threshold_data$SUBSAMPLE_NUM) - 0.25,\n')
-        CURRENT_SNP_R_SCRIPT.write(f'   xend = as.numeric(BHY_threshold_data$SUBSAMPLE_NUM) + 0.25,\n')
-        CURRENT_SNP_R_SCRIPT.write(f'   y = BHY_threshold_data$THRESHOLD_VALUE,\n')
-        CURRENT_SNP_R_SCRIPT.write(f'   yend = BHY_threshold_data$THRESHOLD_VALUE,\n')
-        CURRENT_SNP_R_SCRIPT.write(f'   threshold_type = "BHY Threshold")\n')
+        CURRENT_SNP_R_SCRIPT.write(f'   SUBSAMPLE_NUM = NN_threshold_data$SUBSAMPLE_NUM,\n')
+        CURRENT_SNP_R_SCRIPT.write(f'   x = as.numeric(NN_threshold_data$SUBSAMPLE_NUM) - 0.25,\n')
+        CURRENT_SNP_R_SCRIPT.write(f'   xend = as.numeric(NN_threshold_data$SUBSAMPLE_NUM) + 0.25,\n')
+        CURRENT_SNP_R_SCRIPT.write(f'   y = NN_threshold_data$THRESHOLD_VALUE,\n')
+        CURRENT_SNP_R_SCRIPT.write(f'   yend = NN_threshold_data$THRESHOLD_VALUE,\n')
+        CURRENT_SNP_R_SCRIPT.write(f'   threshold_type = "99% Threshold")\n')
         CURRENT_SNP_R_SCRIPT.write(f'\n')
+
+
+
+
+
         CURRENT_SNP_R_SCRIPT.write(f'# combine the threshold dataframes\n')
         CURRENT_SNP_R_SCRIPT.write(f'threshold_lines <- rbind(threshold_lines1, threshold_lines2)\n')
         CURRENT_SNP_R_SCRIPT.write(f'\n')
@@ -677,7 +707,7 @@ def IDEA_2_MAKE_R_AND_BASH_SCRIPT(
         CURRENT_SNP_R_SCRIPT.write(f'       aes(x = x, xend = xend, y = y, yend = yend, color = threshold_type), \n')
         CURRENT_SNP_R_SCRIPT.write(f'       linetype = "dashed", show.legend = TRUE) +\n')
         CURRENT_SNP_R_SCRIPT.write(f'   scale_color_manual(name = "Thresholds",\n')
-        CURRENT_SNP_R_SCRIPT.write(f'       values = c("BF Threshold" = "red", "BHY Threshold" = "blue")) +\n')
+        CURRENT_SNP_R_SCRIPT.write(f'       values = c("95% Threshold" = "red", "99% Threshold" = "blue")) +\n')
         CURRENT_SNP_R_SCRIPT.write(f'   scale_fill_manual(name = "Subsample numbers",\n')
         CURRENT_SNP_R_SCRIPT.write(f'       values = c("200" = "#e04e43", "400" = "#e0892b", "600" = "#d1d145", "800" = "#5fb547", "999" = "#51dee0")) +\n')
         CURRENT_SNP_R_SCRIPT.write(f'   guides(fill = guide_legend(order = 1), color = guide_legend(order = 2)) +\n')
@@ -743,6 +773,27 @@ def IDEA_2_MAKE_R_AND_BASH_SCRIPT(
     CURRENT_SNP_BATCH.close()
 
     # END OF FUNCTION
+
+
+parser=argparse.ArgumentParser(description="W.I.P")
+
+parser.add_argument('-subsampleFile', 
+                    type=str, 
+                    metavar='location of subsample file', 
+                    required=True, 
+                    help='location of the file containing list of all sample numbers'
+                    )
+
+# stores input data and parses them
+args= parser.parse_args() 
+
+subsample_num_list=fetch_subsample_numbers_list(args.subsampleFile)
+my_subsample_number_list=""
+for item in subsample_num_list:
+    my_subsample_number_list += str(item)
+    my_subsample_number_list += ","
+
+my_subsample_number_list = my_subsample_number_list[:-1]
 
 ############################################
 IDEA_2_MAKE_R_AND_BASH_SCRIPT("Mo98", "Mo98_positive_control.csv","positive")

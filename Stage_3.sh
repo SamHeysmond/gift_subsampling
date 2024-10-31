@@ -2,9 +2,9 @@
 #SBATCH --partition=defq
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=2
 #SBATCH --mem=10g
-#SBATCH --time=24:00:00
+#SBATCH --time=02:00:00
 #SBATCH --job-name=Stage_3
 #SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out
 #SBATCH --error=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.err
@@ -35,29 +35,29 @@ mkdir /gpfs01/home/mbysh17/output_files/stage_3_scripts/
 rm -r /gpfs01/home/mbysh17/output_files/summary_plots/stage_3/
 mkdir /gpfs01/home/mbysh17/output_files/summary_plots/stage_3/
 
-# activate python environment
-conda activate python3_env
+# # activate python environment
+# conda activate python3_env
 
-# run python script to make the R zoom scripts
-python batch_files/Zoom_In.py
+# # run python script to make the R zoom scripts
+# python batch_files/Zoom_In.py
 
-conda deactivate
+# conda deactivate
 
-# activate R environment
-conda activate r_env
+# # activate R environment
+# conda activate r_env
 
-# run each zoom plot R script that we want
-Rscript output_files/stage_3_scripts/Mo98_GWAS_AVERAGE_P_Zoom.R
-Rscript output_files/stage_3_scripts/Mo98_GIFT_AVERAGE_PSNP8_Zoom.R
-
-
-Rscript output_files/stage_3_scripts/Na23_GWAS_AVERAGE_P_Zoom.R
-Rscript output_files/stage_3_scripts/Na23_GIFT_AVERAGE_PSNP8_Zoom.R
+# # run each zoom plot R script that we want
+# Rscript output_files/stage_3_scripts/Mo98_GWAS_AVERAGE_P_Zoom.R
+# Rscript output_files/stage_3_scripts/Mo98_GIFT_AVERAGE_PSNP8_Zoom.R
 
 
-conda deactivate
+# Rscript output_files/stage_3_scripts/Na23_GWAS_AVERAGE_P_Zoom.R
+# Rscript output_files/stage_3_scripts/Na23_GIFT_AVERAGE_PSNP8_Zoom.R
 
-echo "Zoom script finished"
+
+# conda deactivate
+
+# echo "Zoom script finished"
 
 
 #######################################################
@@ -81,7 +81,7 @@ sbatch batch_files/cross_reference_script.sh
 # give the above script time to run
     # need a more sensible method to ensure the python file runs afterwards
 # sleep 4m
-sleep 3m
+# sleep 3m
 
 conda activate python3_env
 

@@ -2,9 +2,9 @@
 #SBATCH --partition=shortq
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=9
 #SBATCH --mem=90g
-#SBATCH --time=01:00:00
+#SBATCH --time=02:00:00
 #SBATCH --job-name=SNP_tracker_sh
 #SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out
 #SBATCH --error=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.err
@@ -12,9 +12,9 @@
 #SBATCH --mail-user=mbysh17@nottingham.ac.uk
 
 # changed over to short q
-# changed mem down from 1350GB to 90GB
-# changed CPUS down from 32 to 16
-# changed time down from 7 days to 1 hour
+# changed mem down from 1350GB to 90GB (80 used in python script)
+# changed CPUS down from 32 to 16 to 8 (9 in this 8 ion python script)
+# changed time down from 7 days to 2 hours
 
 #change to home directory
 cd /gpfs01/home/mbysh17

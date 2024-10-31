@@ -69,7 +69,7 @@ echo "JOB_ID,SUBSAMPLE_N,PHENOTYPE" > core_files/JOB_LIST.csv
 conda activate python3_env
 
 # run the python script which will make all of the individual scripts needed
-python3 batch_files/subsample_script_setup.py
+python3 batch_files/subsample_script_setup.py -subsampleFile core_files/subsample_numbers_list.txt
 
 echo "Subsample_setup.sh finished!"
 #end of script

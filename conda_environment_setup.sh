@@ -30,7 +30,7 @@ source ~/.bashrc
 # echo "creating gift_env environment"
 
 # conda create -n gift_env -y
-# conda activate gift_env
+conda activate gift_env
 # conda install python=3.10 -y
 # conda install r-base -y
 # conda install bioconductor-biocinstaller -y # (check)
@@ -42,7 +42,8 @@ source ~/.bashrc
 # conda install r-dplyr -y
 # conda install r-ggstatsplot -y 
 # pip3 install pandas
-# conda deactivate
+pip3 install statsmodels
+conda deactivate
 
 # # # modin install tricky (due to dependencies)- try one of the below in order
 # # # try the ray install one first but other lines may be necessary if ray fails

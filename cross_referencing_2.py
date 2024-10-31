@@ -2,6 +2,7 @@
 import pandas 
 import os 
 import fnmatch
+import time
 
 # path to my home dir
 PATH_TO_MAIN = "/gpfs01/home/mbysh17/"
@@ -14,6 +15,25 @@ GWAS_gene_results_files=[]
 Mo98_gene_tracker_df = pandas.DataFrame(columns=['DATA_SOURCE'])
 Na23_gene_tracker_df = pandas.DataFrame(columns=['DATA_SOURCE'])
 
+# wait on green light
+light = "redlight"
+print("waiting on green light to start . . .", flush = True)
+while light == "redlight":
+
+    # read from light file
+    f=open(f"{PATH_TO_MAIN}core_files/light.txt","r")
+    light=f.readline()
+    print(f"current light is . . .{light}", flush = True)
+    f.close()
+    if str(light)=="greenlight":
+        print("light FOUND . . .", flush = True)
+        
+    else:
+        # wait 30 seconds before checking again
+        print("waiting 10 seconds . . .", flush = True)
+        time.sleep(10)
+
+print("green light found, starting . . .", flush = True)
 
 # search and append all the GIFT data on average values
 print("#############################################.", flush = True)

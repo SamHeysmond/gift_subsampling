@@ -81,25 +81,46 @@ Rscript_output.write(f'write.csv(T20_SNPS,"output_files/T20_SNPS_{args.m}_{args.
 Rscript_output.write(f'# Calculate the Benjamini yekutieli threshold\n')
 Rscript_output.write(f'm <- nrow(Results)\n')
 Rscript_output.write(f'Results <- Results[order(Results${p_value_name}),]\n')
-Rscript_output.write(f's <- 1.0\n')
-Rscript_output.write(f'i <- 0\n')
-Rscript_output.write('for (p in Results$'+str(p_value_name)+') {\n')
-Rscript_output.write(f'  p\n')
-Rscript_output.write(f'  i <- i+1\n')
-Rscript_output.write('  if (i > 1) {\n')
-Rscript_output.write(f'    s <- s + 1.0/(i-1)\n')
-Rscript_output.write('  }\n')
-Rscript_output.write(f'  thes_pval <- ((i + 1.0) / m) * 0.05 / s\n')
-Rscript_output.write('  if (p > thes_pval) {break\n')
-Rscript_output.write('  }\n')
-Rscript_output.write('}\n')
-Rscript_output.write(f'thes_pval_original <- thes_pval\n')
-Rscript_output.write(f'by_thres <- -log10(thes_pval)\n')
-Rscript_output.write(f'# calculate bonferroni_threshold\n')
 
-# Should the *1135 change depending on subsample number? if so -> e.g. 200 samples would be *200
-Rscript_output.write(f'bt <- 0.05 / (nrow(Results)*{args.i})\n')
-Rscript_output.write(f'bf_thres <- -log10(bt)\n')
+# Rscript_output.write(f's <- 1.0\n')
+# Rscript_output.write(f'i <- 0\n')
+# Rscript_output.write('for (p in Results$'+str(p_value_name)+') {\n')
+# Rscript_output.write(f'  p\n')
+# Rscript_output.write(f'  i <- i+1\n')
+# Rscript_output.write('  if (i > 1) {\n')
+# Rscript_output.write(f'    s <- s + 1.0/(i-1)\n')
+# Rscript_output.write('  }\n')
+# Rscript_output.write(f'  thes_pval <- ((i + 1.0) / m) * 0.05 / s\n')
+# Rscript_output.write('  if (p > thes_pval) {break\n')
+# Rscript_output.write('  }\n')
+# Rscript_output.write('}\n')
+# Rscript_output.write(f'thes_pval_original <- thes_pval\n')
+# Rscript_output.write(f'by_thres <- -log10(thes_pval)\n')
+# Rscript_output.write(f'# calculate bonferroni_threshold\n')
+
+# # Should the *1135 change depending on subsample number? if so -> e.g. 200 samples would be *200
+# Rscript_output.write(f'bt <- 0.05 / (nrow(Results)*{args.i})\n')
+# Rscript_output.write(f'bf_thres <- -log10(bt)\n')
+
+if args.m == "GIFT":
+    # 99TH and 95th percentile
+    Rscript_output.write(f'NNNH<-quantile(Results$PSNP8,probs=0.01)\n')
+    Rscript_output.write(f'NNNH<-unname(NNNH)\n')
+    Rscript_output.write(f'NNNH<- -log10(NNNH)\n')
+    Rscript_output.write(f'\n')
+    Rscript_output.write(f'NFNH<-quantile(Results$PSNP8,probs=0.05)\n')
+    Rscript_output.write(f'NFNH<-unname(NFNH)\n')
+    Rscript_output.write(f'NFNH<- -log10(NFNH)\n')
+
+# obtain 99% and 95% bonferroni
+
+elif args.m == "GWAS":
+    # 99th and 95th bonferoni
+    # test apply fix here with Results$pvals
+    Rscript_output.write(f'NNBF<- -log10(0.01/(nrow(Results$pvals)))\n')
+    Rscript_output.write(f'\n')
+    Rscript_output.write(f'NFBF<- -log10(0.05/(nrow(Results$pvals)))\n')
+    Rscript_output.write(f'\n')
 
 # annotation prep stuff
 Rscript_output.write(f'#make new columns where the default highlight and annotation is no\n')
@@ -151,8 +172,17 @@ Rscript_output.write(f'     geom_point(alpha=0.5) +\n')
 #Rscript_output.write(f'     scale_color_manual(values = rep(c("cyan", "blue"), 22 )) +\n')
 
 # write in the threshold lines
-Rscript_output.write(f'     geom_hline(yintercept = bf_thres, color = "red", linetype = "dashed") +\n')
-Rscript_output.write(f'     geom_hline(yintercept = by_thres, color = "blue", linetype = "dashed") +\n')
+if args.m == "GIFT":
+
+    Rscript_output.write(f'     geom_hline(yintercept = NNNH, color = "red", linetype = "dashed") +\n')
+    Rscript_output.write(f'     geom_hline(yintercept = NFNH, color = "blue", linetype = "dashed") +\n')
+
+else:
+    Rscript_output.write(f'     geom_hline(yintercept = NNBF, color = "red", linetype = "dashed") +\n')
+    Rscript_output.write(f'     geom_hline(yintercept = NFBF, color = "blue", linetype = "dashed") +\n')
+
+# Rscript_output.write(f'     geom_hline(yintercept = bf_thres, color = "red", linetype = "dashed") +\n')
+# Rscript_output.write(f'     geom_hline(yintercept = by_thres, color = "blue", linetype = "dashed") +\n')
 
 Rscript_output.write(f'     # custom X axis:\n')
 Rscript_output.write(f'     scale_x_continuous( label = axisdf$CHROM, breaks= axisdf$center ) +\n')
