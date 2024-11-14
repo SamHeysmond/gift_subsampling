@@ -11,7 +11,8 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=mbysh17@nottingham.ac.uk
 #===============================
-# This script runs all stage 4 and 5 scripts 
+# This script runs all stage 5 R scripts to make...
+# ... the plots for the paths
 #===============================
 echo "start of stage 5 script"
 

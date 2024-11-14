@@ -256,17 +256,17 @@ for phenotype in phenotype_list:
             # each ID within SUBSAMPLE_LEVEL = 400 etc
         if int(subsample_number)<=200:
             print("Entering <=200 section",flush=True)
-            with Pool(20) as pool: # changed from 50
+            with Pool(50) as pool: # changed from 50
                 pool.map(gather_function, list_of_job_ids_to_gather)
 
         elif int(subsample_number)==400:
             print("Entering 400 section",flush=True)
-            with Pool(20) as pool:
+            with Pool(50) as pool:
                 pool.map(gather_function, list_of_job_ids_to_gather)
 
         elif int(subsample_number)==600:
             print("Entering 600 section",flush=True)
-            with Pool(10) as pool: # reduced to 20 from 25
+            with Pool(25) as pool: # reduced to 20 from 25
                 pool.map(gather_function, list_of_job_ids_to_gather)
 
         elif int(subsample_number)==int(max_subsample_num):
@@ -275,11 +275,11 @@ for phenotype in phenotype_list:
             import modin.pandas as pandas
             import ray
             # use modin version and set up ray instance etc
-            # (25 CPUS and 100 GB) for now OUT OF (51 CPUs and 800GB )
-            os.environ["MODIN_CPUS"] = "20" #reduced to 20 from 25
+            # (25 CPUS and 105 GB) for now OUT OF (51 CPUs and 500GB )
+            os.environ["MODIN_CPUS"] = "25" #reduced to 20 from 25
 
-            memory_for_ray= 100000000000
-            ray.init(_plasma_directory="/tmp", object_store_memory=memory_for_ray,num_cpus=20) # setting to disable out of core in Ray and obj store mem increase
+            memory_for_ray= 150000000000
+            ray.init(_plasma_directory="/tmp", object_store_memory=memory_for_ray,num_cpus=25) # setting to disable out of core in Ray and obj store mem increase
 
             for job_id in list_of_job_ids_to_gather:
                 gather_function(job_id)

@@ -1,17 +1,20 @@
 #!/bin/bash
-#SBATCH --partition=defq
+#SBATCH --partition=hmemq
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=21
-#SBATCH --mem=200g
-#SBATCH --time=05:00:00
+#SBATCH --cpus-per-task=51
+#SBATCH --mem=650g
+#SBATCH --time=10:00:00
 #SBATCH --job-name=Stage_5_1
 #SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out
 #SBATCH --error=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.err
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=mbysh17@nottingham.ac.uk
 #===============================
-# This script runs all stage 5 scripts 
+# This script runs all stage 5 scripts to filter ...
+# ... genotypes to only the positions given
+# It also creates R scripts to calculating ...
+# ... theta paths.
 #===============================
 # mem down from 800
 # cpu down from 51
