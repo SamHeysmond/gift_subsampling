@@ -4,6 +4,7 @@ import concurrent.futures
 import modin.pandas as pandas
 import ray
 import statsmodels.stats.multitest
+import numpy as np
 
 os.environ["MODIN_CPUS"] = "8"
 
@@ -40,6 +41,21 @@ PATH_TO_MAIN = "/gpfs01/home/mbysh17/"
 
 ########################################################################
 ######### FUNCTIONS
+def fetch_phenotype_list(phenotype_list_file):
+    phenotypes_list=[]
+    temp_file=open(f"{phenotype_list_file}","r")
+
+    for line in temp_file:
+
+        subsample_number=line.replace('\n','')
+
+        phenotypes_list.append(subsample_number)
+    
+    print("Phenotype list fetched: ",flush=True)
+    print(phenotypes_list,flush=True)
+
+    return phenotypes_list
+
 
 # IDEA 3 function 1 (3.1) MODIFIED
 def IDEA_3_process_all_snps_file(df_to_process,GIFT_or_GWAS,TOTAL_GIFT_OR_GWAS,subsample_num):
@@ -91,10 +107,6 @@ def IDEA_3_process_all_snps_file(df_to_process,GIFT_or_GWAS,TOTAL_GIFT_OR_GWAS,s
         df_to_process = df_to_process.groupby(['CHR','POS','SUBSAMPLE_NUM'],as_index=False).agg({'TOTAL_PSNP8':'sum','TIMES_APPEARED':'sum','TOTAL_GIFT':'max'})
             
         # calculate averages of pvalues for each SNP in each pvalue type
-        # df_to_process["AVERAGE_PSNP4"] = df_to_process["TOTAL_PSNP4"] / df_to_process["TIMES_APPEARED"]
-        # df_to_process["AVERAGE_PSNP5"] = df_to_process["TOTAL_PSNP5"] / df_to_process["TIMES_APPEARED"]
-        # df_to_process["AVERAGE_ABS_THETA"] =df_to_process["TOTAL_ABS_THETA"] / df_to_process["TIMES_APPEARED"]
-            # new
         df_to_process["AVERAGE_PSNP8"] = df_to_process["TOTAL_PSNP8"] / df_to_process["TIMES_APPEARED"]
 
     return df_to_process
@@ -413,24 +425,32 @@ Total_GWAS_Na23 = 0
 csv_files=[]
 
 # PHENOTYPE_MEHTOD_SUBNUM_files=[]
+Mo98_GIFT_50_files=[]
+Mo98_GIFT_100_files=[]
 Mo98_GIFT_200_files =[]
 Mo98_GIFT_400_files =[]
 Mo98_GIFT_600_files =[]
 Mo98_GIFT_800_files =[]
 Mo98_GIFT_999_files =[]
 
+Mo98_GWAS_50_files=[]
+Mo98_GWAS_100_files=[]
 Mo98_GWAS_200_files =[]
 Mo98_GWAS_400_files =[]
 Mo98_GWAS_600_files =[]
 Mo98_GWAS_800_files =[]
 Mo98_GWAS_999_files =[]
 
+Na23_GIFT_50_files=[]
+Na23_GIFT_100_files=[]
 Na23_GIFT_200_files =[]
 Na23_GIFT_400_files =[]
 Na23_GIFT_600_files =[]
 Na23_GIFT_800_files =[]
 Na23_GIFT_999_files =[]
 
+Na23_GWAS_50_files=[]
+Na23_GWAS_100_files=[]
 Na23_GWAS_200_files =[]
 Na23_GWAS_400_files =[]
 Na23_GWAS_600_files =[]
@@ -449,6 +469,9 @@ for file in os.listdir(PATH_TO_MAIN+"output_files"):
 
 csv_file_index =0
 csv_file_index_max=int(len(csv_files)-1)
+
+
+phenotype_list=fetch_phenotype_list(PATH_TO_MAIN+"core_files/phenotypes_list.txt")
 
 
 # split csv files into categories (PHENO, METHOD, SUBNUM)
@@ -483,7 +506,12 @@ for csv_file in csv_files:
 
         elif csv_file_name[6]=="999":
             Mo98_GIFT_999_files.append(csv_file)
+        
+        elif csv_file_name[6]=="50":
+            Mo98_GIFT_50_files.append(csv_file)
 
+        elif csv_file_name[6]=="100":
+            Mo98_GIFT_100_files.append(csv_file)
 
     # Mo98 GWAS lists
     elif csv_file_name[2]=="Mo98" and csv_file_name[3]=='GWAS' :
@@ -499,11 +527,14 @@ for csv_file in csv_files:
         elif csv_file_name[4]=="800":# GWAS code vvv  
             Mo98_GWAS_800_files.append(csv_file) 
 
-        # elif csv_file_name[4]=="1000":# GWAS code vvv  
-        #     Mo98_GWAS_999_files.append(csv_file)
-
         elif csv_file_name[4]=="999":# GWAS code vvv  
             Mo98_GWAS_999_files.append(csv_file)
+
+        elif csv_file_name[4]=="50":# GWAS code vvv  
+            Mo98_GWAS_50_files.append(csv_file)
+
+        elif csv_file_name[4]=="100":# GWAS code vvv  
+            Mo98_GWAS_100_files.append(csv_file)
 
     # Na23 GIFT lists
     elif csv_file_name[2] == "Na23" and csv_file_name[3]=='whole': 
@@ -518,12 +549,16 @@ for csv_file in csv_files:
 
         elif csv_file_name[6]=="800":
             Na23_GIFT_800_files.append(csv_file)
-
-        # elif csv_file_name[6]=="1000":
-        #     Na23_GIFT_999_files.append(csv_file)
         
         elif csv_file_name[6]=="999":
             Na23_GIFT_999_files.append(csv_file)
+
+        elif csv_file_name[6]=="50":
+            Na23_GIFT_50_files.append(csv_file)
+
+        elif csv_file_name[6]=="100":
+            Na23_GIFT_100_files.append(csv_file)
+
 
     # Na23 GWAS lists
     elif csv_file_name[2]=="Na23" and csv_file_name[3]=='GWAS':
@@ -539,12 +574,14 @@ for csv_file in csv_files:
         elif csv_file_name[4]=="800":# GWAS code vvv  
             Na23_GWAS_800_files.append(csv_file) 
 
-        # elif csv_file_name[4]=="1000":# GWAS code vvv  
-        #     Na23_GWAS_999_files.append(csv_file)  
-
         elif csv_file_name[4]=="999":# GWAS code vvv  
             Na23_GWAS_999_files.append(csv_file)  
 
+        elif csv_file_name[4]=="50":# GWAS code vvv  
+            Na23_GWAS_50_files.append(csv_file)  
+
+        elif csv_file_name[4]=="100":# GWAS code vvv  
+            Na23_GWAS_100_files.append(csv_file)  
 # PROGRESS METER
 print("////////////////////////////////////////////////",flush=True)
 print("Finished splitting into groups!",flush=True)
@@ -556,27 +593,42 @@ print("////////////////////////////////////////////////",flush=True)
 ####################################
 ### IDEA 3
 # store each of the lists of the files into one big list to loop through
-list_of_list_of_files=[Mo98_GIFT_200_files,
+    # need better way to do this...
+# list_of_list_of_files=[Mo98_GIFT_200_files,
+#                        Mo98_GIFT_400_files,
+#                        Mo98_GIFT_600_files,
+#                        Mo98_GIFT_800_files,
+#                        Mo98_GIFT_999_files,
+#                        Mo98_GWAS_200_files,
+#                        Mo98_GWAS_400_files,
+#                        Mo98_GWAS_600_files,
+#                        Mo98_GWAS_800_files,
+#                        Mo98_GWAS_999_files,
+#                        Na23_GIFT_200_files,
+#                        Na23_GIFT_400_files,
+#                        Na23_GIFT_600_files,
+#                        Na23_GIFT_800_files,
+#                        Na23_GIFT_999_files,
+#                        Na23_GWAS_200_files,
+#                        Na23_GWAS_400_files,
+#                        Na23_GWAS_600_files,
+#                        Na23_GWAS_800_files,
+#                        Na23_GWAS_999_files]
+
+list_of_list_of_files=[Mo98_GIFT_50_files,
+                       Mo98_GIFT_100_files,
+                       Mo98_GIFT_200_files,
                        Mo98_GIFT_400_files,
                        Mo98_GIFT_600_files,
-                       Mo98_GIFT_800_files,
                        Mo98_GIFT_999_files,
+                       Mo98_GWAS_50_files,
+                       Mo98_GWAS_100_files,
                        Mo98_GWAS_200_files,
                        Mo98_GWAS_400_files,
                        Mo98_GWAS_600_files,
-                       Mo98_GWAS_800_files,
-                       Mo98_GWAS_999_files,
-                       Na23_GIFT_200_files,
-                       Na23_GIFT_400_files,
-                       Na23_GIFT_600_files,
-                       Na23_GIFT_800_files,
-                       Na23_GIFT_999_files,
-                       Na23_GWAS_200_files,
-                       Na23_GWAS_400_files,
-                       Na23_GWAS_600_files,
-                       Na23_GWAS_800_files,
-                       Na23_GWAS_999_files]
+                       Mo98_GWAS_999_files,]
 
+std_dev_df = pandas.DataFrame(columns=['CHROM','POS','pvalue_stdv', 'PVAL_TYPE','SUBSAMPLE_NUM'])
 
 # Reminder of CSV format (GIFT) NAME leaf_ionome_Mo98_whole_genome_metrics_600_732692.csv
 # CHROM,POS,largest_theta,smallest_theta,absolute_theta,theta_range,largest_relative_theta,smallest_relative_theta,absolute_relative_theta,range_relative_theta,min_p,mean_p,log_mean_p,bigest_theta_p,pSNP4,pSNP5
@@ -619,6 +671,36 @@ for list_of_files in list_of_list_of_files:
             # new
         this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["CHROM","POS","PSNP8"]) for csv_file in list_of_files],ignore_index=True)
 
+        this_df['log_PSNP8']=-np.log10(this_df['PSNP8'])
+
+        print("This df: ")
+        print(this_df.head(5),flush=True)
+
+        #calculate the standard deviation for each chrom and pos
+        temp_df = this_df.groupby(['CHROM', 'POS'])['log_PSNP8'].std().reset_index()
+
+        print("temp df: ")
+        print(temp_df.head(5),flush=True)
+
+        # Rename the 'pvalue' column to something more descriptive, like 'pvalue_std'
+        temp_df.rename(columns={'log_PSNP8': 'pvalue_stdv'}, inplace=True)
+
+        # add in column to describe the pvalue type
+        temp_df['PVAL_TYPE'] = "PSNP8"
+
+        temp_df['SUBSAMPLE_NUM'] = subsample_number
+
+
+        print("temp df: ")
+        print(temp_df.head(5),flush=True)
+
+        # remove -log10 column for now
+        this_df.drop(columns="log_PSNP8",inplace=True)
+
+        print("This df: ")
+        print(this_df.head(5),flush=True)
+
+
         # once concatonated, check for pos + neg control values in this function
         IDEA_2_CONTROL_CHECK(this_df,
                              str(first_item_name[2])+"_positive_control.csv", # positive control df
@@ -636,6 +718,35 @@ for list_of_files in list_of_list_of_files:
         #this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["chromosomes","positions","pvals"]) for csv_file in list_of_files],ignore_index=True)
         # new
         this_df=pandas.concat([pandas.read_csv(PATH_TO_MAIN+"output_files/"+csv_file,sep=",",na_filter=False,usecols=["CHROM","POS","pvals"]) for csv_file in list_of_files],ignore_index=True)
+
+        this_df['log_pvals']=-np.log10(this_df['pvals'])
+        #calculate the standard deviation for each chrom and pos
+            # might need as_index = False? -> or not since CHROM POS becomes new index
+        print("This df: ")
+        print(this_df.head(5),flush=True)
+
+        temp_df = this_df.groupby(['CHROM', 'POS'])['log_pvals'].std().reset_index()
+
+        print("temp df: ")
+        print(temp_df.head(5),flush=True)
+
+        # Rename the 'pvalue' column to something more descriptive, like 'pvalue_std'
+        temp_df.rename(columns={'log_pvals': 'pvalue_stdv'},inplace=True)
+
+
+        # add in column to describe the pvalue type
+        temp_df['PVAL_TYPE'] = "GWAS_P"
+
+        temp_df['SUBSAMPLE_NUM'] = subsample_number
+
+        print("temp df: ")
+        print(temp_df.head(5),flush=True)
+
+        # remove -log10 column for now
+        this_df.drop(columns="log_pvals",inplace=True)
+
+        print("This df: ")
+        print(this_df.head(5),flush=True)
 
         # IDEA 2 function
         IDEA_2_CONTROL_CHECK(this_df,
@@ -672,19 +783,33 @@ for list_of_files in list_of_list_of_files:
     
     this_df[f'{col_name}'] = corrected_pvals
 
+    # add column for standard deviation calculations? (this may give NaN so check afterwards)
+        # index wont match properly so this should work...
+    this_df['pvalue_stdv']=temp_df['pvalue_stdv'].to_numpy()
+
     # then upload as corrected (ending in _All.csv)
     this_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/"+first_item_name[2]+"_"+GIFT_or_GWAS+"_"+subsample_number+"_ALL.csv",header=True,index=False)
 
+    std_dev_df = pandas.concat([std_dev_df,temp_df])
 
-    # delete df to save mem
+    # remove NaN values
+    std_dev_df.dropna(inplace=True)
+
+    # delete dfs to save mem
     del this_df
+    del temp_df
 
+
+print("std dev df: ")
+print(std_dev_df,flush=True)
+
+std_dev_df.to_csv(PATH_TO_MAIN+"output_files/R_DATA/std_dev_results.csv",header=True,index=False)
 
 print("IDEA 2 FINISHED",flush=True)
 print("IDEA 3 FINISHED",flush=True)
 
 
-phenotype_list=["Mo98","Na23"] # can later update this to read from the phenotype text file
+# phenotype_list=["Mo98","Na23"] # can later update this to read from the phenotype text file
 
 #average_pvals_list=["AVERAGE_P","AVERAGE_PSNP4","AVERAGE_PSNP5","AVERAGE_ABS_THETA"]
     # new

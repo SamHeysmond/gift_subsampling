@@ -24,6 +24,20 @@ def fetch_subsample_numbers_list(subsample_numbers_list_file):
 
     return subsample_num_list
 
+def fetch_phenotype_list(phenotype_list_file):
+    phenotypes_list=[]
+    temp_file=open(f"{phenotype_list_file}","r")
+
+    for line in temp_file:
+
+        subsample_number=line.replace('\n','')
+
+        phenotypes_list.append(subsample_number)
+    
+    print("Phenotype list fetched: ",flush=True)
+    print(phenotypes_list,flush=True)
+
+    return phenotypes_list
 
 # IDEA 3 RSCRIPT UPDATED (THRESHOLDS - testing)
 def IDEA_3_R_AND_BATCH(phenotype,subsample_number,pval_type):
@@ -805,9 +819,13 @@ print("IDEA 2 FINISHED",flush=True)
 
 #subsample_num_list=[200,400,600,800,1000] # can later update this to read from earlier scripts or something
     # new
-subsample_num_list=[200,400,600,800,999] # can later update this to read from earlier scripts or something
+# subsample_num_list=[200,400,600,800,999] # can later update this to read from earlier scripts or something
 
-phenotype_list=["Mo98","Na23"] # can later update this to read from the phenotype text file
+# subsample_num_list=[50,100,400,600,999] # can later update this to read from earlier scripts or something
+
+# phenotype_list=["Mo98","Na23"] # can later update this to read from the phenotype text file
+
+phenotype_list=fetch_phenotype_list(PATH_TO_MAIN+"core_files/phenotypes_list.txt")
 
 # pvals=["AVERAGE_P","AVERAGE_PSNP4","AVERAGE_PSNP5","AVERAGE_ABS_THETA"] # these should always be the same 4 types
     # new

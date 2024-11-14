@@ -44,17 +44,9 @@ parser.add_argument('-subsampleFile',
 # stores input data and parses them
 args= parser.parse_args() 
 
-
-
 phenotypes_input=open("core_files/phenotypes_list.txt","r")
 
-# alter this to change the number of subsamples per run
-# keep in mind the if statements below will also need modifying too if so
-
-
-
-
-# subsample_list=[200,400,600,800,999]
+# set the subsample lists to what is in the file
 subsample_list=fetch_subsample_numbers_list(args.subsampleFile)
 
 cpu_num = 4
@@ -77,12 +69,11 @@ for phenotype in phenotypes_input:
         # 200 -> 22 // 600 -> 30 // 1000 -> 38 (GB)
         # allow 90% of the total memory limit (in case of spills etc?)
 
-
         hours_given=math.ceil(int(subsample_num)/100)
         # 200 -> 4 hours
         # make 100 copies of each file 
         # for copynum in range(1,101):
-        for copynum in range(1,2):
+        for copynum in range(1,101):
             if subsample_num=='999' and switch==False:
                 pass
             else:
@@ -120,7 +111,14 @@ for phenotype in phenotypes_input:
                 if subsample_num=='200':
                     output_f.write(f'#SBATCH --mem=24g\n')
                     memory_limit=24
-                    core_mem_limit = math.ceil(0.9*memory_limit)
+                if subsample_num=='100':
+                    output_f.write(f'#SBATCH --mem=20g\n')
+                    memory_limit=20
+                if subsample_num=='50':
+                    output_f.write(f'#SBATCH --mem=16g\n')
+                    memory_limit=16
+
+                core_mem_limit = math.ceil(0.9*memory_limit)
                     
                 output_f.write(f'#SBATCH --time={hours_given}:00:00\n')             
                 output_f.write(f'#SBATCH --job-name=subrun\n')
@@ -160,7 +158,14 @@ for phenotype in phenotypes_input:
 
                 # main code to run the subsampling
                 output_f.write(f'# run the subsample script to get the appropriate number of subsamples\n')
-                output_f.write('python3 batch_files/subsample.py -p core_files/leaf_phenotype.csv -s core_files/all_vcf_samples.txt -n ${i} -t ${phenotype} -op core_files/subsampled_data/subsampled_phenotype_${i}_${SLURM_JOB_ID}.csv -og core_files/subsampled_data/subsampled_genotype_${i}_${SLURM_JOB_ID}.vcf -ri ${SLURM_JOB_ID}\n')
+                #output_f.write('python3 batch_files/subsample.py -p core_files/leaf_phenotype.csv -s core_files/all_vcf_samples.txt -n ${i} -t ${phenotype} -op core_files/subsampled_data/subsampled_phenotype_${i}_${SLURM_JOB_ID}.csv -og core_files/subsampled_data/subsampled_genotype_${i}_${SLURM_JOB_ID}.vcf -ri ${SLURM_JOB_ID}\n')
+                output_f.write('python3 batch_files/subsample.py -p core_files/leaf_phenotype.csv \\')
+                output_f.write(f'-s core_files/all_vcf_samples.txt \\')
+                output_f.write(f'-n $i \\')
+                output_f.write(f'-t $phenotype \\')
+                output_f.write('-op core_files/subsampled_data/subsampled_phenotype_${i}_${SLURM_JOB_ID}.csv \\')
+                output_f.write('-og core_files/subsampled_data/subsampled_genotype_${i}_${SLURM_JOB_ID}.vcf \\')
+                output_f.write(f'-ri $SLURM_JOB_ID ')
                 output_f.write(f'\n')
 
                 output_f.write(f'#deactivate conda environment\n')
@@ -212,8 +217,14 @@ for phenotype in phenotypes_input:
                 output_f.write(f'\n')
                 output_f.write(f'echo "Calculating PSNP8 with gift_testing_giota.R" \n')
                 output_f.write(f'\n')
+
                 # output_f.write(f'Rscript batch_files/gift_testing_giota.R core_files/subsampled_data/subsampled_phenotype_{subsample_num}_$SLURM_JOB_ID.csv core_files/genotype_tracker/$SLURM_JOB_ID_genotypes.csv output_files/leaf_ionome_{phenotype}_whole_genome_metrics_{subsample_num}_$SLURM_JOB_ID.csv {cores} \n')
-                output_f.write(f'Rscript batch_files/gift_testing_giota.R core_files/subsampled_data/subsampled_phenotype_{subsample_num}_$SLURM_JOB_ID.csv core_files/genotype_tracker/genotypes_$SLURM_JOB_ID.csv output_files/leaf_ionome_{phenotype}_whole_genome_metrics_{subsample_num}_$SLURM_JOB_ID.csv \n')
+                    # works
+                #output_f.write(f'Rscript batch_files/gift_testing_giota.R core_files/subsampled_data/subsampled_phenotype_{subsample_num}_$SLURM_JOB_ID.csv core_files/genotype_tracker/genotypes_$SLURM_JOB_ID.csv output_files/leaf_ionome_{phenotype}_whole_genome_metrics_{subsample_num}_$SLURM_JOB_ID.csv \n')
+                output_f.write(f'Rscript batch_files/gift_testing_giota.R core_files/subsampled_data/subsampled_phenotype_{subsample_num}_$SLURM_JOB_ID.csv \\')
+                output_f.write(f'core_files/genotype_tracker/genotypes_$SLURM_JOB_ID.csv \\')
+                output_f.write(f'output_files/leaf_ionome_{phenotype}_whole_genome_metrics_{subsample_num}_$SLURM_JOB_ID.csv ')
+                output_f.write(f'\n')
                 output_f.write(f'\n')
 
 
@@ -265,7 +276,7 @@ for phenotype in phenotypes_input:
                 #output_f.write('gemma -bfile core_files/subsampled_data/subsampled_genotype_${i}_${SLURM_JOB_ID} -lm 2 -o ${SLURM_JOB_ID}\n')
                 # maf is 0.05 since 0.01 of 1000 is 10 and 0.05 of 200 is 10
                 #output_f.write('gemma -bfile core_files/subsampled_data/subsampled_genotype_${i}_${SLURM_JOB_ID} -lm 2 -miss 0.1 -maf 0.05 -o ${SLURM_JOB_ID}\n')
-                    # -miss 1 or 0 not sure yet
+                    # -miss 1 or 0 not sure yet -> aim is to allow ALL through analysis since i filtered earlier
                 output_f.write('gemma -bfile core_files/subsampled_data/subsampled_genotype_${i}_${SLURM_JOB_ID} -lm 2 -miss 1 -maf 0 -hwe 0 -r2 1 -o ${SLURM_JOB_ID}\n')
 
 
@@ -289,7 +300,6 @@ for phenotype in phenotypes_input:
                 output_f.write(f'\n')
                 output_f.write(f'\n')
                 
-
                 # # remove the subsampled phenotype file to save on storage
                 # bash_script_output.write('rm core_files/subsampled_phenotype_${i}_${SLURM_JOB_ID}.csv\n')
                 # bash_script_output.write('echo "GWAS for: ${SLURM_JOB_ID} finished" \n')
@@ -305,8 +315,11 @@ for phenotype in phenotypes_input:
                 output_f.write(f'conda deactivate\n')
                 # # # updated to run R scripts
                 output_f.write(f'\n')
+                output_f.write('echo "Running R scripts" \n')
                 output_f.write(f'conda activate r_env\n')
-                output_f.write('Rscript output_files/${SLURM_JOB_ID}_${i}_${phenotype}.R\n')
+                # temp disabled
+                # output_f.write('Rscript output_files/GWAS_${phenotype}_${i}_${SLURM_JOB_ID}.R\n')
+                # output_f.write('Rscript output_files/GIFT_${phenotype}_${i}_${SLURM_JOB_ID}.R\n')
                 output_f.write(f'conda deactivate\n')
                 output_f.write(f'\n')
                 ######################################################################
@@ -318,13 +331,19 @@ for phenotype in phenotypes_input:
                 output_f.write('rm output/${SLURM_JOB_ID}.assoc.txt\n')
                 output_f.write('rm output/${SLURM_JOB_ID}.log.txt\n')
                 output_f.write('\n')
-                output_f.write('rm core_files/subsample_text_files/subsamples_${i}_${SLURM_JOB_ID}.txt\n')
-                output_f.write('rm core_files/genotype_tracker/genotypes_${SLURM_JOB_ID}.csv\n')
+                     # keep for now (so comment out to disable the removal)
+                # output_f.write('rm core_files/subsample_text_files/subsamples_${i}_${SLURM_JOB_ID}.txt\n')
+                # output_f.write('rm core_files/genotype_tracker/genotypes_${SLURM_JOB_ID}.csv\n')
+
+                ### WRITE IN A REMOVE FOR subsampled_data/subsampled_phenotpe_{i}_{SLURM_JOB_ID}.csv
+
                 output_f.write('\n')
                     # instead of just removing all, i could compress the vcf and phenotype files
                 output_f.write('rm core_files/subsampled_data/subsampled_genotype_${i}_${SLURM_JOB_ID}.*\n')
-                output_f.write('rm core_files/subsampled_data/${SLURM_JOB_ID}_accession_list.txt\n')
-                output_f.write('rm core_files/subsampled_data/${SLURM_JOB_ID}_phenotype_list.tsv\n')
+
+                    # keep for now (so comment out to disable the removal)
+                # output_f.write('rm core_files/subsampled_data/${SLURM_JOB_ID}_accession_list.txt\n')
+                # output_f.write('rm core_files/subsampled_data/${SLURM_JOB_ID}_phenotype_list.tsv\n')
                 output_f.write('rm core_files/subsampled_data/subsampled_genotype_${i}_${SLURM_JOB_ID}_modified.fam\n')
                 output_f.write('\n')
                 output_f.write('\n')

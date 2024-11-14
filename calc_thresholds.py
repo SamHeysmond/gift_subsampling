@@ -28,7 +28,7 @@ def calc_thresholds_main(phenotype,subsample_number,pval_type,threshold_df,apply
         csv_df = pandas.read_csv(f"{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_GWAS_{subsample_number}_UNCORRECTED.csv")
 
     # for GIFT data (PSNP4 and 5 specifically)
-    else:
+    elif pval_type=="AVERAGE_PSNP8" or pval_type=="PSNP8":
 
         # fetch the compiled data of the csv for the current phenotype and current method (GIFT)
         # csv_df = pandas.read_csv(f"{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_GIFT_{subsample_number}_ALL.csv")
@@ -67,7 +67,8 @@ def calc_thresholds_main(phenotype,subsample_number,pval_type,threshold_df,apply
 
             # save the dataframe as a corrected version of itself
             csv_df.to_csv(f"{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_GWAS_{subsample_number}_ALL.csv",header=True,index=False)
-
+        else:
+            print("NO correction...",flush=True)
         new_row_NN = pandas.Series({'PHENOTYPE':phenotype,
                     'SUBSAMPLE_NUM':subsample_number,
                     'PVAL_TYPE':pval_type,
@@ -83,7 +84,7 @@ def calc_thresholds_main(phenotype,subsample_number,pval_type,threshold_df,apply
                     })
 
         # GIFT steps
-    else:
+    elif pval_type=="AVERAGE_PSNP8" or pval_type=="PSNP8":
 
         # obtain 99% and 95% quantile values (before correction)
         # NNNH= numpy.percentile(s_pvals,99)
@@ -115,6 +116,8 @@ def calc_thresholds_main(phenotype,subsample_number,pval_type,threshold_df,apply
 
             # return corrected dataframe (temp disabled)
             csv_df.to_csv(f"{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_GIFT_{subsample_number}_ALL.csv",header=True,index=False)
+        else:
+            print("NO correction...",flush=True)
 
         # export threshold values to the dataframe
             # first make new row for the data
@@ -141,6 +144,22 @@ def calc_thresholds_main(phenotype,subsample_number,pval_type,threshold_df,apply
     threshold_df.to_csv(f'{PATH_TO_MAIN}output_files/R_DATA/THRESHOLDS.csv',header=True,index=False)
 
     # end of function
+
+def fetch_phenotype_list(phenotype_list_file):
+    phenotypes_list=[]
+    temp_file=open(f"{phenotype_list_file}","r")
+
+    for line in temp_file:
+
+        subsample_number=line.replace('\n','')
+
+        phenotypes_list.append(subsample_number)
+    
+    print("Phenotype list fetched: ",flush=True)
+    print(phenotypes_list,flush=True)
+
+    return phenotypes_list
+
 
 # subsample_num_list=[200,400,600,800,1000] # can later update this to read from earlier scripts or something
     # new
@@ -178,8 +197,8 @@ args= parser.parse_args()
 # subsample_num_list=[200,400,600,800,999]
 subsample_num_list=fetch_subsample_numbers_list(args.subsampleFile)
 
-phenotype_list=["Mo98","Na23"] # can later update this to read from the phenotype text file
-
+# phenotype_list=["Mo98","Na23"] # can later update this to read from the phenotype text file
+phenotype_list=fetch_phenotype_list(PATH_TO_MAIN+"core_files/phenotypes_list.txt")
 
 # pvals=["AVERAGE_P","AVERAGE_PSNP4","AVERAGE_PSNP5","AVERAGE_ABS_THETA"] # these should always be the same 4 types
     # new

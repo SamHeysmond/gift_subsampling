@@ -147,7 +147,8 @@ for csv_file in csv_files_Arabidopsis_Thaliana:
         print(plant_data.head(10))
 
         # sort in descending order (so biggest are first after log transformation)
-        plant_data=plant_data.sort_values(by="AVERAGE_PSNP8",ascending=False)
+            # plant_data=plant_data.sort_values(by="AVERAGE_PSNP8",ascending=False)
+        plant_data.sort_values(by="AVERAGE_PSNP8",ascending=False,inplace=True)
         print("PSNP8 data after sort",flush=True)
         print(plant_data.head(10))
 

@@ -117,10 +117,18 @@ if args.m == "GIFT":
 elif args.m == "GWAS":
     # 99th and 95th bonferoni
     # test apply fix here with Results$pvals
-    Rscript_output.write(f'NNBF<- -log10(0.01/(nrow(Results$pvals)))\n')
+        # not giving anything ...
+    # Rscript_output.write(f'NNBF<- -log10(0.01/(nrow(Results$pvals)))\n')
+    # Rscript_output.write(f'\n')
+    # Rscript_output.write(f'NFBF<- -log10(0.05/(nrow(Results$pvals)))\n')
+    # Rscript_output.write(f'\n')
+    Rscript_output.write(f'NNNH<-quantile(Results$pvals,probs=0.01)\n')
+    Rscript_output.write(f'NNNH<-unname(NNNH)\n')
+    Rscript_output.write(f'NNNH<- -log10(NNNH)\n')
     Rscript_output.write(f'\n')
-    Rscript_output.write(f'NFBF<- -log10(0.05/(nrow(Results$pvals)))\n')
-    Rscript_output.write(f'\n')
+    Rscript_output.write(f'NFNH<-quantile(Results$pvals,probs=0.05)\n')
+    Rscript_output.write(f'NFNH<-unname(NFNH)\n')
+    Rscript_output.write(f'NFNH<- -log10(NFNH)\n')
 
 # annotation prep stuff
 Rscript_output.write(f'#make new columns where the default highlight and annotation is no\n')
@@ -172,14 +180,12 @@ Rscript_output.write(f'     geom_point(alpha=0.5) +\n')
 #Rscript_output.write(f'     scale_color_manual(values = rep(c("cyan", "blue"), 22 )) +\n')
 
 # write in the threshold lines
-if args.m == "GIFT":
-
-    Rscript_output.write(f'     geom_hline(yintercept = NNNH, color = "red", linetype = "dashed") +\n')
-    Rscript_output.write(f'     geom_hline(yintercept = NFNH, color = "blue", linetype = "dashed") +\n')
-
-else:
-    Rscript_output.write(f'     geom_hline(yintercept = NNBF, color = "red", linetype = "dashed") +\n')
-    Rscript_output.write(f'     geom_hline(yintercept = NFBF, color = "blue", linetype = "dashed") +\n')
+#if args.m == "GIFT":
+Rscript_output.write(f'     geom_hline(yintercept = NNNH, color = "red", linetype = "dashed") +\n')
+Rscript_output.write(f'     geom_hline(yintercept = NFNH, color = "blue", linetype = "dashed") +\n')
+# else:
+#     Rscript_output.write(f'     geom_hline(yintercept = NNBF, color = "red", linetype = "dashed") +\n')
+#     Rscript_output.write(f'     geom_hline(yintercept = NFBF, color = "blue", linetype = "dashed") +\n')
 
 # Rscript_output.write(f'     geom_hline(yintercept = bf_thres, color = "red", linetype = "dashed") +\n')
 # Rscript_output.write(f'     geom_hline(yintercept = by_thres, color = "blue", linetype = "dashed") +\n')

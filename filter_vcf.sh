@@ -1,9 +1,9 @@
 #!/bin/bash
-#SBATCH --partition=shortq
+#SBATCH --partition=defq
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
-#SBATCH --mem=40g
+#SBATCH --mem=35g
 #SBATCH --time=06:00:00
 #SBATCH --job-name=filter_vcf
 #SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out
@@ -19,15 +19,15 @@
 ## FILTER CHECKLIST ##############################
 ##################################################
 # 1 - CHROMOSOMES 1-5 ONLY (NO CHLORO OR MITO)
-# 2 - MAF = 1%
-# 3 - MAX MISS = 10% (from 1135 this is 135) (maybe change to 5%?)
-# 4 - MIN Q = 30
+# 2 - MAF 
+# 3 - MAX MISS 
+# 4 - MIN Q 
 # 5 - BIALLELIC (MAX ALLELES 2)
-# 6 - MIN GQ = 25
-# 7 - MIN MEAN DEPTH = 15
-# 8 - MAX MEAN DEPTH = 40
-# 9 - MIN DEPTH =  15
-# 10 - MAX DEPTH = 15
+# 6 - MIN GQ 
+# 7 - MIN MEAN DEPTH 
+# 8 - MAX MEAN DEPTH
+# 9 - MIN DEPTH 
+# 10 - MAX DEPTH 
 # 11 - SINGLETONS = NONE ALLOWED
 # 12 - LD (DISABLED) 
 # 13 - IMPUTED MISSING SNPS = TRUE
@@ -62,7 +62,7 @@ rm IMPUTED.vcf.gz
 rm IMPUTED.vcf
 rm IMPUTED.log
 rm TAIR10_chr_all.fas.fai
-rm FINAL.vcf 
+# rm FINAL.vcf 
 
 ##################################################
 ##################################################
@@ -72,7 +72,7 @@ rm FINAL.vcf
 ##################################################
 
 MAX_ALLELES=2
-MAF=0.03
+MAF=0.01
 MISS=0.98
 QUAL=30
 G_QUAL=25
@@ -128,6 +128,7 @@ echo "Filtering with vcftools . . . "
 # --min-meanDP $MIN_DEPTH --max-meanDP $MAX_DEPTH \
 # --minDP $MIN_DEPTH --maxDP $MAX_DEPTH --recode --stdout > quality_filtered.vcf
 
+# min DP and max DP caused a problem so just using min Mean max mean
 vcftools --gzvcf new_chr_only.vcf.gz \
 --remove-indels --maf $MAF --max-missing $MISS --minQ $QUAL \
 --max-alleles $MAX_ALLELES --minGQ $G_QUAL \

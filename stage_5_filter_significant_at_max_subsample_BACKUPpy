@@ -1,0 +1,236 @@
+
+# packages
+import modin.pandas as pandas
+import ray
+# import pandas
+import math
+import os
+
+# testing
+from multiprocessing import pool
+
+# functions
+
+os.environ["MODIN_CPUS"] = "20"
+memory_for_ray= 60000000000
+ray.init(_plasma_directory="/tmp", object_store_memory=memory_for_ray,num_cpus=20) # setting to disable out of core in Ray and obj store mem increase
+		
+
+# change these functions to import from a main py file later
+def fetch_subsample_numbers_list(subsample_numbers_list_file):
+
+    subsample_num_list=[]
+
+    temp_file=open(f"{subsample_numbers_list_file}","r")
+
+    for line in temp_file:
+
+        subsample_number=line.replace('\n','')
+
+        subsample_num_list.append(subsample_number)
+    
+    print("Subsample number list fetched: ",flush=True)
+    print(subsample_num_list,flush=True)
+
+    return subsample_num_list
+
+def fetch_phenotype_list(phenotype_list_file):
+    phenotypes_list=[]
+    temp_file=open(f"{phenotype_list_file}","r")
+
+    for line in temp_file:
+
+        subsample_number=line.replace('\n','')
+
+        phenotypes_list.append(subsample_number)
+    
+    print("Phenotype list fetched: ",flush=True)
+    print(phenotypes_list,flush=True)
+
+    return phenotypes_list
+
+
+def log_function(value):
+    return -(math.log(value,10))
+
+def gather_function():
+    pass
+
+def run_gather_function_parallel(list_of_job_ids_to_gather):
+    p=pool()
+    p.map(gather_function,list_of_job_ids_to_gather)
+
+
+# set constant for file path
+PATH_TO_MAIN = "/gpfs01/home/mbysh17/"
+
+# fetch data
+subsample_numbers_list = fetch_subsample_numbers_list(PATH_TO_MAIN+"core_files/subsample_numbers_list.txt")
+phenotype_list=fetch_phenotype_list(PATH_TO_MAIN+"core_files/phenotypes_list.txt")
+
+
+
+
+# get last in the list (maximum value)
+    # may use "max" function instead in future since the list may be ordered wrong
+max_subsample_num = max(subsample_numbers_list)
+print(f"Max subsample number = {max_subsample_num}",flush=True)
+
+# obtain threshold data
+threshold_data =pandas.read_csv(f'{PATH_TO_MAIN}output_files/R_DATA/THRESHOLDS.csv')
+
+print(f"Threshold data: ",flush=True)
+print(threshold_data,flush=True)
+
+# must repeat whole process for each phenotype
+for phenotype in phenotype_list:
+
+    print(f"phenotype =  {phenotype}",flush=True)
+
+    # fetch csv for the _ALL file for current phenotype 
+    # {phenotype}_{GIFT/GWAS}_{subsample_num}_ALL.csv
+    phenotype_data_at_max_subsample= pandas.read_csv(f'{PATH_TO_MAIN}output_files/R_DATA/{phenotype}_GIFT_{max_subsample_num}_ALL.csv')
+
+    # subset the threshold data to get the threshold at max subsamples
+    subsetted_threshold_data=threshold_data[(threshold_data['PHENOTYPE']==phenotype) & 
+                        (threshold_data['SUBSAMPLE_NUM']==int(max_subsample_num)) & 
+                        (threshold_data['PVAL_TYPE']=="AVERAGE_PSNP8") &
+                        (threshold_data['THRESHOLD_TYPE']=="NNNH")
+                        ]
+
+    print("Subsetted threshold data",flush=True)
+    print(subsetted_threshold_data,flush=True)
+
+    # obtain threshold value specifically
+    subsetted_threshold_value = subsetted_threshold_data.iloc[0]["THRESHOLD_VALUE"]
+
+    # apply log scale to the data
+    phenotype_data_at_max_subsample["AVERAGE_PSNP8"]= phenotype_data_at_max_subsample["AVERAGE_PSNP8"].apply(log_function)
+
+    # filter to keep only results that lie above the threshold
+    phenotype_data_at_max_subsample=phenotype_data_at_max_subsample.loc[phenotype_data_at_max_subsample['AVERAGE_PSNP8']>=subsetted_threshold_value]
+
+    # take the top 20 of these
+    cropped_pheno_data = phenotype_data_at_max_subsample.head(20).copy()
+    print("Cropped pheno data:", flush=True)
+    print(cropped_pheno_data,flush=True)
+
+
+    # concatonate chromosome and position columns
+    cropped_pheno_data.loc[:, 'POSITION_DATA'] = cropped_pheno_data['CHR'].astype(str) + ":" + cropped_pheno_data["POS"].astype(str) 
+
+
+    # get the positions data from this dataframe so that the position data follows format CHROMOSOME:BASEPAIRS e.g. 1:3030 
+        # save to a list for filtering the temp_df soon
+    position_columns_filter=[]
+    position_columns_filter=list(cropped_pheno_data['POSITION_DATA'])
+    print("position_columns_filter ",flush=True)
+    print(position_columns_filter,flush=True)
+        # may need to export this to core_files
+
+    # for each of the subsample levels- gather then filter all the genotype data and put the filtered data into new folder
+    for subsample_number in subsample_numbers_list:
+
+        # get JOB list .csv which contains the ID and subsample num with phenotype for each run
+        job_list_df = pandas.read_csv(f'{PATH_TO_MAIN}core_files/JOB_LIST.csv')
+
+        # filter it for the specific subsample number and phenotype in question
+        filtered_job_list_df = job_list_df[(job_list_df['SUBSAMPLE_N']==int(subsample_number)) & 
+                                            (threshold_data['PHENOTYPE']==phenotype)]
+        
+        print("filtered_job_list_df",flush=True)
+        print(filtered_job_list_df,flush=True)
+
+        list_of_job_ids_to_gather = list(filtered_job_list_df["JOB_ID"])
+        print("list of job ids...: ",flush=True)
+        print(list_of_job_ids_to_gather,flush=True)
+
+        del job_list_df
+        del filtered_job_list_df
+        # gather list of files that follow the naming protocol 
+            # each ID within SUBSAMPLE_LEVEL = 400 etc
+        SUBSAMPLE_NUMBER=subsample_number
+
+        if __name__=='__main__':
+            run_gather_function_parallel()
+
+        for job_ID in list_of_job_ids_to_gather:
+            temp_df = pandas.read_csv(f'{PATH_TO_MAIN}core_files/genotype_tracker/genotypes_{job_ID}.csv')
+            print("temp df: ",flush=True)
+            print(temp_df,flush=True)
+
+            # filter based on the position data gathered
+            # temp_df_filtered = temp_df.filter(items=position_columns_filter)
+            temp_df_filtered = temp_df.loc[:, position_columns_filter]
+
+            print("temp df FILTERED: ",flush=True)
+            print(temp_df_filtered,flush=True)
+            # save the filtered data to a folder
+            temp_df_filtered.to_csv(f"{PATH_TO_MAIN}core_files/filtered_genotype_tracker/filtered_genotypes_{job_ID}_{subsample_number}.csv",header=True,index=False)
+
+            # make batch file which will
+                # 1) run the data for each ID using "get_paths.R"
+                    # should output to another file called core_files/theta_paths/*
+            
+            # another batch file? no-> just run after this python script ends and all batch files above have run
+
+                # 2) run a python script which will 
+                    # gather the path data
+                    # for each subsample level
+                        # appends each dataframe side by side (should all be same length because same subsample level kept on each loop)
+                        # Then for each POSITIION DATA (20 in this instance)
+                            # select and make a new dataframe for THAT position which spans all the 100 ID's gathered eg columns are( 1:3030_ID1234 , 1:3030_ID1235, ....)
+                            # saves it to one more folder but with subsample number and position in the header instead of the ID (since now each position has all the IDs gathered together)
+                                # core_files/combined_theta_paths/ e.g 400_3_3030.csv
+                                    # colon was swapped for underscore
+
+                # COULD DO THIS LOCALLY!
+
+                # 3) make the plots using an R script made by THIS CURRENT python script
+                    # if the subsample level is the same as the maximum it runs it with 1 line on the graph (since only one run)
+                    # ELSE: randomly selects 5 IDs (columns) within the dataframe to use then plots the path against j (subsample number) for these
+
+        ### BATCH FILE 1 CREATION
+            # saved to batch_files/stage_5_prerun
+            batch1_out = open(f"{PATH_TO_MAIN}batch_files/stage_5_prerun/batch1_{job_ID}.sh","w")
+
+            # necessary start to the file
+            batch1_out.write(f'#!/bin/bash\n')
+            batch1_out.write(f'#SBATCH --partition=defq\n')
+            batch1_out.write(f'#SBATCH --nodes=1\n')
+            batch1_out.write(f'#SBATCH --ntasks=1\n')
+            batch1_out.write(f'#SBATCH --cpus-per-task=3\n')
+            batch1_out.write(f'#SBATCH --mem=8g\n')
+            batch1_out.write(f'#SBATCH --time00:30:00\n')
+            batch1_out.write(f'#SBATCH --job-name=S5_batch1\n')
+            batch1_out.write(f'#SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out\n')
+            batch1_out.write(f'#SBATCH --error=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.err\n')
+            batch1_out.write(f'#SBATCH --mail-type=ALL\n')
+            batch1_out.write(f'#SBATCH --mail-user=mbysh17@nottingham.ac.uk\n')
+            batch1_out.write(f'#===============================\n')
+            batch1_out.write(f'echo "start OF IDEA 5 subrun"\n')
+            batch1_out.write(f'#change to home directory\n')
+            batch1_out.write(f'cd /gpfs01/home/mbysh17\n')
+            batch1_out.write(f'# source conda environments\n')
+            batch1_out.write(f'source ~/.bashrc\n')
+            batch1_out.write(f'conda deactivate\n')
+            batch1_out.write(f'conda activate r_env\n') # in gift_env but may change to R env if needed
+            # run the R script
+            # batch1_out.write(f'Rscript batch_files/gift_testing_giota.R core_files/subsampled_data/subsampled_phenotype_{subsample_num}_$SLURM_JOB_ID.csv \\')
+            # batch1_out.write(f'core_files/genotype_tracker/genotypes_$SLURM_JOB_ID.csv \\')
+            # batch1_out.write(f'output_files/leaf_ionome_{phenotype}_whole_genome_metrics_{subsample_num}_$SLURM_JOB_ID.csv ')
+
+            batch1_out.write(f'Rscript batch_files/get_paths.R core_files/subsampled_data/subsampled_phenotype_{subsample_number}_{job_ID}.csv \\')
+            batch1_out.write(f'core_files/filtered_genotype_tracker/filtered_genotypes_{job_ID}.csv" \\')
+            batch1_out.write(f'core_files/theta_paths/delta_theta_paths_{job_ID}.csv ')
+
+            batch1_out.write(f'conda deactivate\n')
+            batch1_out.write(f'echo "END OF STAGE 5 subrun batch 1"\n')
+            batch1_out.write(f'# end of file\n')
+            batch1_out.close()
+
+        ### R SCRIPT CREATION
+
+print("stage_5_filter_significant_at_max_subsample.py finished")
+
+# end of script
