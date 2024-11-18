@@ -110,6 +110,7 @@ def write_R_script_and_shell(subsample_number,position_info):
             R_out.write(f'      plot.background = element_rect(fill = alpha("red",0.5)))\n')
         R_out.write(f'   \n')
         R_out.write(f'   \n')
+        
     else:
         R_out.write(f'ggplot(ThPaths_Data_long, aes(x=Index/{subsample_number}, y=Value/{subsample_number}, color=Line)) +\n')
         R_out.write(f'  geom_line() +\n')
