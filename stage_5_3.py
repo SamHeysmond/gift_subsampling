@@ -103,10 +103,13 @@ def write_R_script_and_shell(subsample_number,position_info):
         R_out.write(f'  geom_line(color="black")+\n')
         R_out.write(f'   geom_point(color="black")+\n')
         R_out.write(f'   theme(axis.text=element_text(size=30),\n')
-        R_out.write(f'      axis.title=element_text(size=30,face="bold"))\n')
+        R_out.write(f'      axis.title=element_text(size=30,face="bold"),\n')
+        if position_info in list_of_currently_significant_snps:
+            R_out.write(f'      plot.background = element_rect(fill = alpha("green",0.5)))\n')
+        else:
+            R_out.write(f'      plot.background = element_rect(fill = alpha("red",0.5)))\n')
         R_out.write(f'   \n')
         R_out.write(f'   \n')
-
     else:
         R_out.write(f'ggplot(ThPaths_Data_long, aes(x=Index/{subsample_number}, y=Value/{subsample_number}, color=Line)) +\n')
         R_out.write(f'  geom_line() +\n')

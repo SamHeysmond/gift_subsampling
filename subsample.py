@@ -85,7 +85,7 @@ print("Merged dataframe initially:",flush= True)
 print(merged_df,flush= True)
 print("- - - - - - - - - - - - - - - - - - ",flush= True)
 
-    # Delete rows where data is in both 
+    # Delete rows where data is in left only 
 merged_df = merged_df.drop(merged_df[merged_df['_merge'] == 'left_only'].index)
 
 print("- - - - - - - - - - - - - - - - - - ",flush= True)
