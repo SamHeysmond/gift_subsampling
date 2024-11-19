@@ -37,6 +37,13 @@ def fetch_phenotype_list(phenotype_list_file):
     return phenotypes_list
 
 def write_R_script_and_shell(subsample_number,position_info):
+    Matryoshka=True
+
+    # get significant SNPs
+    significant_snp_data=pandas.read_csv(f"{PATH_TO_MAIN}output_files/significant_SNP_data/GIFT_SIGNIFICANT_{subsample_number}.csv")
+    # obtain list of significant SNPs at this subsample level
+    list_of_currently_significant_snps=list(significant_snp_data['POSITION_DATA'])
+
     # saved to batch_files/stage_5_prerun
     R_out = open(f"{PATH_TO_MAIN}batch_files/stage_5_3_Rscripts/{subsample_number}_{position_info}.R","w")
     R_out.write(f'# start of file \n')
@@ -101,6 +108,7 @@ def write_R_script_and_shell(subsample_number,position_info):
 
     R_out.write(f'png("{PATH_TO_MAIN}output_files/stage_5_results/{subsample_number}_{position_info}.png",res=75, height=900, width = 900) \n')
 
+
     if int(subsample_num)==999:
         R_out.write(f'ggplot(ThPaths_Data, aes(x=Index/{subsample_number} , y=Value/{subsample_number} , color="black")) +\n')
         R_out.write(f'  geom_line(color="black")+\n')
@@ -126,7 +134,7 @@ def write_R_script_and_shell(subsample_number,position_info):
             R_out.write(f'      plot.background = element_rect(fill = alpha("red",0.5)))\n')
         R_out.write(f'   \n')
         R_out.write(f'   \n')
-        
+
     elif int(subsample_num)!=999 and Matryoshka==False:
 
         R_out.write(f'ggplot(ThPaths_Data_long, aes(x=Index/{subsample_number}, y=Value/{subsample_number}, color=Line)) +\n')
@@ -141,12 +149,6 @@ def write_R_script_and_shell(subsample_number,position_info):
             R_out.write(f'  geom_point(data=ThPaths_Data,aes(x=Index/{subsample_number},y=AverageValues/{subsample_number}),color="black") +\n')
         R_out.write(f'  theme(axis.text=element_text(size=30), \n')
         R_out.write(f'      axis.title=element_text(size=30,face="bold"),\n')
-        
-        
-        significant_snp_data=pandas.read_csv(f"{PATH_TO_MAIN}output_files/significant_SNP_data/GIFT_SIGNIFICANT_{subsample_number}.csv")
-
-        # obtain list of significant SNPs at this subsample level
-        list_of_currently_significant_snps=list(significant_snp_data['POSITION_DATA'])
 
         # check if position info is in the currently significant SNPs for GIFT 
         print(f"Current position info to check for: {position_info}",flush=True)
