@@ -89,7 +89,10 @@ def write_R_script_and_shell(subsample_number,position_info):
     if int(subsample_num)==999:
         R_out.write(f'ThPaths_Data <- ThPaths_Data %>% \n')
         R_out.write(f'    pivot_longer(cols = -c(Index),names_to = "Line", values_to = "Value") \n')
-    else:
+    elif int(subsample_num)!=999 and Matryoshka==True:
+        R_out.write(f'ThPaths_Data <- ThPaths_Data %>% \n')
+        R_out.write(f'    pivot_longer(cols = -c(Index),names_to = "Line", values_to = "Value") \n')
+    elif int(subsample_num)!=999 and Matryoshka==False:
         R_out.write(f'ThPaths_Data$AverageValues<-apply(ThPaths_Data[, !(names(ThPaths_Data) %in% c("AverageValues","Index"))], 1, mean) \n')
         R_out.write(f'ThPaths_Data$Row_SD <- apply(ThPaths_Data[, !(names(ThPaths_Data) %in% c("AverageValues","Index"))], 1, sd)\n')
         R_out.write(f'ThPaths_Data <- ThPaths_Data %>% \n')
@@ -110,8 +113,22 @@ def write_R_script_and_shell(subsample_number,position_info):
             R_out.write(f'      plot.background = element_rect(fill = alpha("red",0.5)))\n')
         R_out.write(f'   \n')
         R_out.write(f'   \n')
+    
+    elif int(subsample_num)!=999 and Matryoshka==True:
+        R_out.write(f'ggplot(ThPaths_Data, aes(x=Index/{subsample_number} , y=Value/{subsample_number} , color="black")) +\n')
+        R_out.write(f'  geom_line(color="black")+\n')
+        R_out.write(f'   geom_point(color="black")+\n')
+        R_out.write(f'   theme(axis.text=element_text(size=30),\n')
+        R_out.write(f'      axis.title=element_text(size=30,face="bold"),\n')
+        if position_info in list_of_currently_significant_snps:
+            R_out.write(f'      plot.background = element_rect(fill = alpha("green",0.5)))\n')
+        else:
+            R_out.write(f'      plot.background = element_rect(fill = alpha("red",0.5)))\n')
+        R_out.write(f'   \n')
+        R_out.write(f'   \n')
         
-    else:
+    elif int(subsample_num)!=999 and Matryoshka==False:
+
         R_out.write(f'ggplot(ThPaths_Data_long, aes(x=Index/{subsample_number}, y=Value/{subsample_number}, color=Line)) +\n')
         R_out.write(f'  geom_line() +\n')
         R_out.write(f'  geom_point() +\n')
@@ -179,6 +196,9 @@ def write_R_script_and_shell(subsample_number,position_info):
 
 # set constant for file path
 PATH_TO_MAIN = "/gpfs01/home/mbysh17/"
+
+# temp for matryoshka
+Matryoshka=True
 
 subsample_numbers_list = fetch_subsample_numbers_list(PATH_TO_MAIN+"core_files/subsample_numbers_list.txt")
 phenotype_list=fetch_phenotype_list(PATH_TO_MAIN+"core_files/phenotypes_list.txt")
