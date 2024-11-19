@@ -2,9 +2,9 @@
 #SBATCH --partition=shortq
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=3g
-#SBATCH --time=00:10:00
+#SBATCH --cpus-per-task=2
+#SBATCH --mem=16g
+#SBATCH --time=01:00:00
 #SBATCH --job-name=subsample_setup
 #SBATCH --output=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.out
 #SBATCH --error=/gpfs01/home/mbysh17/slurmOandE/slurm-%x-%j.err
@@ -66,7 +66,9 @@ echo "JOB_ID,SUBSAMPLE_N,PHENOTYPE" > core_files/JOB_LIST.csv
 # Make the subsample scripts ========================================
 
 # enter python environment
-conda activate python3_env
+# conda activate python3_env
+# temp for MATRYOSHKA
+conda activate subsample_env
 
 # run the python script which will make all of the individual scripts needed
 python3 batch_files/subsample_script_setup.py -subsampleFile core_files/subsample_numbers_list.txt
