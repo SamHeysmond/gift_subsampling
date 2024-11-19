@@ -481,6 +481,9 @@ print("////////////////////////////////////////////////",flush=True)
 print("Splitting the file names into groups...",flush=True)
 print("////////////////////////////////////////////////",flush=True)
 
+
+# key must be made up of
+    # PHENOTYPE_METHOD_SUBSAMPLENUMBER e.g. Mo98_GIFT_200
 for csv_file in csv_files:
 
     csv_file_name = csv_file.split("_")
@@ -582,6 +585,7 @@ for csv_file in csv_files:
 
         elif csv_file_name[4]=="100":# GWAS code vvv  
             Na23_GWAS_100_files.append(csv_file)  
+
 # PROGRESS METER
 print("////////////////////////////////////////////////",flush=True)
 print("Finished splitting into groups!",flush=True)

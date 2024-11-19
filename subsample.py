@@ -67,7 +67,6 @@ print("sample_list_from_vcf : ",flush=True)
 print(sample_list_from_vcf,flush=True)
 
 # open phenotype data file
-input_file_phenotype_data = open(args.p,'r')
 sample_list_from_phenotype_file = pandas.read_csv(args.p, sep=',', usecols=['Accession_ID',args.t])
 print("sample_list_from_phenotype_file : ",flush=True)
 print(sample_list_from_phenotype_file,flush=True)

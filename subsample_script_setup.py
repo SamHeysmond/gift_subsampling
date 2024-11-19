@@ -14,6 +14,8 @@
 # packages
 import argparse
 import math
+import pandas
+import os 
 
 def fetch_subsample_numbers_list(subsample_numbers_list_file):
 
@@ -52,6 +54,90 @@ subsample_list=fetch_subsample_numbers_list(args.subsampleFile)
 cpu_num = 4
 cores=cpu_num-1
 
+
+# STEPS FOR MATRYOSHKA CODE
+# set the data sets for each subsample number by 
+    # 1) subsampling from each one and saving to files like subsample.py would do
+        # see output 1,2 and 3 in subsample.py
+    # 2) then set the output of these to same format as subsample .py but using the ID name for the run (gives unique run IDs
+        # e.g. using a mv command but with the variable name to the SLURM job ID in named format
+    # 3) ensure copynum range is 1 to 2 so that theres only 1 copy at each subsample level
+        # to get repeats i will need to run the WHOLE set of scripts multiple times (e.g. 10 times over)
+
+#1)
+#set input file
+sample_list_from_vcf = pandas.read_csv('core_files/all_vcf_samples.txt' , sep=',', usecols=[0], names=['Accession_ID'], header=None)
+
+print("sample_list_from_vcf : ",flush=True)
+print(sample_list_from_vcf,flush=True)
+
+# open phenotype data file (set to Mo98 for this)
+sample_list_from_phenotype_file = pandas.read_csv("core_files/leaf_phenotype.csv", sep=',', usecols=['Accession_ID',"Mo98"])
+print("sample_list_from_phenotype_file : ",flush=True)
+print(sample_list_from_phenotype_file,flush=True)
+
+# merge data where Accession_ID is in both the vcf and phenotype files
+consensus_ID_dataframe = (sample_list_from_vcf.reset_index(drop=True)[["Accession_ID"]].merge(sample_list_from_phenotype_file.reset_index(drop=True), on=['Accession_ID'], how='inner',left_index=False,right_index=False))
+
+print("consensus_ID_dataframe_with_phenotypes : ",flush=True)
+print(consensus_ID_dataframe,flush=True)
+
+print(f"Length of consensus dataframe (should be 1000 or 1003 ish): {len(consensus_ID_dataframe)}", flush=True)
+
+# now subsample for MATRYOSHKA for each number in subsample num list
+for subsample_number in reversed(subsample_list):
+
+    # if its the max number it'll take from consensus, not from itself
+    if subsample_number==max(subsample_list):
+        # take from consensus
+        subsampled_dataframe = consensus_ID_dataframe.sample(n=int(subsample_number))
+
+    else:
+        # take from previous (subsampling from itself)
+        subsampled_dataframe=subsampled_dataframe.sample(n=int(subsample_number))
+
+    #### 
+    
+    print("Subsampled_dataframe before reset index: ",flush=True)
+    print(subsampled_dataframe,flush=True)
+
+    subsampled_dataframe.reset_index(drop=True, inplace=True)
+    print("Subsampled_dataframe after reset index: ",flush=True)
+    print(subsampled_dataframe,flush=True)
+
+    # open file for writing all the IDs that were subsampled for this particular run
+    subsampled_IDs_path = (f'core_files/subsample_text_files/subsamples_{subsample_number}_1234.txt')
+
+    print("subsampled_dataframe data types before sorting: ",flush=True)
+    print(subsampled_dataframe.dtypes,flush=True)
+
+    # convert phenotype to numeric and sort in ascending order
+    subsampled_dataframe[[f'Mo98']] = subsampled_dataframe[[f'Mo98']].apply(pandas.to_numeric)
+    subsampled_dataframe = subsampled_dataframe.sort_values(by='Mo98',ascending=True)
+
+    print("subsampled_dataframe after sorting: ",flush=True)
+    print(subsampled_dataframe,flush=True)
+
+    print("subsampled_dataframe data types after sorting: ",flush=True)
+    print(subsampled_dataframe.dtypes,flush=True)
+
+    # OUTPUT 1 
+        # ordered subsample list of just the IDs 
+    subsampled_dataframe.to_csv(subsampled_IDs_path,columns=['Accession_ID'],index=False, header=False)
+        # NEEDS MV COMMAND BELOW
+
+    # OUTPUT 2
+        #create subsampled vcf
+        # set the ID to 1234-> this will be changed in the single run scripts that are temporarily active
+    os.system(f'bcftools view --samples-file core_files/subsample_text_files/subsamples_{subsample_number}_1234.txt core_files/FINAL.vcf > core_files/subsampled_data/subsampled_genotype_{subsample_number}_1234.vcf')
+        # NEEDS MV COMMAND BELOW
+
+    # OUTPUT 3
+        # subsample of the accessions and phenotype data together
+    subsampled_dataframe.to_csv(f"core_files/subsampled_data/subsampled_phenotype_{subsample_number}_1234.csv",header=True,index=False)
+        # NEEDS MV COMMAND BELOW
+
+
 #loop through each phenotype with the following settings
 for phenotype in phenotypes_input:
     phenotype = phenotype.replace('\n','')
@@ -73,7 +159,7 @@ for phenotype in phenotypes_input:
         # 200 -> 4 hours
         # make 100 copies of each file 
         # for copynum in range(1,101):
-        for copynum in range(1,101):
+        for copynum in range(1,2): # temp changed
             if subsample_num=='999' and switch==False:
                 pass
             else:
@@ -148,6 +234,30 @@ for phenotype in phenotypes_input:
                 output_f.write("original_location=$(scontrol show job $SLURM_JOB_ID | awk -F= '/Command=/{print $2}')\n")
                 output_f.write(f'\n')
 
+                # SPACING
+                output_f.write(f'\n')
+                output_f.write(f'\n')
+                # SPACING
+
+                # temp for MATRYOSHKA
+                output_f.write(f'echo "Moving files for MATRYOSHKA\n')
+                # MV output 1
+                output_f.write('mv core_files/subsample_text_files/subsamples_'+str(subsample_num)+'_1234.txt core_files/subsample_text_files/subsamples_'+str(subsample_num)+'_${SLURM_JOB_ID}.txt\n')
+                output_f.write(f'\n')
+
+                # MV output 2
+                output_f.write('mv core_files/subsampled_data/subsampled_genotype_'+str(subsample_num)+'_1234.vcf core_files/subsampled_data/subsampled_genotype_'+str(subsample_num)+'_${SLURM_JOB_ID}.vcf\n')
+                output_f.write(f'\n')
+
+                # MV output 3
+                output_f.write('mv core_files/subsampled_data/subsampled_phenotype_'+str(subsample_num)+'_1234.csv core_files/subsampled_data/subsampled_phenotype_'+str(subsample_num)+'_${SLURM_JOB_ID}.csv\n')
+                output_f.write(f'\n')
+
+                # SPACING
+                output_f.write(f'\n')
+                output_f.write(f'\n')
+                # SPACING
+
                 #job ID updating to the csv
                 output_f.write(f'#append the JOB ID and subsample number (i) to a file\n')
                 output_f.write('echo "${SLURM_JOB_ID},${i},${phenotype}" >> core_files/JOB_LIST.csv \n')
@@ -156,17 +266,16 @@ for phenotype in phenotypes_input:
                 output_f.write(f'echo "GIFT core mem lim: {core_mem_limit}"  \n')
                 output_f.write(f'\n')
 
-                # main code to run the subsampling
+                # main code to run the subsampling (TEMP DISABLED FOR MATRYOSHKA)
                 output_f.write(f'# run the subsample script to get the appropriate number of subsamples\n')
-                #output_f.write('python3 batch_files/subsample.py -p core_files/leaf_phenotype.csv -s core_files/all_vcf_samples.txt -n ${i} -t ${phenotype} -op core_files/subsampled_data/subsampled_phenotype_${i}_${SLURM_JOB_ID}.csv -og core_files/subsampled_data/subsampled_genotype_${i}_${SLURM_JOB_ID}.vcf -ri ${SLURM_JOB_ID}\n')
-                output_f.write('python3 batch_files/subsample.py -p core_files/leaf_phenotype.csv \\')
-                output_f.write(f'-s core_files/all_vcf_samples.txt \\')
-                output_f.write(f'-n $i \\')
-                output_f.write(f'-t $phenotype \\')
-                output_f.write('-op core_files/subsampled_data/subsampled_phenotype_${i}_${SLURM_JOB_ID}.csv \\')
-                output_f.write('-og core_files/subsampled_data/subsampled_genotype_${i}_${SLURM_JOB_ID}.vcf \\')
-                output_f.write(f'-ri $SLURM_JOB_ID ')
-                output_f.write(f'\n')
+                # output_f.write('python3 batch_files/subsample.py -p core_files/leaf_phenotype.csv \\')
+                # output_f.write(f'-s core_files/all_vcf_samples.txt \\')
+                # output_f.write(f'-n $i \\')
+                # output_f.write(f'-t $phenotype \\')
+                # output_f.write('-op core_files/subsampled_data/subsampled_phenotype_${i}_${SLURM_JOB_ID}.csv \\')
+                # output_f.write('-og core_files/subsampled_data/subsampled_genotype_${i}_${SLURM_JOB_ID}.vcf \\')
+                # output_f.write(f'-ri $SLURM_JOB_ID ')
+                # output_f.write(f'\n')
 
                 output_f.write(f'#deactivate conda environment\n')
                 output_f.write(f'conda deactivate\n')
@@ -306,7 +415,7 @@ for phenotype in phenotypes_input:
                 ########################################################
                 ######################################################################
 
-                ######## TEMP DISABLED WHILE WORKING ON GIFT FIRST ####################
+                ######## RAW RUN MANHATTAN PLOTS ####################
                 ####################################################################
                 # # calling for the python script to make the R script for GWAS and GIFT manhattan plots
                 output_f.write(f'conda activate python3_env\n')
@@ -317,9 +426,9 @@ for phenotype in phenotypes_input:
                 output_f.write(f'\n')
                 output_f.write('echo "Running R scripts" \n')
                 output_f.write(f'conda activate r_env\n')
-                # temp disabled
-                # output_f.write('Rscript output_files/GWAS_${phenotype}_${i}_${SLURM_JOB_ID}.R\n')
-                # output_f.write('Rscript output_files/GIFT_${phenotype}_${i}_${SLURM_JOB_ID}.R\n')
+                # temp enambled
+                output_f.write('Rscript output_files/GWAS_${phenotype}_${i}_${SLURM_JOB_ID}.R\n')
+                output_f.write('Rscript output_files/GIFT_${phenotype}_${i}_${SLURM_JOB_ID}.R\n')
                 output_f.write(f'conda deactivate\n')
                 output_f.write(f'\n')
                 ######################################################################
