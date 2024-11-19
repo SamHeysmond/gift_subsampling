@@ -162,26 +162,27 @@ for phenotype in phenotype_list:
     # apply log scale to the data
     combined_data_at_max_subsample["AVERAGE_PSNP8"]= combined_data_at_max_subsample["AVERAGE_PSNP8"].apply(log_function)
 
+    ## FOR TOP 20 SNPS
     # filter to keep only results that lie above the threshold
-
         # works (use by default)
-    #combined_data_at_max_subsample=combined_data_at_max_subsample.loc[combined_data_at_max_subsample['AVERAGE_PSNP8']>=subsetted_threshold_value]
-
-        # temp usage for non sig snps
-    combined_data_at_max_subsample=combined_data_at_max_subsample.loc[combined_data_at_max_subsample['AVERAGE_PSNP8']<subsetted_threshold_value]
+    combined_data_at_max_subsample=combined_data_at_max_subsample.loc[combined_data_at_max_subsample['AVERAGE_PSNP8']>=subsetted_threshold_value]
 
     #instead take top 20 ordered by value (WORKS- KEEP AND USE BY DEFAULT)
         # order by PVALUE (highest first since they have been log transformed already)
-    # combined_data_at_max_subsample.sort_values(by="AVERAGE_PSNP8",ascending=False,inplace=True)
-    # cropped_pheno_data = combined_data_at_max_subsample.head(20).copy()
-    # print("Cropped pheno data:", flush=True)
-    # print(cropped_pheno_data,flush=True)
-
-    # taking bottom of the barrell SNPs (only taking 10 this time)
-    combined_data_at_max_subsample.sort_values(by="AVERAGE_PSNP8",ascending=True,inplace=True)
-    cropped_pheno_data = combined_data_at_max_subsample.head(10).copy()
+    combined_data_at_max_subsample.sort_values(by="AVERAGE_PSNP8",ascending=False,inplace=True)
+    cropped_pheno_data = combined_data_at_max_subsample.head(20).copy()
     print("Cropped pheno data:", flush=True)
     print(cropped_pheno_data,flush=True)
+
+    # ### FOR NON SIG SNIPS
+    # # temp usage for non sig snps
+    # combined_data_at_max_subsample=combined_data_at_max_subsample.loc[combined_data_at_max_subsample['AVERAGE_PSNP8']<subsetted_threshold_value]
+
+    # # taking bottom of the barrell SNPs (only taking 10 this time)
+    # combined_data_at_max_subsample.sort_values(by="AVERAGE_PSNP8",ascending=True,inplace=True)
+    # cropped_pheno_data = combined_data_at_max_subsample.head(10).copy()
+    # print("Cropped pheno data:", flush=True)
+    # print(cropped_pheno_data,flush=True)
 
 
     # concatonate chromosome and position columns
