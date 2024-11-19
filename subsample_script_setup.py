@@ -240,7 +240,7 @@ for phenotype in phenotypes_input:
                 # SPACING
 
                 # temp for MATRYOSHKA
-                output_f.write(f'echo "Moving files for MATRYOSHKA\n')
+                output_f.write(f'echo "Moving files for MATRYOSHKA"\n')
                 # MV output 1
                 output_f.write('mv core_files/subsample_text_files/subsamples_'+str(subsample_num)+'_1234.txt core_files/subsample_text_files/subsamples_'+str(subsample_num)+'_${SLURM_JOB_ID}.txt\n')
                 output_f.write(f'\n')
