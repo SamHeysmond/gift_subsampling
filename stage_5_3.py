@@ -88,7 +88,9 @@ def write_R_script_and_shell(subsample_number,position_info):
 
     ### FOURTH PLOT
     R_out.write(f'ThPaths_Data$Index <- seq_len(nrow(ThPaths_Data)) \n')
-    R_out.write(f'ThPaths_Data$Index <- ThPaths_Data$Index/{subsample_number} \n')
+
+    # temp disabled since division occurs on the ggplot command
+    # R_out.write(f'ThPaths_Data$Index <- ThPaths_Data$Index/{subsample_number} \n')
     
     R_out.write(f'ThPaths_Data_long <- ThPaths_Data %>%\n')
     R_out.write(f'  pivot_longer(cols = -Index, names_to = "Line", values_to = "Value") \n')
